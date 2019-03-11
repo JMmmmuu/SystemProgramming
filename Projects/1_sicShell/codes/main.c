@@ -50,7 +50,7 @@ int main() {
                     printf("\t\t%s", dirEntry->d_name);
                     stat(dirEntry->d_name, &fileInfo);
                     if (S_ISDIR(fileInfo.st_mode)) printf("/");
-                    if (fileInfo.st_mode & S_IXUSR) printf("*");
+                    else if (fileInfo.st_mode & S_IXUSR) printf("*");
                     printf("\n");
                 }
 

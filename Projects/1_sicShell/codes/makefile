@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -W -g
-OBJECTS = main.o shell.o memory.c opcode.c
+OBJECTS = main.o shell.o memory.o opcode.o
 TARGET = 20171690.out
 
 all: $(TARGET)
