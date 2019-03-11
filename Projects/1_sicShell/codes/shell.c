@@ -37,3 +37,16 @@ void history() {
         printf("%d\t%s\n", pMove->num, pMove->hist);
     }
 }
+
+void quit() {
+    // free memories
+    HISTORY* pFree;
+
+    while (hisHead) {
+        pFree = hisHead;
+        hisHead = hisHead->link;
+        free(pFree);
+    }
+
+    printf("exit shell\n");
+}

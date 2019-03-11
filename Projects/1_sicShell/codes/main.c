@@ -54,8 +54,13 @@ int main() {
                 printf("0x02\n");
                 break;
             case 0x03:  // q[uit]
-                printf("0x03\n");
-                break;
+                if ((cmd = strtok(NULL, " ")) != NULL) {
+                    printf("q[uit]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
+                    break;
+                }
+
+                quit();
+                return 0;
             case 0x10: case 0x11: case 0x12:    // du[mp] [start, end]
                 printf("0x10\n");
                 break;
@@ -85,7 +90,6 @@ int main() {
 
     }
 
-    quit();
     return 0;
 }
 
@@ -112,12 +116,6 @@ int findCmd(char* cmd) {
     if (strcmp(cmd, "opcodelist") == 0) return 0x21;
 
     return 0x30;
-}
-
-int findCommand() {
-
-
-    return 0;
 }
 
 char* removeSpace(char* input) {
