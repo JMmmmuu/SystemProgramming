@@ -26,41 +26,58 @@ int main() {
 
         char* cmd = strtok(input_formed, " ");
         switch (findCmd(cmd)) {
-            case 0x00:  // help
+            
+            case 0x00:  // h[elp]
+                if ((cmd = strtok(NULL, " ")) != NULL) {
+                    printf("h[elp]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
+                    break;
+                }
+
+                addHistory(input);
                 help();
                 break;
-            case 0x01:
+            case 0x01:  // d[ir]
+                if ((cmd = strtok(NULL, " ")) != NULL) {
+                    printf("d[ir]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
+                    break;
+                }
                 printf("0x01\n");
                 break;
-            case 0x02:
+            case 0x02:  // hi[story]
+                if ((cmd = strtok(NULL, " ")) != NULL) {
+                    printf("hi[story]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
+                    break;
+                }
+
+                addHistory(input);
+                history();
                 printf("0x02\n");
                 break;
-            case 0x03:
+            case 0x03:  // q[uit]
                 printf("0x03\n");
                 break;
-            case 0x10: case 0x11: case 0x12:
+            case 0x10: case 0x11: case 0x12:    // du[mp] [start, end]
                 printf("0x10\n");
                 break;
-            case 0x13: case 0x14:
+            case 0x13: case 0x14:   // e[dit] address, value
                 printf("0x13\n");
                 break;
-            case 0x15:
+            case 0x15:  // f[ill] start, end, value
                 printf("0x15\n");
                 break;
-            case 0x16:
+            case 0x16:  // reset
                 printf("0x16\n");
                 break;
-            case 0x20:
+            case 0x20:  // opcode mnemonic
                 printf("0x20\n");
                 break;
-            case 0x21:
+            case 0x21:  // opcodelist
                 printf("0x21\n");
                 break;
 
             case 0x30:
                 printf("command not found: %s\n", cmd);
-                printf("sicsim> ");
-                continue;
+                break;
         }
 
 
@@ -74,7 +91,6 @@ int main() {
 
 void init() {
     // allocate memories
-
 
     printf("sicsim> ");
 }

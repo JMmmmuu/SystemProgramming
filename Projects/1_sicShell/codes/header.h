@@ -15,10 +15,11 @@
 
 // STRUCTUREs
 typedef struct hist {
+    int num;
     char* hist;
     struct hist* link;
 } HISTORY;
-
+HISTORY* hisHead;
 
 
 
