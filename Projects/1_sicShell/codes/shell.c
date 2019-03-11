@@ -28,13 +28,13 @@ void addHistory(char* input) {
     HISTORY* pMove;
     for (pMove = hisHead; pMove->link; pMove = pMove->link) ;
     pMove->link = pNew;
-    pNew->num = pMove->num;
+    pNew->num = pMove->num + 1;
 }
 
 void history() {
     HISTORY* pMove;
     for (pMove = hisHead; pMove; pMove = pMove->link) {
-        printf("%d\t%s\n", pMove->num, pMove->hist);
+        printf("\t%d\t%s\n", pMove->num, pMove->hist);
     }
 }
 

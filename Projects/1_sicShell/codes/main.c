@@ -36,12 +36,13 @@ int main() {
                 addHistory(input);
                 help();
                 break;
-            case 0x01:  // d[ir]
+            case 0x01:  // d[ir]        done
                 if ((cmd = strtok(NULL, " ")) != NULL) {
                     printf("d[ir]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
                     break;
                 }
 
+                addHistory(input);
                 struct dirent *dirEntry;      // directory entry Pointer
                 struct stat fileInfo;
                 DIR* dr = opendir(".");
@@ -63,7 +64,6 @@ int main() {
 
                 addHistory(input);
                 history();
-                printf("0x02\n");
                 break;
             case 0x03:  // q[uit]       done
                 if ((cmd = strtok(NULL, " ")) != NULL) {
@@ -89,6 +89,12 @@ int main() {
                 printf("0x20\n");
                 break;
             case 0x21:  // opcodelist
+                if ((cmd = strtok(NULL, " ")) != NULL) {
+                        printf("opcodelist: '%s' is not a correct option. See 'h[elp]'\n", cmd);
+                        break;
+                }
+
+                addHistory(input);
                 printf("0x21\n");
                 break;
 
