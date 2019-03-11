@@ -1,17 +1,17 @@
 /*************************************************
- *************************************************
+ ************** System Programming ***************
  ******************** Yuseok *********************
  ******************** 190000 *********************
  *************************************************/
 #include "header.h"
 
 void help() {
-    printf("h[elp]\nd[ir]\nq[uit]\nhi[story]\n");
-    printf("du[mp] [start, end]\n");
-    printf("e[dit] address, value\n");
-    printf("f[ill] start, end, value\n");
-    printf("reset\n");
-    printf("opcode mnemonic\nopcodelist\n");
+    printf("\t\th[elp]\n\t\td[ir]\n\t\tq[uit]\n\t\thi[story]\n");
+    printf("\t\tdu[mp] [start, end]\n");
+    printf("\t\te[dit] address, value\n");
+    printf("\t\tf[ill] start, end, value\n");
+    printf("\t\treset\n");
+    printf("\t\topcode mnemonic\n\t\topcodelist\n");
 }
 
 void addHistory(char* input) {

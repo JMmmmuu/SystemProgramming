@@ -27,7 +27,7 @@ int main() {
         char* cmd = strtok(input_formed, " ");
         switch (findCmd(cmd)) {
             
-            case 0x00:  // h[elp]
+            case 0x00:  // h[elp]       done
                 if ((cmd = strtok(NULL, " ")) != NULL) {
                     printf("h[elp]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
                     break;
@@ -41,9 +41,21 @@ int main() {
                     printf("d[ir]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
                     break;
                 }
-                printf("0x01\n");
+
+                struct dirent *dirEntry;      // directory entry Pointer
+                struct stat fileInfo;
+                DIR* dr = opendir(".");
+                while ( (dirEntry = readdir(dr)) != NULL) {
+                    printf("\t\t%s", dirEntry->d_name);
+                    stat(dirEntry->d_name, &fileInfo);
+                    if (S_ISDIR(fileInfo.st_mode)) printf("/");
+                    if (fileInfo.st_mode & S_IXUSR) printf("*");
+                    printf("\n");
+                }
+
+                closedir(dr);
                 break;
-            case 0x02:  // hi[story]
+            case 0x02:  // hi[story]    done
                 if ((cmd = strtok(NULL, " ")) != NULL) {
                     printf("hi[story]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
                     break;
@@ -53,7 +65,7 @@ int main() {
                 history();
                 printf("0x02\n");
                 break;
-            case 0x03:  // q[uit]
+            case 0x03:  // q[uit]       done
                 if ((cmd = strtok(NULL, " ")) != NULL) {
                     printf("q[uit]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
                     break;
@@ -96,6 +108,7 @@ int main() {
 void init() {
     // allocate memories
 
+    hisHead = NULL;
     printf("sicsim> ");
 }
 
@@ -121,11 +134,11 @@ int findCmd(char* cmd) {
 char* removeSpace(char* input) {
     // remove Spaces at front & at the end
     int i;
-    for (i = 0; input[i] == ' '; i++) ;
+    for (i = 0; input[i] == ' ' || input[i] == '\t'; i++) ;
     input = input + i;
  
     i = 0;
-    while (input[strlen(input) - i - 1] == ' ' || input[strlen(input) - i - 1] == '\n') i++;
+    while (input[strlen(input) - i - 1] == ' ' || input[strlen(input) - i - 1] == '\n' || input[strlen(input) - i - 1] == '\t') i++;
     input[strlen(input) - i] = '\0';
 
     return input;
