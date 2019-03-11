@@ -20,15 +20,14 @@ int main() {
 
         // refine into form
         strcpy(input_formed, removeSpace(input));
-        printf("JUST : %s\n", input);
-        printf("FORM : %s\n", input_formed);
+        //printf("JUST : %s\n", input);
+        //printf("FORM : %s\n", input_formed);
 
 
         char* cmd = strtok(input_formed, " ");
-        printf("%x\n", findCmd(cmd));
         switch (findCmd(cmd)) {
-            case 0x00:
-                printf("0x00\n");
+            case 0x00:  // help
+                help();
                 break;
             case 0x01:
                 printf("0x01\n");
@@ -59,6 +58,8 @@ int main() {
                 break;
 
             case 0x30:
+                printf("command not found: %s\n", cmd);
+                printf("sicsim> ");
                 continue;
         }
 
