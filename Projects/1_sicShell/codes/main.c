@@ -113,8 +113,9 @@ int main() {
 
 void init() {
     // allocate memories
-
     hisHead = NULL;
+    opTable = (opNode**)malloc(20 * sizeof(opNode*));
+
     printf("sicsim> ");
 }
 

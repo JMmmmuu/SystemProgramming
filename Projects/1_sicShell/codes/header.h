@@ -20,11 +20,18 @@ typedef struct hist {
     char* hist;
     struct hist* link;
 } HISTORY;
-HISTORY* hisHead;
 
-
+typedef struct opT {
+    int opcode;
+    char operation[7];
+    int format;
+    struct opT* link;
+} opNode;
 
 // GLOBAL VARIANTs
+HISTORY* hisHead;
+opNode** opTable;
+
 
 
 
@@ -64,3 +71,5 @@ void reset();       // 0x16
  **************************************************/
 void opcode();      // 0x20
 void opcodeList();  // 0x21
+
+void readOpTable();

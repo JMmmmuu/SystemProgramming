@@ -48,5 +48,15 @@ void quit() {
         free(pFree);
     }
 
+    opNode* opFree, *optmp;
+    for (int i = 0; i < 20; i++) {
+        optmp = opTable[i];
+        while (optmp) {
+            opFree = optmp;
+            optmp = optmp->link;
+            free(opFree);
+        }
+    }
+
     printf("exit shell\n");
 }
