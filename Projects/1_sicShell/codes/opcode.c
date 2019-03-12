@@ -27,15 +27,11 @@ int readOpTable() {
         printf("wrong input file\n");
         return 1;
     }
-    
-
-
-
 
     int i = 0;
     int opcode;
     char operation[7];
-    char formatStr[5];
+    char formatStr[4];
 
     while (fscanf(fp, "%X %s %s\n", &opcode, operation, formatStr) != EOF) {
         i = i % 20;

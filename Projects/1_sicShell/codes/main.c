@@ -23,7 +23,27 @@ int main() {
         //printf("FORM : %s\n", input_formed);
 
 
+        printf("1_%s\n", input_formed);
         char* cmd = strtok(input_formed, " ");
+
+        /*
+        printf("cmd: %s\n", cmd);
+        char* tmp = input_formed + strlen(cmd) + 1;
+        printf("2_%s\n", tmp);
+        char* op1 = strtok(NULL, ",");
+        if (op1) {
+            printf("3_%s\n", removeSpace(op1));
+            char* op2 = strtok(NULL, ",");
+            if (op2) {
+                printf("4_%s\n", removeSpace(op2));
+            }
+        }*/
+        //char* op = strtok(NULL, "\0");
+        //printf("op: %s\n", op);
+
+
+
+
         switch (findCmd(cmd)) {
             
             case 0x00:  // h[elp]       done
@@ -77,19 +97,32 @@ int main() {
             case 0x10: case 0x11: case 0x12:    // du[mp] [start, end]
                 printf("0x10\n");
                 break;
-            case 0x13: case 0x14:   // e[dit] address, value
+            case 0x13: case 0x14:               // e[dit] address, value
                 printf("0x13\n");
                 break;
-            case 0x15:  // f[ill] start, end, value
+            case 0x15:          // f[ill] start, end, value
+                //char* start = strtok(NULL, ",");
+                //char* end = strtok(NULL, ",");
+
+
                 printf("0x15\n");
                 break;
-            case 0x16:  // reset
-                printf("0x16\n");
+            case 0x16:          // reset
+                if ((cmd = strtok(NULL, " ")) != NULL) {
+                    printf("reset: '%s' is not a correct option. See 'h[elp]'\n", cmd);
+                    break;
+                }
+
+                addHistory(input);
+                reset();
                 break;
             case 0x20:  // opcode mnemonic
+                printf("%s\n", input_formed);
+                cmd = strtok(NULL, " ");
+                printf("%s\n", cmd);
                 printf("0x20\n");
                 break;
-            case 0x21:  // opcodelist
+            case 0x21:  // opcodelist       done
                 if ((cmd = strtok(NULL, " ")) != NULL) {
                         printf("opcodelist: '%s' is not a correct option. See 'h[elp]'\n", cmd);
                         break;
@@ -103,7 +136,6 @@ int main() {
                 printf("command not found: %s\n", cmd);
                 break;
         }
-
 
         printf("sicsim> ");
 

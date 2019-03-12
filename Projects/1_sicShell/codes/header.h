@@ -50,10 +50,10 @@ char* removeSpace(char*);
 /**************************************************
  ***************** SHELL COMMANDS *****************
  **************************************************/
-void help();        // 0x00
-void directory();   // 0x01
-void history();     // 0x02
-void quit();        // 0x03
+void help();                    // 0x00
+void directory();               // 0x01
+void history();                 // 0x02
+void quit();                    // 0x03
 
 void addHistory(char*);
 
@@ -62,16 +62,18 @@ void addHistory(char*);
 /**************************************************
  **************** MEMORY COMMANDS *****************
  **************************************************/
-void dump(char* start, char* end);        // 0x10 ~ 0x12
-void edit(char* address, char* value);        // 0x13 ~ 0x14
-void fill(char* start, char* end, char* value);        // 0x15
-void reset();       // 0x16
+int dump(char* start, char* end, int type);                  // 0x10 ~ 0x12
+int edit(char* address, char value);              // 0x13 ~ 0x14
+int fill(char* start, char* end, char value);     // 0x15
+void reset();                                       // 0x16
 
+int validAddr(char* addr);
+int validAddrRange(char* start, char* end);
 
 /**************************************************
  ************* OPCODE TABLE COMMANDS **************
  **************************************************/
-void opcode();      // 0x20
-void opcodeList();  // 0x21
+void opcode();                  // 0x20
+void opcodeList();              // 0x21
 
 int readOpTable();
