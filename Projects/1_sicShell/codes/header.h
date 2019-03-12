@@ -13,6 +13,7 @@
 // MACROs
 #define MEMORY_SIZE 1<<10
 #define COMMAND_SIZE 30
+#define OPCODE "opcode.txt"
 
 // STRUCTUREs
 typedef struct hist {
@@ -31,6 +32,7 @@ typedef struct opT {
 // GLOBAL VARIANTs
 HISTORY* hisHead;
 opNode** opTable;
+char* MEMORY;
 
 
 
@@ -60,9 +62,9 @@ void addHistory(char*);
 /**************************************************
  **************** MEMORY COMMANDS *****************
  **************************************************/
-void dump();        // 0x10 ~ 0x12
-void edit();        // 0x13 ~ 0x14
-void fill();        // 0x15
+void dump(char* start, char* end);        // 0x10 ~ 0x12
+void edit(char* address, char* value);        // 0x13 ~ 0x14
+void fill(char* start, char* end, char* value);        // 0x15
 void reset();       // 0x16
 
 
@@ -72,4 +74,4 @@ void reset();       // 0x16
 void opcode();      // 0x20
 void opcodeList();  // 0x21
 
-void readOpTable();
+int readOpTable();

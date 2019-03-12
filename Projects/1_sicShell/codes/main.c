@@ -16,7 +16,6 @@ int main() {
         // get command
         fflush(stdin);
         fgets(input, COMMAND_SIZE, stdin);
-        //strcpy(input_formed, input);
 
         // refine into form
         strcpy(input_formed, removeSpace(input));
@@ -71,6 +70,8 @@ int main() {
                     break;
                 }
 
+                free(input);
+                free(input_formed);
                 quit();
                 return 0;
             case 0x10: case 0x11: case 0x12:    // du[mp] [start, end]
@@ -95,7 +96,7 @@ int main() {
                 }
 
                 addHistory(input);
-                printf("0x21\n");
+                opcodeList();
                 break;
 
             case 0x30:
@@ -114,7 +115,12 @@ int main() {
 void init() {
     // allocate memories
     hisHead = NULL;
+
     opTable = (opNode**)malloc(20 * sizeof(opNode*));
+    for (int i = 0; i < 20; i++)
+        opTable[i] = NULL;
+
+    MEMORY = malloc(MEMORY_SIZE);
 
     printf("sicsim> ");
 }
