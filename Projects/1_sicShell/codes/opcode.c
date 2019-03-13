@@ -5,6 +5,12 @@
  *************************************************/
 #include "header.h"
 
+int opcode(char* mnemonic) {
+
+
+
+    return 1;
+}
 void opcodeList() {
     if (readOpTable()) return ;
 
@@ -28,14 +34,12 @@ int readOpTable() {
         return 1;
     }
 
-    int i = 0;
+    int idx;
     int opcode;
     char operation[7];
     char formatStr[4];
 
     while (fscanf(fp, "%X %s %s\n", &opcode, operation, formatStr) != EOF) {
-        i = i % 20;
-
         opNode* pNew = (opNode*)malloc(sizeof(opNode));
         pNew->opcode = opcode;
         strcpy(pNew->operation, operation);
@@ -45,16 +49,23 @@ int readOpTable() {
         else pNew->format = 0;
         pNew->link = NULL;
 
-        if (!opTable[i])
-            opTable[i] = pNew;
+        idx = hashFunction(operation);
+        if (!opTable[idx])
+            opTable[idx] = pNew;
         else {
             opNode* pMove;
         
-            for (pMove = opTable[i]; pMove->link; pMove = pMove->link) ;
+            for (pMove = opTable[idx]; pMove->link; pMove = pMove->link) ;
             pMove->link = pNew;
         }
-
-        i++;
     }
     return 0;
+}
+
+int hashFunction(char* op) {
+    int idx = 0;
+    for (int i = 0; i < (int)strlen(op); i++)
+        idx += op[i];
+
+    return idx % 20;
 }
