@@ -12,6 +12,7 @@ int main() {
 
     
     while (1) {
+        printf("sicsim> ");
         // allocate memories
         input = (char*)malloc(COMMAND_SIZE * sizeof(char));
         input_formed = (char*)malloc(COMMAND_SIZE * sizeof(char));
@@ -19,11 +20,23 @@ int main() {
         // get input
         fflush(stdin);
         fgets(input, COMMAND_SIZE, stdin);
+        if (strlen(input) > COMMAND_SIZE) {
+            printf("Too long command!\n");
+            continue;
+        }
+
 
         // remove white spaces 
         strcpy(input_formed, removeSpace(input));
+        //printf("%s\n", input_formed);
 
         char* cmd = strtok(input_formed, " \t");
+        char* params;
+        int res;
+        int start, end, addr, val;
+        //char* left = removeSpace(strtok(NULL, "\0"));
+        //printf("%s\n", cmd);
+        //printf("%s\n", cmd+strlen(cmd) + 1);
 
         /*
         printf("cmd: %s\n", cmd);
@@ -41,13 +54,11 @@ int main() {
         //printf("op: %s\n", op);
 
 
+        // if input is white spaces, continue;
         if (cmd) {
-
-
             switch (findCmd(cmd)) {
-
                 case 0x00:  // h[elp]       done
-                    if ( !(cmd = strtok(NULL, " ")) ) {
+                    if ( (cmd = strtok(NULL, " ")) ) {
                         printf("h[elp]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
                         break;
                     }
@@ -56,7 +67,7 @@ int main() {
                     help();
                     break;
                 case 0x01:  // d[ir]        done
-                    if ( !(cmd = strtok(NULL, " ")) ) {
+                    if ( (cmd = strtok(NULL, " ")) ) {
                         printf("d[ir]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
                         break;
                     }
@@ -76,7 +87,7 @@ int main() {
                     closedir(dr);
                     break;
                 case 0x02:  // hi[story]    done
-                    if ( !(cmd = strtok(NULL, " ")) ) {
+                    if ( (cmd = strtok(NULL, " ")) ) {
                         printf("hi[story]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
                         break;
                     }
@@ -85,7 +96,7 @@ int main() {
                     history();
                     break;
                 case 0x03:  // q[uit]       done
-                    if ( !(cmd = strtok(NULL, " ")) ) {
+                    if ( (cmd = strtok(NULL, " ")) ) {
                         printf("q[uit]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
                         break;
                     }
@@ -95,17 +106,68 @@ int main() {
                     quit();
                     return 0;
                 case 0x10: case 0x11: case 0x12:    // du[mp] [start, end]
-                    printf("0x10\n");
+                    params = strtok(NULL, "\0");
+                    if (!params) {
+                        // dump 10 lines
+                        addHistory(input);
+
+                        break;
+                    }
+                    
+                    res = scanf(params, " %x , %x", &start, &end);
+                    if (res == 1) {
+                        // if there's comma, print error
+                        
+                        // else, dump from start
+                        addHistory(input);
+
+                        break;
+                    }
+                    if (res == 2) {
+                        // if there's another char except parameters, print error
+                        
+                        // else, dump from start to end
+                        addHistory(input);
+
+                        break;
+                    }
                     break;
                 case 0x13: case 0x14:               // e[dit] address, value
-                    printf("0x13\n");
+                    params = strtok(NULL, "\0");
+                    if (!params) {
+                        // No parameters at all
+                        printf("Not enough parameters. See 'h[elp]'\n");
+                        break;
+                    }
+
+                    res = scanf(params, " %x , %x", &addr, &val);
+                    if (res != 2) {
+                        // Not enough parameters
+                        printf("Not enough parameters. See 'h[elp]'\n");
+                        break;
+                    }
+
+                    addHistory(input);
                     break;
                 case 0x15:          // f[ill] start, end, value
-                    //char* start = strtok(NULL, ",");
-                    //char* end = strtok(NULL, ",");
+                    params = strtok(NULL, "\0");
+                    if (!params) {
+                        // No parameters at all
+                        printf("Not enough parameters. See 'h[elp]'\n");
+                        break;
+                    }
 
+                    printf("%s\n", params);
+                    res = sscanf(params, " %x , %x , %x", &start, &end, &val);
+                    if (res != 3) {
+                        // Not enough parameters
+                        printf("Not enough parameters. See 'h[elp]'\n");
+                        break;
+                    }
 
-                    printf("0x15\n");
+                    addHistory(input);
+                    
+
                     break;
                 case 0x16:          // reset
                     if ( !(cmd = strtok(NULL, " ")) ) {
@@ -137,10 +199,9 @@ int main() {
                     break;
             }
         }
+
         free(input);
         free(input_formed);
-        printf("sicsim> ");
-
     }
 
     return 0;
@@ -155,8 +216,6 @@ void init() {
         opTable[i] = NULL;
 
     MEMORY = malloc(MEMORY_SIZE);
-
-    printf("sicsim> ");
 }
 
 int findCmd(char* cmd) {

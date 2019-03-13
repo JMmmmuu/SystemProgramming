@@ -12,7 +12,7 @@
 
 // MACROs
 #define MEMORY_SIZE 1<<10
-#define COMMAND_SIZE 30
+#define COMMAND_SIZE 100
 #define OPCODE "opcode.txt"
 
 // STRUCTUREs
