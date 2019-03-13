@@ -7,24 +7,23 @@
 
 int main() {
     init();
-    char* input = (char*)malloc(COMMAND_SIZE * sizeof(char));
-    char* input_formed = (char*)malloc(COMMAND_SIZE * sizeof(char));
-    //int cmdNum;
+    char* input;
+    char* input_formed;
 
     
     while (1) {
-        // get command
+        // allocate memories
+        input = (char*)malloc(COMMAND_SIZE * sizeof(char));
+        input_formed = (char*)malloc(COMMAND_SIZE * sizeof(char));
+
+        // get input
         fflush(stdin);
         fgets(input, COMMAND_SIZE, stdin);
 
-        // refine into form
+        // remove white spaces 
         strcpy(input_formed, removeSpace(input));
-        //printf("JUST : %s\n", input);
-        //printf("FORM : %s\n", input_formed);
 
-
-        printf("1_%s\n", input_formed);
-        char* cmd = strtok(input_formed, " ");
+        char* cmd = strtok(input_formed, " \t");
 
         /*
         printf("cmd: %s\n", cmd);
@@ -42,101 +41,104 @@ int main() {
         //printf("op: %s\n", op);
 
 
+        if (cmd) {
 
 
-        switch (findCmd(cmd)) {
-            
-            case 0x00:  // h[elp]       done
-                if ((cmd = strtok(NULL, " ")) != NULL) {
-                    printf("h[elp]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
+            switch (findCmd(cmd)) {
+
+                case 0x00:  // h[elp]       done
+                    if ( !(cmd = strtok(NULL, " ")) ) {
+                        printf("h[elp]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
+                        break;
+                    }
+
+                    addHistory(input);
+                    help();
                     break;
-                }
+                case 0x01:  // d[ir]        done
+                    if ( !(cmd = strtok(NULL, " ")) ) {
+                        printf("d[ir]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
+                        break;
+                    }
 
-                addHistory(input);
-                help();
-                break;
-            case 0x01:  // d[ir]        done
-                if ((cmd = strtok(NULL, " ")) != NULL) {
-                    printf("d[ir]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
+                    addHistory(input);
+                    struct dirent *dirEntry;      // directory entry Pointer
+                    struct stat fileInfo;
+                    DIR* dr = opendir(".");
+                    while ( (dirEntry = readdir(dr)) != NULL) {
+                        printf("\t\t%s", dirEntry->d_name);
+                        stat(dirEntry->d_name, &fileInfo);
+                        if (S_ISDIR(fileInfo.st_mode)) printf("/");
+                        else if (fileInfo.st_mode & S_IXUSR) printf("*");
+                        printf("\n");
+                    }
+
+                    closedir(dr);
                     break;
-                }
+                case 0x02:  // hi[story]    done
+                    if ( !(cmd = strtok(NULL, " ")) ) {
+                        printf("hi[story]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
+                        break;
+                    }
 
-                addHistory(input);
-                struct dirent *dirEntry;      // directory entry Pointer
-                struct stat fileInfo;
-                DIR* dr = opendir(".");
-                while ( (dirEntry = readdir(dr)) != NULL) {
-                    printf("\t\t%s", dirEntry->d_name);
-                    stat(dirEntry->d_name, &fileInfo);
-                    if (S_ISDIR(fileInfo.st_mode)) printf("/");
-                    else if (fileInfo.st_mode & S_IXUSR) printf("*");
-                    printf("\n");
-                }
-
-                closedir(dr);
-                break;
-            case 0x02:  // hi[story]    done
-                if ((cmd = strtok(NULL, " ")) != NULL) {
-                    printf("hi[story]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
+                    addHistory(input);
+                    history();
                     break;
-                }
+                case 0x03:  // q[uit]       done
+                    if ( !(cmd = strtok(NULL, " ")) ) {
+                        printf("q[uit]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
+                        break;
+                    }
 
-                addHistory(input);
-                history();
-                break;
-            case 0x03:  // q[uit]       done
-                if ((cmd = strtok(NULL, " ")) != NULL) {
-                    printf("q[uit]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
+                    free(input);
+                    free(input_formed);
+                    quit();
+                    return 0;
+                case 0x10: case 0x11: case 0x12:    // du[mp] [start, end]
+                    printf("0x10\n");
                     break;
-                }
-
-                free(input);
-                free(input_formed);
-                quit();
-                return 0;
-            case 0x10: case 0x11: case 0x12:    // du[mp] [start, end]
-                printf("0x10\n");
-                break;
-            case 0x13: case 0x14:               // e[dit] address, value
-                printf("0x13\n");
-                break;
-            case 0x15:          // f[ill] start, end, value
-                //char* start = strtok(NULL, ",");
-                //char* end = strtok(NULL, ",");
-
-
-                printf("0x15\n");
-                break;
-            case 0x16:          // reset
-                if ((cmd = strtok(NULL, " ")) != NULL) {
-                    printf("reset: '%s' is not a correct option. See 'h[elp]'\n", cmd);
+                case 0x13: case 0x14:               // e[dit] address, value
+                    printf("0x13\n");
                     break;
-                }
+                case 0x15:          // f[ill] start, end, value
+                    //char* start = strtok(NULL, ",");
+                    //char* end = strtok(NULL, ",");
 
-                addHistory(input);
-                reset();
-                break;
-            case 0x20:  // opcode mnemonic
-                printf("%s\n", input_formed);
-                cmd = strtok(NULL, " ");
-                printf("%s\n", cmd);
-                printf("0x20\n");
-                break;
-            case 0x21:  // opcodelist       done
-                if ((cmd = strtok(NULL, " ")) != NULL) {
+
+                    printf("0x15\n");
+                    break;
+                case 0x16:          // reset
+                    if ( !(cmd = strtok(NULL, " ")) ) {
+                        printf("reset: '%s' is not a correct option. See 'h[elp]'\n", cmd);
+                        break;
+                    }
+
+                    addHistory(input);
+                    reset();
+                    break;
+                case 0x20:  // opcode mnemonic
+                    printf("%s\n", input_formed);
+                    cmd = strtok(NULL, " ");
+                    printf("%s\n", cmd);
+                    printf("0x20\n");
+                    break;
+                case 0x21:  // opcodelist       done
+                    if ( !(cmd = strtok(NULL, " ")) ) {
                         printf("opcodelist: '%s' is not a correct option. See 'h[elp]'\n", cmd);
                         break;
-                }
+                    }
 
-                addHistory(input);
-                opcodeList();
-                break;
+                    addHistory(input);
+                    opcodeList();
+                    break;
 
-            case 0x30:
-                printf("command not found: %s\n", cmd);
-                break;
+                case 0x30:
+                    printf("command not found: %s\n", cmd);
+                    break;
+            }
         }
-
+        free(input);
+        free(input_formed);
         printf("sicsim> ");
 
     }
@@ -179,11 +181,11 @@ int findCmd(char* cmd) {
 char* removeSpace(char* input) {
     // remove Spaces at front & at the end
     int i;
-    for (i = 0; input[i] == ' ' || input[i] == '\t'; i++) ;
+    for (i = 0; input[i] == ' ' || input[i] == '\t' || input[i] == '\n'; i++) ;
     input = input + i;
  
     i = 0;
-    while (input[strlen(input) - i - 1] == ' ' || input[strlen(input) - i - 1] == '\n' || input[strlen(input) - i - 1] == '\t') i++;
+    while (input[strlen(input) - 1 - i] == ' ' || input[strlen(input) - 1 - i] == '\n' || input[strlen(input) - 1 - i] == '\t') i++;
     input[strlen(input) - i] = '\0';
 
     return input;
