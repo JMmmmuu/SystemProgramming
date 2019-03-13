@@ -73,7 +73,8 @@ int validAddrRange(char* start, char* end);
 /**************************************************
  ************* OPCODE TABLE COMMANDS **************
  **************************************************/
-void opcode();                  // 0x20
+int opcode(char* mnemonic);                  // 0x20
 void opcodeList();              // 0x21
 
 int readOpTable();
+int hashFunction(char* op);

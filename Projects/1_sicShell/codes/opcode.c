@@ -6,13 +6,21 @@
 #include "header.h"
 
 int opcode(char* mnemonic) {
+    // if found correct mnemonic, return 1, else return 0
+    int idx = hashFunction(mnemonic);
+    opNode* pMove;
 
-
-
-    return 1;
+    for (pMove = opTable[idx]; pMove; pMove = pMove->link) {
+        if (strcmp(pMove->operation, mnemonic) == 0) {
+            printf("opcode is %X\n", pMove->opcode);
+            return 1;
+        }
+    }
+    printf("Wrong mnemonic\n");
+    return 0;
 }
 void opcodeList() {
-    if (readOpTable()) return ;
+    //if (readOpTable()) return ;
 
     opNode* pMove;
     for (int i = 0; i < 20; i++) {
@@ -31,7 +39,7 @@ int readOpTable() {
     FILE* fp = fopen(OPCODE, "r");
     if (!fp) {
         printf("wrong input file\n");
-        return 1;
+        return 0;
     }
 
     int idx;
@@ -59,7 +67,7 @@ int readOpTable() {
             pMove->link = pNew;
         }
     }
-    return 0;
+    return 1;
 }
 
 int hashFunction(char* op) {

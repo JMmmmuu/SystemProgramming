@@ -20,7 +20,7 @@ int main() {
         // get input
         fflush(stdin);
         fgets(input, COMMAND_SIZE, stdin);
-        if (strlen(input) > COMMAND_SIZE) {
+        if ((int)strlen(input) > COMMAND_SIZE) {
             printf("Too long command!\n");
             continue;
         }
@@ -34,25 +34,6 @@ int main() {
         char* params;
         int res;
         int start, end, addr, val;
-        //char* left = removeSpace(strtok(NULL, "\0"));
-        //printf("%s\n", cmd);
-        //printf("%s\n", cmd+strlen(cmd) + 1);
-
-        /*
-        printf("cmd: %s\n", cmd);
-        char* tmp = input_formed + strlen(cmd) + 1;
-        printf("2_%s\n", tmp);
-        char* op1 = strtok(NULL, ",");
-        if (op1) {
-            printf("3_%s\n", removeSpace(op1));
-            char* op2 = strtok(NULL, ",");
-            if (op2) {
-                printf("4_%s\n", removeSpace(op2));
-            }
-        }*/
-        //char* op = strtok(NULL, "\0");
-        //printf("op: %s\n", op);
-
 
         // if input is white spaces, continue;
         if (cmd) {
@@ -170,7 +151,7 @@ int main() {
 
                     break;
                 case 0x16:          // reset
-                    if ( !(cmd = strtok(NULL, " ")) ) {
+                    if ( (cmd = strtok(NULL, " ")) ) {
                         printf("reset: '%s' is not a correct option. See 'h[elp]'\n", cmd);
                         break;
                     }
@@ -178,14 +159,21 @@ int main() {
                     addHistory(input);
                     reset();
                     break;
-                case 0x20:  // opcode mnemonic
-                    printf("%s\n", input_formed);
-                    cmd = strtok(NULL, " ");
-                    printf("%s\n", cmd);
-                    printf("0x20\n");
+                case 0x20:  // opcode mnemonic      //done
+                    params = strtok(NULL, "\0");
+                    if (!params) {
+                        // no mnemonic
+                        printf("Invalid Syntax. See 'h[elp]'\n");
+                        break;
+                    }
+
+                    if (opcode(removeSpace(params))) {
+                        addHistory(input);
+                    }
+
                     break;
                 case 0x21:  // opcodelist       done
-                    if ( !(cmd = strtok(NULL, " ")) ) {
+                    if ( (cmd = strtok(NULL, " ")) ) {
                         printf("opcodelist: '%s' is not a correct option. See 'h[elp]'\n", cmd);
                         break;
                     }
@@ -216,6 +204,8 @@ void init() {
         opTable[i] = NULL;
 
     MEMORY = malloc(MEMORY_SIZE);
+
+    readOpTable();
 }
 
 int findCmd(char* cmd) {
