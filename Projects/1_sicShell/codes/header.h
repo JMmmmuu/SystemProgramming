@@ -69,6 +69,8 @@ void reset();                                       // 0x16
 
 int validAddr(char* addr);
 int validAddrRange(char* start, char* end);
+int strToHex(char* param);
+int isHex(char ch);
 
 /**************************************************
  ************* OPCODE TABLE COMMANDS **************

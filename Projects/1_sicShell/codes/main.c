@@ -135,8 +135,9 @@ int main() {
                     //}
                     //addHistory(input);
                     printf("addr: %s val: %s\n", addr, val);
-                    printf("sizeof(addr): %lu sizeof(val): %lu\n", sizeof(addr), sizeof(val));
-                    printf("strlen(addr): %lu strlen(val): %lu\n", strlen(addr), strlen(val));
+                    //printf("sizeof(addr): %lu sizeof(val): %lu\n", sizeof(addr), sizeof(val));
+                    //printf("strlen(addr): %lu strlen(val): %lu\n", strlen(addr), strlen(val));
+                    edit(addr, val);
 
                     break;
 
