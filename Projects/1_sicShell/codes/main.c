@@ -32,8 +32,7 @@ int main() {
 
         char* cmd = strtok(input_formed, " \t");
         char* params;
-        int res;
-        int start, end, addr, val;
+        char* start, *end, *addr, *val;
 
         // if input is white spaces, continue;
         if (cmd) {
@@ -89,60 +88,77 @@ int main() {
                 case 0x10: case 0x11: case 0x12:    // du[mp] [start, end]
                     params = strtok(NULL, "\0");
                     if (!params) {
-                        // dump 10 lines
+                        // "dump"
                         addHistory(input);
 
                         break;
                     }
+
+                    start = removeSpace(strtok(params, ","));
+                    if (!start) {
+                        // "dump start"
+
+                        break;
+                    }
+
+                    end = removeSpace(strtok(NULL, "\0"));
+                    if (!end) {
+                        // "dump start, "
+                        printf("Syntax Error. See 'h[elp]'\n");
+                        break;
+                    }
+
+                    // "dump start, end"
                     
-                    res = scanf(params, " %x , %x", &start, &end);
-                    if (res == 1) {
-                        // if there's comma, print error
-                        
-                        // else, dump from start
-                        addHistory(input);
 
-                        break;
-                    }
-                    if (res == 2) {
-                        // if there's another char except parameters, print error
-                        
-                        // else, dump from start to end
-                        addHistory(input);
 
-                        break;
-                    }
+                    
                     break;
                 case 0x13: case 0x14:               // e[dit] address, value
-                    params = strtok(NULL, "\0");
-                    if (!params) {
-                        // No parameters at all
-                        printf("Not enough parameters. See 'h[elp]'\n");
+                    addr = removeSpace(strtok(NULL, ","));
+                    if (!addr) {
+                        // no comma
+                        printf("Syntax Error. See 'h[elp]'\n");
                         break;
                     }
 
-                    res = scanf(params, " %x , %x", &addr, &val);
-                    if (res != 2) {
-                        // Not enough parameters
-                        printf("Not enough parameters. See 'h[elp]'\n");
+                    val = removeSpace(strtok(NULL, "\0"));
+                    if (!val) {
+                        // no value
+                        printf("Syntax Error. See 'h[elp]'\n");
                         break;
                     }
+                    //if (!edit(addr, val)) {
+                        // wrong syntax
+                        
+                        //break;
+                    //}
+                    //addHistory(input);
+                    printf("addr: %s val: %s\n", addr, val);
+                    printf("sizeof(addr): %lu sizeof(val): %lu\n", sizeof(addr), sizeof(val));
+                    printf("strlen(addr): %lu strlen(val): %lu\n", strlen(addr), strlen(val));
 
-                    addHistory(input);
                     break;
+
                 case 0x15:          // f[ill] start, end, value
-                    params = strtok(NULL, "\0");
-                    if (!params) {
+                    start = removeSpace(strtok(NULL, ","));
+                    if (!start) {
                         // No parameters at all
-                        printf("Not enough parameters. See 'h[elp]'\n");
+                        printf("Syntax Error. See 'h[elp]'\n");
                         break;
                     }
 
-                    printf("%s\n", params);
-                    res = sscanf(params, " %x , %x , %x", &start, &end, &val);
-                    if (res != 3) {
-                        // Not enough parameters
-                        printf("Not enough parameters. See 'h[elp]'\n");
+                    end = removeSpace(strtok(NULL, ","));
+                    if (!end) {
+                        // No parameters at all
+                        printf("Syntax Error. See 'h[elp]'\n");
+                        break;
+                    }
+
+                    val = removeSpace(strtok(NULL, "\0"));
+                    if (!val) {
+                        // No parameters at all
+                        printf("Syntax Error. See 'h[elp]'\n");
                         break;
                     }
 

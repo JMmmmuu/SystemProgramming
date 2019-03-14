@@ -63,8 +63,8 @@ void addHistory(char*);
  **************** MEMORY COMMANDS *****************
  **************************************************/
 int dump(char* start, char* end, int type);                  // 0x10 ~ 0x12
-int edit(char* address, char value);              // 0x13 ~ 0x14
-int fill(char* start, char* end, char value);     // 0x15
+int edit(char* address, char *value);              // 0x13 ~ 0x14
+int fill(char* start, char* end, char *value);     // 0x15
 void reset();                                       // 0x16
 
 int validAddr(char* addr);
