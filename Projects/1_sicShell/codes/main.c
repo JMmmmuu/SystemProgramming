@@ -128,16 +128,14 @@ int main() {
                         printf("Syntax Error. See 'h[elp]'\n");
                         break;
                     }
-                    //if (!edit(addr, val)) {
+
+                    if (!edit(addr, val)) {
                         // wrong syntax
-                        
-                        //break;
-                    //}
-                    //addHistory(input);
-                    printf("addr: %s val: %s\n", addr, val);
-                    //printf("sizeof(addr): %lu sizeof(val): %lu\n", sizeof(addr), sizeof(val));
-                    //printf("strlen(addr): %lu strlen(val): %lu\n", strlen(addr), strlen(val));
-                    edit(addr, val);
+                        printf("Syntax Error. See 'h[elp]'\n");
+                        break;
+                    }
+                    addHistory(input);
+                    //printf("addr: %s val: %s\n", addr, val);
 
                     break;
 

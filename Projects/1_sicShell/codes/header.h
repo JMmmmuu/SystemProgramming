@@ -14,6 +14,7 @@
 #define MEMORY_SIZE 1<<10
 #define COMMAND_SIZE 100
 #define OPCODE "opcode.txt"
+#define ONE_BYTE (unsigned char)0xFF
 
 // STRUCTUREs
 typedef struct hist {
@@ -67,8 +68,8 @@ int edit(char* address, char *value);              // 0x13 ~ 0x14
 int fill(char* start, char* end, char *value);     // 0x15
 void reset();                                       // 0x16
 
-int validAddr(char* addr);
-int validAddrRange(char* start, char* end);
+int validAddr(int addr);
+int validAddrRange(int start, int end);
 int strToHex(char* param);
 int isHex(char ch);
 
