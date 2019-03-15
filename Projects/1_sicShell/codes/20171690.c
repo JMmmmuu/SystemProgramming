@@ -95,6 +95,7 @@ int main() {
                         break;
                     }
 
+                    // parameter(s) follow(s)
                     start = removeSpace(strtok(params, ","));
                     if (!start) {
                         // "dump start"
@@ -104,13 +105,15 @@ int main() {
                         break;
                     }
 
-                    end = removeSpace(strtok(NULL, "\0"));
+                    end = strtok(NULL, "\0");
                     if (!end) {
                         // "dump start, "
                         printf("Syntax Error. See 'h[elp]'\n");
                         break;
                     }
 
+
+                    end = removeSpace(end);
                     // "dump start, end"
                     if (!dump(start, end, 2)) break;
                     addHistory(input);
