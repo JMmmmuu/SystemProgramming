@@ -3,7 +3,7 @@
  ******************** Yuseok *********************
  ******************** 190000 *********************
  *************************************************/
-#include "header.h"
+#include "20171690.h"
 
 int opcode(char* mnemonic) {
     // if found correct mnemonic, return 1, else return 0
