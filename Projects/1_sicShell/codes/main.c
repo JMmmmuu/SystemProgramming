@@ -164,6 +164,7 @@ int main() {
                     }
 
                     addHistory(input);
+                    fill(start, end, val);
                     
 
                     break;

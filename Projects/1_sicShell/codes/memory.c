@@ -64,7 +64,7 @@ int dump(char* start, char* end, int type) {
                 else ASCIIcode[j] = '.';
             }
         }
-        printf(" ; %s\n", ASCIIcode);
+        printf("; %s\n", ASCIIcode);
     }
 
 
@@ -86,7 +86,6 @@ int edit(char* address, char* value) {
     // then edit memory
     unsigned char realValue = val & ONE_BYTE;
     memcpy(MEMORY + addr, &realValue, 1);
-    //printf("memcpy: %X\n", *(MEMORY + addr));
 
 
     return 1;
@@ -109,6 +108,7 @@ int fill(char* start, char* end, char* value) {
         printf("segmentation fault\n");
         return 0;
     }
+
     unsigned char realValue = v & ONE_BYTE;
     for (int i = s; i <= e; i++)
         memcpy(MEMORY + i, &realValue, 1);
