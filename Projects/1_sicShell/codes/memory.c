@@ -14,11 +14,24 @@ int dump(char* start, char* end, int type) {
         case 2:         // du[mp] start, end
     }*/
     int s, e;
-    s = strToHex(start);
-    e = strToHex(end);
+    if (type == 0) {
+        s = 0;
+        e = 0x9F;
+    }
+    else if (type == 1) {
+        s = strToHex(start);
+        e = s + 0x9F;
+    }
+    else {
+        s = strToHex(start);
+        e = strToHex(end);
+    }
 
     // incorrect input or addr and val are not hex
-    if (s == -1 || e == -1) return 0;
+    if (s == -1 || e == -1) {
+        printf("incorrect input. Please text again\n");
+        return 0;
+    }
 
     if (!validAddrRange(s, e)) {
         printf("segmentation fault\n");
@@ -30,15 +43,28 @@ int dump(char* start, char* end, int type) {
     int endLineAddr = e / 16 * 16;
     int line = (endLineAddr - startLineAddr) / 16 + 1;
     int addr;
+    char ASCIIcode[17];
+    ASCIIcode[16] = '\0';
 
     for (i = 0; i < line; i++) {
         printf("%05X ", startLineAddr + i * 16);
         for (j = 0; j < 16; j++) {
             addr = startLineAddr + i * 16 + j;
-            if (addr < s) printf("   ");
-            else if (addr > e) printf("   ");
-            else printf("%02X ", *(MEMORY + addr));
+            if (addr < s) {
+                printf("   ");
+                ASCIIcode[j] = '.';
+            }
+            else if (addr > e) {
+                printf("   ");
+                ASCIIcode[j] = '.';
+            }
+            else {
+                printf("%02X ", *(MEMORY + addr));
+                if (*(MEMORY + addr) >= 0x20 && *(MEMORY + addr) <= 0x7E) ASCIIcode[j] = *(MEMORY + addr);
+                else ASCIIcode[j] = '.';
+            }
         }
+        printf(" ; %s\n", ASCIIcode);
     }
 
 
@@ -74,7 +100,10 @@ int fill(char* start, char* end, char* value) {
     v = strToHex(value);
 
     // incorrect input or addr and val are not hex
-    if (s == -1 || e == -1 || v == -1) return 0;
+    if (s == -1 || e == -1 || v == -1) {
+        printf("incorrect input. Please text again\n");
+        return 0;
+    }
 
     if (!validAddrRange(s, e)) {
         printf("segmentation fault\n");
