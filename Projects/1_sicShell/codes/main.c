@@ -90,6 +90,7 @@ int main() {
                     if (!params) {
                         // "dump"
                         addHistory(input);
+                        dump(NULL, NULL, 0);
 
                         break;
                     }
@@ -97,6 +98,8 @@ int main() {
                     start = removeSpace(strtok(params, ","));
                     if (!start) {
                         // "dump start"
+                        if (!dump(start, NULL, 1)) break;
+                        addHistory(input);
 
                         break;
                     }
@@ -109,9 +112,8 @@ int main() {
                     }
 
                     // "dump start, end"
-                    
-
-
+                    if (!dump(start, end, 2)) break;
+                    addHistory(input);
                     
                     break;
                 case 0x13: case 0x14:               // e[dit] address, value
