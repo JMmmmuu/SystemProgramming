@@ -11,7 +11,7 @@
 #include <sys/types.h>
 
 // MACROs
-#define MEMORY_SIZE 1<<10
+#define MEMORY_SIZE 1<<20
 #define COMMAND_SIZE 100
 #define OPCODE "opcode.txt"
 #define ONE_BYTE (unsigned char)0xFF
@@ -33,7 +33,7 @@ typedef struct opT {
 // GLOBAL VARIANTs
 HISTORY* hisHead;
 opNode** opTable;
-char* MEMORY;
+unsigned char* MEMORY;
 
 
 
