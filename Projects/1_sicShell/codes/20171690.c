@@ -87,17 +87,18 @@ int main() {
                     return 0;
                 case 0x10: case 0x11: case 0x12:    // du[mp] [start, end]
                     params = strtok(NULL, "\0");
+                    printf("params: %s\n", params);
                     if (!params) {
                         // "dump"
                         addHistory(input);
                         dump(NULL, NULL, 0);
-
                         break;
                     }
 
                     // parameter(s) follow(s)
                     start = removeSpace(strtok(params, ","));
-                    if (!start) {
+                    end = strtok(NULL, "\0");
+                    if (!end) {
                         // "dump start"
                         if (!dump(start, NULL, 1)) break;
                         addHistory(input);
@@ -105,16 +106,8 @@ int main() {
                         break;
                     }
 
-                    end = strtok(NULL, "\0");
-                    if (!end) {
-                        // "dump start, "
-                        printf("Syntax Error. See 'h[elp]'\n");
-                        break;
-                    }
-
-
-                    end = removeSpace(end);
                     // "dump start, end"
+                    end = removeSpace(end);
                     if (!dump(start, end, 2)) break;
                     addHistory(input);
                     
@@ -225,6 +218,7 @@ void init() {
         opTable[i] = NULL;
 
     MEMORY = (unsigned char*)calloc(MEMORY_SIZE, sizeof(unsigned char));
+    END_ADDR = 0;
 
     readOpTable();
 }

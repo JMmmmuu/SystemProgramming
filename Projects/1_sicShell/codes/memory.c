@@ -7,24 +7,27 @@
 
 int dump(char* start, char* end, int type) {
     // du[mp] [start, end]
-    /*switch (type) {
-        case 0:         // du[mp]
-            
-        case 1:         // du[mp] start
-        case 2:         // du[mp] start, end
-    }*/
     int s, e;
-    if (type == 0) {
-        s = 0;
-        e = 0x9F;
-    }
-    else if (type == 1) {
-        s = strToHex(start);
-        e = s + 0x9F;
-    }
-    else {
-        s = strToHex(start);
-        e = strToHex(end);
+    switch (type) {
+        case 0:         // du[mp]
+            if (END_ADDR > 0xFFFFF) END_ADDR = 0;
+            s = END_ADDR;
+            e = ((END_ADDR + 0x9F) > 0xFFFFF) ? 0xFFFFF : END_ADDR + 0x9F;
+
+            END_ADDR = e + 0x1;
+            break;  
+        case 1:         // du[mp] start
+            s = strToHex(start);
+            e = ((s + 0x9F) > 0xFFFFF) ? 0xFFFFF : s + 0x9F;
+
+            END_ADDR = e + 0x1;
+            break;
+        case 2:         // du[mp] start, end
+            s = strToHex(start);
+            e = strToHex(end);
+
+            END_ADDR = e + 0x1;
+            break;
     }
 
     // incorrect input or addr and val are not hex
@@ -140,7 +143,7 @@ int validAddrRange(int start, int end) {
 
 int strToHex(char* param) {
     // if parameter is not a hex, or incorrect parser return -1
-    for (int i = strlen(param) - 1; i >= 0; i--) {
+    for (int i = 0; i < (int)strlen(param); i++) {
         if ( !isHex(param[i]) ) {
             printf("not a Hexadecimal!\n");
             return -1;

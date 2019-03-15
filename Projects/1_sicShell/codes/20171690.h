@@ -34,10 +34,7 @@ typedef struct opT {
 HISTORY* hisHead;
 opNode** opTable;
 unsigned char* MEMORY;
-
-
-
-
+int END_ADDR;
 
 
 /**************************************************
