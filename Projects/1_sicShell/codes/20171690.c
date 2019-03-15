@@ -25,10 +25,8 @@ int main() {
             continue;
         }
 
-
         // remove white spaces 
         strcpy(input_formed, removeSpace(input));
-        //printf("%s\n", input_formed);
 
         char* cmd = strtok(input_formed, " \t");
         char* params;
@@ -38,8 +36,8 @@ int main() {
         if (cmd) {
             switch (findCmd(cmd)) {
                 case 0x00:  // h[elp]       done
-                    if ( (cmd = strtok(NULL, " ")) ) {
-                        printf("h[elp]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
+                    if ( (params = strtok(NULL, " ")) ) {
+                        printf("h[elp]: '%s' is an invalid option. See 'h[elp]'\n", params);
                         break;
                     }
 
@@ -47,28 +45,18 @@ int main() {
                     help();
                     break;
                 case 0x01:  // d[ir]        done
-                    if ( (cmd = strtok(NULL, " ")) ) {
-                        printf("d[ir]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
+                    if ( (params = strtok(NULL, " ")) ) {
+                        printf("d[ir]: '%s' is an invalid option. See 'h[elp]'\n", params);
                         break;
                     }
 
+                    directory();
                     addHistory(input);
-                    struct dirent *dirEntry;      // directory entry Pointer
-                    struct stat fileInfo;
-                    DIR* dr = opendir(".");
-                    while ( (dirEntry = readdir(dr)) != NULL) {
-                        printf("\t\t%s", dirEntry->d_name);
-                        stat(dirEntry->d_name, &fileInfo);
-                        if (S_ISDIR(fileInfo.st_mode)) printf("/");
-                        else if (fileInfo.st_mode & S_IXUSR) printf("*");
-                        printf("\n");
-                    }
 
-                    closedir(dr);
                     break;
                 case 0x02:  // hi[story]    done
-                    if ( (cmd = strtok(NULL, " ")) ) {
-                        printf("hi[story]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
+                    if ( (params = strtok(NULL, " ")) ) {
+                        printf("hi[story]: '%s' is an invalid option. See 'h[elp]'\n", params);
                         break;
                     }
 
@@ -76,8 +64,8 @@ int main() {
                     history();
                     break;
                 case 0x03:  // q[uit]       done
-                    if ( (cmd = strtok(NULL, " ")) ) {
-                        printf("q[uit]: '%s' is not a correct option. See 'h[elp]'\n", cmd);
+                    if ( (params = strtok(NULL, " ")) ) {
+                        printf("q[uit]: '%s' is an invalid option. See 'h[elp]'\n", params);
                         break;
                     }
 
@@ -165,13 +153,15 @@ int main() {
 
                     break;
                 case 0x16:          // reset
-                    if ( (cmd = strtok(NULL, " ")) ) {
-                        printf("reset: '%s' is not a correct option. See 'h[elp]'\n", cmd);
+                    if ( (params = strtok(NULL, " ")) ) {
+                        printf("reset: '%s' is an invalid option. See 'h[elp]'\n", params);
                         break;
                     }
 
-                    addHistory(input);
                     reset();
+                    addHistory(input);
+                    printf("Reset Successfully\n");
+
                     break;
                 case 0x20:  // opcode mnemonic      //done
                     params = strtok(NULL, "\0");
@@ -181,19 +171,24 @@ int main() {
                         break;
                     }
 
-                    if (opcode(removeSpace(params))) {
+                    params = removeSpace(params);
+                    if (opcode(params))
                         addHistory(input);
-                    }
+                    else 
+                        printf("%s: No matching mnemonic\n", params);
 
                     break;
                 case 0x21:  // opcodelist       done
-                    if ( (cmd = strtok(NULL, " ")) ) {
-                        printf("opcodelist: '%s' is not a correct option. See 'h[elp]'\n", cmd);
+                    if ( (params = strtok(NULL, " ")) ) {
+                        printf("opcodelist: '%s' is an invalid option. See 'h[elp]'\n", params);
                         break;
                     }
 
-                    addHistory(input);
-                    opcodeList();
+                    if (!opcodeList())
+                        printf("There's no opcode.txt in the directory\n");
+                    else
+                        addHistory(input);
+                        
                     break;
 
                 case 0x30:

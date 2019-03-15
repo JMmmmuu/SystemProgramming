@@ -19,8 +19,8 @@ int opcode(char* mnemonic) {
     printf("Wrong mnemonic\n");
     return 0;
 }
-void opcodeList() {
-    //if (readOpTable()) return ;
+int opcodeList() {
+    if (!opTable) return 0;
 
     opNode* pMove;
     for (int i = 0; i < 20; i++) {
@@ -33,6 +33,8 @@ void opcodeList() {
         }
         printf("\n");
     }
+
+    return 1;
 }
 
 int readOpTable() {

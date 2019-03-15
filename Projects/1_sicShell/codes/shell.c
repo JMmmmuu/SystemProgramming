@@ -14,6 +14,19 @@ void help() {
     printf("\t\topcode mnemonic\n\t\topcodelist\n");
 }
 
+void directory() {
+    struct dirent* dirEntry;        // directory entry Pointer
+    struct stat fileInfo;
+    DIR* dr = opendir(".");
+    while ( (dirEntry = readdir(dr)) != NULL) {
+        printf("\t\t%s", dirEntry->d_name);
+        stat(dirEntry->d_name, &fileInfo);
+        if (S_ISDIR(fileInfo.st_mode)) printf("/");
+        else if (fileInfo.st_mode & S_IXUSR) printf("*");
+        printf("\n");
+    }
+    closedir(dr);
+}
 void addHistory(char* input) {
     HISTORY* pNew = (HISTORY*)malloc(sizeof(HISTORY));
     pNew->hist = (char*)malloc(COMMAND_SIZE * sizeof(char));

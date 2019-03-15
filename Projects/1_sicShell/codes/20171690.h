@@ -74,7 +74,7 @@ int isHex(char ch);
  ************* OPCODE TABLE COMMANDS **************
  **************************************************/
 int opcode(char* mnemonic);                  // 0x20
-void opcodeList();              // 0x21
+int opcodeList();              // 0x21
 
 int readOpTable();
 int hashFunction(char* op);

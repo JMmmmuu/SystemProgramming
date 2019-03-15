@@ -70,8 +70,6 @@ int dump(char* start, char* end, int type) {
         printf("; %s\n", ASCIIcode);
     }
 
-
-    
     return 1;
 }
 
@@ -121,9 +119,8 @@ int fill(char* start, char* end, char* value) {
 
 void reset() {
     // reset
-    for (int i = 0; i < MEMORY_SIZE; i++) {
+    for (int i = 0; i < MEMORY_SIZE; i++)
         MEMORY[i] = 0x00;
-    }
 }
 
 int validAddr(int addr) {
