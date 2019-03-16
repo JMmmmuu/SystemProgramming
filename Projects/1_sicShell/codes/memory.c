@@ -1,13 +1,14 @@
 /*************************************************
  ************** System Programming ***************
  ******************** Yuseok *********************
- ******************** 190000 *********************
+ ******************** 190325 *********************
  *************************************************/
 #include "20171690.h"
 
 int dump(char* start, char* end, int type) {
     // du[mp] [start, end]
     int s, e;
+    int tmp = END_ADDR;
     switch (type) {
         case 0:         // du[mp]
             if (END_ADDR > 0xFFFFF) END_ADDR = 0;
@@ -33,11 +34,12 @@ int dump(char* start, char* end, int type) {
     // incorrect input or addr and val are not hex
     if (s == -1 || e == -1) {
         printf("incorrect input. Please text again\n");
+        END_ADDR = tmp;
         return 0;
     }
 
     if (!validAddrRange(s, e)) {
-        printf("segmentation fault\n");
+        END_ADDR = tmp;
         return 0;
     }
 
@@ -132,10 +134,19 @@ int validAddr(int addr) {
 }
 
 int validAddrRange(int start, int end) {
-    if (validAddr(start) && validAddr(end) && end >= start)
-        return 1;
-    else
+    if (!validAddr(start)) { 
+        printf("Segmentation fault: Cannot access %05X\n", start);
         return 0;
+    }
+    else if (!validAddr(end)) {
+        printf("Segmentation fault: Cannot access %05X\n", start);
+        return 0;
+    }
+    else if (end < start) {
+        printf("Incorrect Address Range\n");
+        return 0;
+    }
+    return 1;
 }
 
 int strToHex(char* param) {
