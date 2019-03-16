@@ -75,7 +75,6 @@ int main() {
                     return 0;
                 case 0x10: case 0x11: case 0x12:    // du[mp] [start, end]
                     params = strtok(NULL, "\0");
-                    printf("params: %s\n", params);
                     if (!params) {
                         // "dump"
                         addHistory(input);
@@ -84,11 +83,21 @@ int main() {
                     }
 
                     // parameter(s) follow(s)
+                    int before = (int)strlen(params);
                     start = removeSpace(strtok(params, ","));
+                    int after = (int)strlen(params);
                     end = strtok(NULL, "\0");
                     if (!end) {
                         // "dump start"
-                        if (!dump(start, NULL, 1)) break;
+                        if (before != after) {
+                            // "dump start, "
+                            printf("Invalid Syntax. See 'h[elp]'\n");
+                            break;
+                        }
+                        if (!dump(start, NULL, 1)) {
+                            // inavalid addr
+                            break;
+                        }
                         addHistory(input);
 
                         break;
