@@ -141,11 +141,11 @@ int validAddrRange(int start, int end) {
         return 0;
     }
     else if (!validAddr(end)) {
-        printf("Segmentation fault: Cannot access %05X\n", start);
+        printf("Segmentation fault: Cannot access %05X\n", end);
         return 0;
     }
     else if (end < start) {
-        printf("Incorrect Address Range\n");
+        printf("Incorrect Address Range. End address must be bigger than Start address.\n");
         return 0;
     }
     return 1;
@@ -155,7 +155,7 @@ int strToHex(char* param) {
     // if parameter is not a hex, or incorrect parser return -1
     for (int i = 0; i < (int)strlen(param); i++) {
         if ( !isHex(param[i]) ) {
-            printf("not a Hexadecimal!\n");
+            printf("Address is not a Hexadecimal!\n");
             return -1;
         }
     }
