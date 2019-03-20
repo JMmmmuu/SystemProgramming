@@ -89,7 +89,6 @@ int main() {
                     after = (int)strlen(params);
                     end = strtok(NULL, "\0");
                     if (!end) {
-                        // "dump start"
                         if (before != after) {
                             // "dump start, "
                             printf("Invalid Syntax. See 'h[elp]'\n");
@@ -99,6 +98,7 @@ int main() {
                             // inavalid addr
                             break;
                         }
+                        // "dump start"
                         addHistory(input);
 
                         break;
