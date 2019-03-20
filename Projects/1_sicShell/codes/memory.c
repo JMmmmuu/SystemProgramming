@@ -33,7 +33,7 @@ int dump(char* start, char* end, int type) {
 
     // incorrect input or addr and val are not hex
     if (s == -1 || e == -1) {
-        printf("incorrect input. Please text again\n");
+        printf("Incorrect input. Please text again\n");
         END_ADDR = tmp;
         return 0;
     }
@@ -82,7 +82,7 @@ int edit(char* address, char* value) {
 
     // incorrect input or addr and val are not hex
     if (addr == -1 || val == -1) {
-        printf("incorrect input. Please text again\n");
+        printf("Incorrect input. Please text again\n");
         return 0;
     }
 
@@ -105,12 +105,11 @@ int fill(char* start, char* end, char* value) {
 
     // incorrect input or addr and val are not hex
     if (s == -1 || e == -1 || v == -1) {
-        printf("incorrect input. Please text again\n");
+        printf("Incorrect input. Please text again\n");
         return 0;
     }
 
     if (!validAddrRange(s, e)) {
-        printf("segmentation fault\n");
         return 0;
     }
 
