@@ -31,13 +31,14 @@ int main() {
         char* cmd = strtok(input_formed, " \t");
         char* params;
         char* start, *end, *addr, *val;
+        int before, after;
 
         // if input is white spaces, continue;
         if (cmd) {
             switch (findCmd(cmd)) {
                 case 0x00:  // h[elp]       done
-                    if ( (params = strtok(NULL, " ")) ) {
-                        printf("h[elp]: '%s' is an invalid option. See 'h[elp]'\n", params);
+                    if ( (params = strtok(NULL, "\0")) ) {
+                        printf("h[elp]: '%s' is an invalid option. See 'h[elp]'\n", removeSpace(params));
                         break;
                     }
 
@@ -45,8 +46,8 @@ int main() {
                     help();
                     break;
                 case 0x01:  // d[ir]        done
-                    if ( (params = strtok(NULL, " ")) ) {
-                        printf("d[ir]: '%s' is an invalid option. See 'h[elp]'\n", params);
+                    if ( (params = strtok(NULL, "\0")) ) {
+                        printf("d[ir]: '%s' is an invalid option. See 'h[elp]'\n", removeSpace(params));
                         break;
                     }
 
@@ -55,8 +56,8 @@ int main() {
 
                     break;
                 case 0x02:  // hi[story]    done
-                    if ( (params = strtok(NULL, " ")) ) {
-                        printf("hi[story]: '%s' is an invalid option. See 'h[elp]'\n", params);
+                    if ( (params = strtok(NULL, "\0")) ) {
+                        printf("hi[story]: '%s' is an invalid option. See 'h[elp]'\n", removeSpace(params));
                         break;
                     }
 
@@ -64,8 +65,8 @@ int main() {
                     history();
                     break;
                 case 0x03:  // q[uit]       done
-                    if ( (params = strtok(NULL, " ")) ) {
-                        printf("q[uit]: '%s' is an invalid option. See 'h[elp]'\n", params);
+                    if ( (params = strtok(NULL, "\0")) ) {
+                        printf("q[uit]: '%s' is an invalid option. See 'h[elp]'\n", removeSpace(params));
                         break;
                     }
 
@@ -83,9 +84,9 @@ int main() {
                     }
 
                     // parameter(s) follow(s)
-                    int before = (int)strlen(params);
+                    before = (int)strlen(params);
                     start = removeSpace(strtok(params, ","));
-                    int after = (int)strlen(params);
+                    after = (int)strlen(params);
                     end = strtok(NULL, "\0");
                     if (!end) {
                         // "dump start"
@@ -105,65 +106,73 @@ int main() {
 
                     // "dump start, end"
                     end = removeSpace(end);
-                    if (!dump(start, end, 2)) break;
+                    if (!dump(start, end, 2)) {
+                        // invalid addr
+                        break;
+                    }
                     addHistory(input);
                     
                     break;
                 case 0x13: case 0x14:               // e[dit] address, value
-                    addr = removeSpace(strtok(NULL, ","));
-                    if (!addr) {
-                        // no comma
+                    params = strtok(NULL, "\0");
+                    if (!params) {
+                        // no parameters
                         printf("Syntax Error. See 'h[elp]'\n");
                         break;
                     }
 
-                    val = removeSpace(strtok(NULL, "\0"));
+                    addr = removeSpace(strtok(params, ","));
+                    val = strtok(NULL, "\0");
                     if (!val) {
-                        // no value
+                        // no value + invalid sytax
                         printf("Syntax Error. See 'h[elp]'\n");
                         break;
                     }
 
+                    val = removeSpace(val);
                     if (!edit(addr, val)) {
-                        // wrong syntax
-                        printf("Syntax Error. See 'h[elp]'\n");
+                        // invalid addr & val
                         break;
                     }
                     addHistory(input);
-                    //printf("addr: %s val: %s\n", addr, val);
 
                     break;
 
                 case 0x15:          // f[ill] start, end, value
-                    start = removeSpace(strtok(NULL, ","));
-                    if (!start) {
+                    params = strtok(NULL, "\0");
+                    if (!params) {
                         // No parameters at all
                         printf("Syntax Error. See 'h[elp]'\n");
                         break;
                     }
 
-                    end = removeSpace(strtok(NULL, ","));
+                    start = removeSpace(strtok(params, ","));
+                    end = strtok(NULL, ",");
                     if (!end) {
-                        // No parameters at all
+                        // "fill start, "
                         printf("Syntax Error. See 'h[elp]'\n");
                         break;
                     }
 
-                    val = removeSpace(strtok(NULL, "\0"));
+                    end = removeSpace(end);
+                    val = strtok(NULL, "\0");
                     if (!val) {
-                        // No parameters at all
+                        // "fill start, end, "
                         printf("Syntax Error. See 'h[elp]'\n");
                         break;
                     }
 
+                    val = removeSpace(val);
+                    if (!fill(start, end, val)) {
+                        // invalid addr & val
+                        break;
+                    }
                     addHistory(input);
-                    fill(start, end, val);
-                    
 
                     break;
                 case 0x16:          // reset
-                    if ( (params = strtok(NULL, " ")) ) {
-                        printf("reset: '%s' is an invalid option. See 'h[elp]'\n", params);
+                    if ( (params = strtok(NULL, "\0")) ) {
+                        printf("reset: '%s' is an invalid option. See 'h[elp]'\n", removeSpace(params));
                         break;
                     }
 
@@ -188,8 +197,8 @@ int main() {
 
                     break;
                 case 0x21:  // opcodelist       done
-                    if ( (params = strtok(NULL, " ")) ) {
-                        printf("opcodelist: '%s' is an invalid option. See 'h[elp]'\n", params);
+                    if ( (params = strtok(NULL, "\0")) ) {
+                        printf("opcodelist: '%s' is an invalid option. See 'h[elp]'\n", removeSpace(params));
                         break;
                     }
 
@@ -248,6 +257,7 @@ int findCmd(char* cmd) {
 
 char* removeSpace(char* input) {
     // remove Spaces at front & at the end
+    if (!input) return input;
     int i;
     for (i = 0; input[i] == ' ' || input[i] == '\t' || input[i] == '\n'; i++) ;
     input = input + i;

@@ -81,7 +81,10 @@ int edit(char* address, char* value) {
     int val = strToHex(value);
 
     // incorrect input or addr and val are not hex
-    if (addr == -1 || val == -1) return 0;
+    if (addr == -1 || val == -1) {
+        printf("incorrect input. Please text again\n");
+        return 0;
+    }
 
     if (val > 0xFF) {
         return 0;
@@ -89,7 +92,6 @@ int edit(char* address, char* value) {
     // then edit memory
     unsigned char realValue = val & ONE_BYTE;
     memcpy(MEMORY + addr, &realValue, 1);
-
 
     return 1;
 }
