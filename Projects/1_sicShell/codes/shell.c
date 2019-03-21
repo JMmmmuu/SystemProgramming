@@ -70,6 +70,7 @@ void quit() {
             free(opFree);
         }
     }
+    free(MEMORY);
 
     printf("exit shell\n");
 }
