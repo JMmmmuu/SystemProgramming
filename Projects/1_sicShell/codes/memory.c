@@ -87,6 +87,7 @@ int edit(char* address, char* value) {
     }
 
     if (val > 0xFF) {
+        printf("Invalid value. Too big!\n");
         return 0;
     }
     // then edit memory
@@ -113,6 +114,10 @@ int fill(char* start, char* end, char* value) {
         return 0;
     }
 
+    if (v > 0xFF) {
+        printf("Invalid value. Too big!\n");
+        return 0;
+    }
     unsigned char realValue = v & ONE_BYTE;
     for (int i = s; i <= e; i++)
         memcpy(MEMORY + i, &realValue, 1);
