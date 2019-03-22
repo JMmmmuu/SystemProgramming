@@ -167,7 +167,10 @@ int strToHex(char* param) {
     // else, return proper hexa decimal number
     int hex;
     int res = sscanf(param, "%x", &hex);
-    if (res == 0) return -1;
+    if (res == 0) {
+        printf("error occured. Please type again\n");
+        return -1;
+    }
 
     return hex;
 }
