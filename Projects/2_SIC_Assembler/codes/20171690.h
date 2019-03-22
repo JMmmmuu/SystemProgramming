@@ -52,6 +52,7 @@ void help();                    // 0x00
 void directory();               // 0x01
 void history();                 // 0x02
 void quit();                    // 0x03
+int type(char*);
 
 void addHistory(char*);
 

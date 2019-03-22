@@ -69,6 +69,8 @@ int readOpTable() {
             pMove->link = pNew;
         }
     }
+
+    fclose(fp);
     return 1;
 }
 

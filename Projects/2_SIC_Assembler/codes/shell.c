@@ -12,6 +12,7 @@ void help() {
     printf("\t\tf[ill] start, end, value\n");
     printf("\t\treset\n");
     printf("\t\topcode mnemonic\n\t\topcodelist\n");
+    printf("\t\tassemble filename\n\t\ttype filename\n\t\tsymbol\n");
 }
 
 void directory() {
@@ -73,4 +74,21 @@ void quit() {
     free(MEMORY);
 
     printf("exit shell\n");
+}
+
+int type(char* filename) {
+    FILE* fp = fopen(filename, "r");
+    if (!fp) {
+        printf("No file in current directory. Please check again\n");
+        return 0;
+    }
+
+    char ch = fgetc(fp);
+    while (!feof(fp)) {
+        ch = fgetc(fp);
+        printf("%c", ch);
+    }
+
+
+    return 1;
 }
