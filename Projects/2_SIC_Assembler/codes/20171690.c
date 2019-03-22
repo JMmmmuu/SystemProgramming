@@ -74,6 +74,19 @@ int main() {
                     free(input_formed);
                     quit();
                     return 0;
+                case 0x04:  // type filename
+                    params = strtok(NULL, "\0");
+                    if (!params) {
+                        // no filename
+                        printf("Invalid Syntax. See 'h[elp]'\n");
+                        break;
+                    }
+
+                    params = removeSpace(params);
+                    if (type(params))
+                        addHistory(input);
+                    break;
+
                 case 0x10: case 0x11: case 0x12:    // du[mp] [start, end]
                     params = strtok(NULL, "\0");
                     if (!params) {
@@ -243,6 +256,7 @@ int findCmd(char* cmd) {
     if (strcmp(cmd, "dir") == 0 || strcmp(cmd, "d") == 0) return 0x01;
     if (strcmp(cmd, "history") == 0 || strcmp(cmd, "hi") == 0) return 0x02;
     if (strcmp(cmd, "quit") == 0 || strcmp(cmd, "q") == 0) return 0x03;
+    if (strcmp(cmd, "type") == 0) return 0x04;
 
     if (strcmp(cmd, "dump") == 0 || strcmp(cmd, "du") == 0) return 0x10;
     if (strcmp(cmd, "edit") == 0 || strcmp(cmd, "e") == 0) return 0x13;
