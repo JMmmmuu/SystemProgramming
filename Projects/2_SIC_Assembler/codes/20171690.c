@@ -195,6 +195,7 @@ int main() {
                     printf("Reset Successfully\n");
 
                     break;
+
                 case 0x20:  // opcode mnemonic      //done
                     params = strtok(NULL, "\0");
                     if (!params) {
@@ -223,7 +224,23 @@ int main() {
                         
                     break;
 
-                case 0x30:
+                case 0x30:          // assemble filename
+                    params = strtok(NULL, "\0");
+                    if (!params) {
+                        // no filename
+                        printf("Invalid Syntax. See 'h[elp]'\n");
+                        break;
+                    }
+
+                    params = removeSpace(params);
+                    if (assemble(params))
+                            addHistory(input);
+                    else
+                        printf("error\n");
+                    
+                    break;
+
+                case 0xA0:
                     printf("command not found: %s\n", cmd);
                     break;
             }
@@ -267,7 +284,9 @@ int findCmd(char* cmd) {
     if (strcmp(cmd, "opcode") == 0) return 0x20;
     if (strcmp(cmd, "opcodelist") == 0) return 0x21;
 
-    return 0x30;
+    if (strcmp(cmd, "assemble") == 0) return 0x30;
+
+    return 0xA0;
 }
 
 char* removeSpace(char* input) {

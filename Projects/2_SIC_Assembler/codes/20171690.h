@@ -53,7 +53,7 @@ void help();                    // 0x00
 void directory();               // 0x01
 void history();                 // 0x02
 void quit();                    // 0x03
-int type(char*);
+int type(char*);                // 0x04
 
 void addHistory(char*);
 
@@ -80,3 +80,9 @@ int opcodeList();              // 0x21
 
 int readOpTable();
 int hashFunction(char* op);
+
+/**************************************************
+ ************* OPCODE TABLE COMMANDS **************
+ **************************************************/
+int assemble(char* filename);               // 0x30
+int symbol();                               // 0x31
