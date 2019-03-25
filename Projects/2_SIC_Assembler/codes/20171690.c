@@ -239,6 +239,11 @@ int main() {
                         printf("error\n");
                     
                     break;
+                case 0x31:          // symbol
+                    if ( (params = strtok(NULL, "\0")) ) {
+                        printf("symbol: '%s' is an invalid option. See 'h[elp]'\n", removeSpace(params));
+                        break;
+                    }
 
                 case 0xA0:
                     printf("command not found: %s\n", cmd);
@@ -285,6 +290,7 @@ int findCmd(char* cmd) {
     if (strcmp(cmd, "opcodelist") == 0) return 0x21;
 
     if (strcmp(cmd, "assemble") == 0) return 0x30;
+    if (strcmp(cmd, "symbol") == 0) return 0x31;
 
     return 0xA0;
 }
