@@ -93,3 +93,6 @@ int hashFunction(char* op);
  **************************************************/
 int assemble(char* filename);               // 0x30
 int symbol();                               // 0x31
+
+int pass1(FILE* fp);
+int pass2(FILE* fp);

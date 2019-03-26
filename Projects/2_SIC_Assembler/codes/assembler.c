@@ -30,4 +30,27 @@ int symbol() {
     return 1;
 }
 
+int pass1(FILE* fp) {
+    int LOCCTR, startingAddr;
+    char line[30];
+    fseek(fp, 0, SEEK_SET);     // move to the first
+    fgets(line, 30, fp);
+    while (line[0] == '.') {
+        fgets(line, 30, fp);
+    }
 
+    char symbol[10], opcode[10], target[10];
+    sscanf(line, "%s %s %s", symbol, opcode, target);
+
+
+    return 1;
+}
+
+int pass2(FILE* fp) {
+
+    fseek(fp, 0, SEEK_SET);     // move to the first
+
+
+
+    return 1;
+}
