@@ -237,6 +237,7 @@ int main() {
                             addHistory(input);
                     else
                         printf("error\n");
+
                     
                     break;
                 case 0x31:          // symbol
@@ -259,8 +260,9 @@ int main() {
 }
 
 void init() {
-    // allocate memories
+    // initialize variants & allocate memories
     hisHead = NULL;
+    SYMTAB = NULL;
 
     opTable = (opNode**)malloc(20 * sizeof(opNode*));
     for (int i = 0; i < 20; i++)

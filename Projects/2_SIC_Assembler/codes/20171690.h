@@ -31,15 +31,22 @@ typedef struct opT {
     struct opT* link;
 } opNode;
 
+typedef struct symT {
+    int addr;
+    char symbol[10];
+    struct symT* link;
+} symNode;
+
 // GLOBAL VARIANTs
 HISTORY* hisHead;
 opNode** opTable;
+symNode** SYMTAB;
 unsigned char* MEMORY;
 int END_ADDR;
 
 
 /**************************************************
- **************************************************
+ ******************* FUNCTIONS ********************
  **************************************************/
 void init();
 int findCmd(char*);
@@ -82,7 +89,7 @@ int readOpTable();
 int hashFunction(char* op);
 
 /**************************************************
- ************* OPCODE TABLE COMMANDS **************
+ ******************** ASSEMBLER *******************
  **************************************************/
 int assemble(char* filename);               // 0x30
 int symbol();                               // 0x31
