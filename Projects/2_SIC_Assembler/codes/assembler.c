@@ -97,21 +97,27 @@ int isStr(char* Str) {
 }
 
 int tokenizeAsmFile(char*** token, char* input) {
+    // tokenize all the possible options into token
+    // return number of strings
     int cnt = 0;
     char* tmp;
+    int commaFlag = removeSpaceAroundComma(input);
     
     *token[cnt] = strtok(input, " \t");
     while (cnt < 5 && *token[cnt]) {
         tmp = strtok(NULL, "\0");
         if (!tmp) break;
         *token[++cnt] = strtok(removeSpace(tmp), " \t");
-        *token[cnt] = removeSpace(strtok(tmp, " \t"));
     }
-    
+    cnt++;
 
+    if (commaFlag) {
+        // contain comma
+        strtok(*token[cnt], ",");
+        *token[++cnt] = strtok(NULL, "\0");
+    }
 
-
-    return 1;
+    return cnt;
 }
 
 int removeSpaceAroundComma(char* input) {
