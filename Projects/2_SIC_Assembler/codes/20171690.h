@@ -37,6 +37,14 @@ typedef struct symT {
     struct symT* link;
 } symNode;
 
+typedef struct __token {
+    char* r1, *r2;
+    char* symbol;
+    char* operation;
+    char* target;
+    char* tmp;
+} asmToken;
+
 // GLOBAL VARIANTs
 HISTORY* hisHead;
 opNode** opTable;
@@ -96,3 +104,8 @@ int symbol();                               // 0x31
 
 int pass1(FILE* fp);
 int pass2(FILE* fp);
+int isStr(char* Str);
+int tokenizeAsmFile(char*** token, char* input);
+
+int removeSpaceAroundComma(char* input);
+int isWhiteSpace(char ch);
