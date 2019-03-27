@@ -9,12 +9,14 @@
 int opcode(char* mnemonic, int type) {
     // if found correct mnemonic, return 1, else return 0
     // if type is 1, print opcode. else, just return value
+    // type == 3: return format. if no mnemonic, return 0
     int idx = hashFunction(mnemonic);
     opNode* pMove;
 
     for (pMove = opTable[idx]; pMove; pMove = pMove->link) {
         if (strcmp(pMove->operation, mnemonic) == 0) {
             if (type) printf("opcode is %X\n", pMove->opcode);
+            if (type == 3) return pMove->format;
             return 1;
         }
     }
