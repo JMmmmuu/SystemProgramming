@@ -21,10 +21,23 @@ int assemble(char* filename) {
 }
 
 int symbol() {
+    // print symbol table of recently assembled file
     if (!SYMTAB) {
         // no symbol table
         printf("assemble file first!\n");
         return 0;
+    }
+
+    symNode *tmp1, *tmp2, *tmp3, *tmp4;
+
+    for (char ch = 'Z'; ch >= 'A'; ch--) {
+        int idx = (ch - 'A') / 7;
+        tmp1 = SYMTAB[idx];
+        tmp2 = SYMTAB[7 + idx];
+        tmp3 = SYMTAB[14 + idx];
+        tmp4 = SYMTAB[21 + idx];
+
+        
     }
 
 
@@ -165,7 +178,6 @@ int addSym(char* label, int LOC) {
     // add symbol to the SYMTAB
     // if label already exist, return 0
     // if add successfully, return 1
-    // if (SYMTAB) freeSymTab();
 
     if (!SYMTAB) {
         // no Symbol table.
@@ -194,74 +206,42 @@ int addSym(char* label, int LOC) {
 
     symNode* pMove = SYMTAB[idx];
     // take shorter symbol's length
-    int len = (int)strlen(pNew->symbol) > (int)strlen(pMove->symbol) ? (int)strlen(pMove->symbol) : (int)strlen(pNew->symbol);
-    int flag = 0, i;
-
-    for (i = 0; i < len; i++) {
-        if (pNew->symbol[i] > pMove->symbol[i]) {
-            flag = 1;
-            break;
-        }
+    if ( getBiggerStr(pNew->symbol, pMove->symbol) ) {
+        // header - pMove - pNew
+        pNew->link = pMove;
+        pMove->link = pNew;
     }
-    if (flag) {
-        // new node must place at the header
+    else {
+        // header - pNew - pMove
         pNew->link = pMove;
         SYMTAB[idx] = pNew;
-        return 1;
     }
 
-    if (i == len) {
-        if (len == (int)strlen(pNew->symbol))
-            // strlen(pNew->symbol) < strlen(pMove->symbol)
-            // header - pMove - pNew
-            pMove->link = pNew;
-        else {
-            // header - pNew - pMove
-            pNew->link = pMove;
-            SYMTAB[idx] = pNew;
-        }
-        return 1;
-    }
+    int flag = 0, i;
 
-    if (!pMove->link) {
+    if (!pMove->link) 
         // if the header has only one node
-        pMove->link = pNew;
         return 1;
-    }
 
     // if the header has more than two nodes
     symNode* ptmp = pMove->link;
     // HEADER - ... - pMove - ptmp - ...
 
     while (ptmp) {
-        len = (int)strlen(pNew->symbol) > (int)strlen(ptmp->symbol) ? (int)strlen(ptmp->symbol) : (int)strlen(pNew->symbol);
-        for (i = 0; i < len; i++) {
-            if (pNew->symbol[i] > ptmp->symbol[i]) {
-                // pNew must place after pMove, before ptmp
-                flag = 1;
-                break;
-            }
-            if (flag) {
-                // pMove - pNew - ptmp
-                pNew->link = ptmp;
-                pMove->link = pNew;
-                return 1;
-            }
-        }
-        if (i == len) {
-            if (len == (int)strlen(pNew->symbol)) {
-                // strlen(ptmp) > strlen(pNew->symbol)
-                // ... - pMove - ptmp - pNew
-                pNew->link = ptmp->link;
-                ptmp->link = pNew;
-            }
-            else {
-                // ... - pMove - pNew - ptmp
-                pNew->link = ptmp;
-                pMove->link = pNew;
-            }
+
+        if ( getBiggerStr(pNew->symbol, ptmp->symbol) ) {
+            // pMove - pNew - ptmp
+            pNew->link = ptmp;
+            pMove->link = pNew;
             return 1;
         }
+        else {
+            // pMove - ptmp - pNew
+            pNew->link = ptmp;
+            ptmp->link = pNew;
+            return 1;
+        }
+
         pMove = pMove->link;
         ptmp = pMove->link;
     }
@@ -347,7 +327,7 @@ int isWhiteSpace(char ch) {
     return (ch == ' ' || ch == '\n' || ch == '\t') ? 1 : 0;
 }
 
-int isDirective(char* token) {
+int isDirective(char* token){
     // check if the token is a directive
     // if it is, return corresponding number. else 0
     // START, END, BYTE, WORD, RESB, RESW
@@ -363,7 +343,43 @@ int isDirective(char* token) {
     return 0;
 }
 
-char toUpper(char ch) {
+char toUpper(char ch){
     if (ch >= 'a' && ch <= 'z') ch -= 'a' - 'A';
     return ch;
+}
+
+
+int getBiggerStr(char* str1, char* str2){
+    // Bigger means closer to Z
+    // return 0 : str1 > str2
+    // return 1 : str1 < str2
+    int len1 = (int)strlen(str1);
+    int len2 = (int)strlen(str2);
+    int shorterLen = len1 > len2 ? len2 : len1;
+    // if flag set, str1 > str2
+    int flag = 0;
+    int i;
+
+    for (i = 0; i < shorterLen; i++) {
+        if (str1[i] > str2[i]) {
+            flag = 1;
+            break;
+        }
+    }
+
+    if (i == shorterLen) {
+        // longer one is bigger
+        flag = (shorterLen == len1) ? 0 : 1;
+    }
+
+    return flag ? 0 : 1;
+}
+
+int getMaxofFour(char* str1, char* str2, char* str3, char* str4) {
+    if ( getBiggerStr(str2, str1) * getBiggerStr(str3, str1) * getBiggerStr(str4, str1) ) return 0;
+    if ( getBiggerStr(str1, str2) * getBiggerStr(str3, str2) * getBiggerStr(str4, str2) ) return 0;
+    if ( getBiggerStr(str1, str3) * getBiggerStr(str2, str3) * getBiggerStr(str4, str3) ) return 0;
+    if ( getBiggerStr(str1, str4) * getBiggerStr(str2, str4) * getBiggerStr(str3, str4) ) return 0;
+
+    return -1;
 }

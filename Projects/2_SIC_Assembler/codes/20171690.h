@@ -118,3 +118,5 @@ int isWhiteSpace(char ch);
 int isDirective(char* token);
 
 char toUpper(char ch);
+int getBiggerStr(char* str1, char* str2);
+int getMaxofFour(char* str1, char* str2, char* str3, char* str4);
