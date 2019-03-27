@@ -17,7 +17,6 @@ int assemble(char* filename) {
     
     pass1(asmFP);
 
-
     return 1;
 }
 
@@ -27,7 +26,6 @@ int symbol() {
         printf("assemble file first!\n");
         return 0;
     }
-
 
     return 1;
 }
@@ -39,40 +37,82 @@ int pass1(FILE* fp) {
     // length of data areas defined by BYTE, RESW, etc
     
     // make symtab, assign LOC
-    int LOCCTR, startingAddr;
+    int LOCCTR, startingAddr = 0, i;
+    int lineNum = 0;
+    int flag = 0;
     char* line = (char*)malloc(30 * sizeof(char));
-    char symbol[10], opcode[10], target[10];
+    char filename[10];
     fseek(fp, 0, SEEK_SET);     // move to the first
-    fgets(line, 30, fp);
 
     if ( !isStr(fgets(line, 30, fp)) ) {
-            // file with no text
+            // file with no content
             printf("No content in the file\n");
             return 0;
     }
     
+    lineNum++;
     line = removeSpace(line);
     while (line[0] == '.') {
         // skip comment lines
+        memset(line, '\0', (int)sizeof(line));
         if ( !isStr(fgets(line, 30, fp)) ) {
             return 1;
         }
         line = removeSpace(line);
+        lineNum++;
     }
 
     // First line
-    char** token = (char**)malloc(5 * sizeof(char));
-    tokenizeAsmFile(&token, line);
+    char** token = (char**)malloc(MAX_TOKEN_NUM * sizeof(char*));
+    int num = tokenizeAsmFile(&token, line);
+    for (i = 0; i < num; i++) {
+        if (isDirective(token[i]) == 1) {
+            // if token[i] == "START"
+            if (i+1 >= num || num == 1) {
+                printf("No name or starting address at [%d] line\n", lineNum);
+                return 0;
+            }
+            if ( (startingAddr = strToHex(token[i+1])) == -1 ) {
+                printf("Error occured in .asm file\nWrong Starting Address at [%d] line\n", lineNum);
+                return 0;
+            }
+            flag = 1;
+            break;
+        }
+    }
+    if (flag) {
+        // if there's START directive, get next line
+        memset(line, '\0', (int)sizeof(line));
+        for (i = 0; i < MAX_TOKEN_NUM; i++) token[i] = NULL;
+        if ( !isStr(fgets(line, 30, fp)) ) return 1;
 
-
-    if (strcmp(opcode, "START") == 0) {
-        LOCCTR = strToHex(target);
+        lineNum++;
+        num = tokenizeAsmFile(&token, line);
 
     }
-    else LOCCTR = 0;
 
-    line = removeSpace(fgets(line, 30, fp));
-    sscanf(line, "%s %s %s", symbol, opcode, target);
+
+    while ( !feof(fp) ) {
+        memset(line, '\0', (int)sizeof(line));
+        for (i = 0; i < MAX_TOKEN_NUM; i++) token[i] = NULL;
+        fgets(line, 30, fp);
+        lineNum++;
+
+        num = tokenizeAsmFile(&token, line);
+
+        if (strcmp(token[0], "END") == 0) break;
+
+        if (num >= 2) {
+            if (opcode(token[1], 0)) {
+                //addSym(token[0], LOCCTR);
+            }
+        }
+
+        
+
+    }
+
+
 
 
     return 1;
@@ -120,6 +160,85 @@ int tokenizeAsmFile(char*** token, char* input) {
     return cnt;
 }
 
+int addSym(char* label, int LOC) {
+    // add symbol to the SYMTAB
+    // if label already exist, return 0. else 1
+    // if (SYMTAB) freeSymTab();
+
+    if (!SYMTAB) {
+        SYMTAB = (symNode**)malloc(SYMTAB_SIZE * sizeof(symNode*));
+        for (int i = 0; i < SYMTAB_SIZE; i++) SYMTAB[i] = NULL;
+    }
+
+    if (findSym(label) != -1) {
+        // label exist
+        printf("Label already exist\n");
+        return 0;
+    }
+
+    // create new node
+    symNode* pNew = (symNode*)malloc(sizeof(symNode));
+    pNew->Loc = LOC; 
+    strcpy(pNew->symbol,label);
+    pNew->link = NULL;
+
+    int idx = symHashFunc(label);
+    if (!SYMTAB[idx])
+        SYMTAB[idx] = pNew;
+    else {
+        symNode* pMove = SYMTAB[idx];
+        for ( ; pMove; pMove->link = pMove->link) ;
+        pMove->link = pNew;
+    }
+
+    return 1;
+}
+
+void freeSymTab() {
+    symNode* pFree, *ptmp;
+    for (int i = 0; i < SYMTAB_SIZE; i++) {
+        ptmp = SYMTAB[i];
+        while (ptmp) {
+            pFree = ptmp;
+            ptmp = ptmp->link;
+            free(pFree);
+        }
+    }
+    free(SYMTAB);
+}
+
+int symHashFunc(char* label) {
+    // Assum proper label input
+    int idx = 0;
+    int rmd = (toUpper(label[0])  - 'A') % 7;
+
+    for (int i = 0; i < strlen(label); i++)
+        idx += label[i];
+
+    int quo = idx % 4;
+    idx = quo * 7 + rmd;
+
+    return idx;
+}
+
+int findSym(char* label) {
+    // if found, return Loc of the label. else -1
+    if (!SYMTAB) {
+        // no Symbol Table
+        printf("No Symbol Table. Please assemble file first\n");
+        return -1;
+    }
+    int idx = symHashFunc(label);
+    symNode* pMove;
+    for (pMove = SYMTAB[idx]; pMove; pMove = pMove->link) {
+        if (strcmp(pMove->symbol, label) == 0) {
+            return pMove->Loc;
+        }
+    }
+
+    return -1;
+}
+
 int removeSpaceAroundComma(char* input) {
     // if comma included, return 1, else 0
     int flag = 0;
@@ -150,4 +269,25 @@ int removeSpaceAroundComma(char* input) {
 
 int isWhiteSpace(char ch) {
     return (ch == ' ' || ch == '\n' || ch == '\t') ? 1 : 0;
+}
+
+int isDirective(char* token) {
+    // check if the token is a directive
+    // if it is, return corresponding number. else 0
+    // START, END, BYTE, WORD, RESB, RESW
+    if (!token) return 0;
+
+    if (strcmp(token, "START") == 0) return 1;
+    if (strcmp(token, "END") == 0) return 2;
+    if (strcmp(token, "BYTE") == 0) return 3;
+    if (strcmp(token, "WORD") == 0) return 4;
+    if (strcmp(token, "RESB") == 0) return 5;
+    if (strcmp(token, "RESW") == 0) return 6;
+
+    return 0;
+}
+
+char toUpper(char ch) {
+    if (ch >= 'a' && ch <= 'z') ch -= 'a' - 'A';
+    return ch;
 }
