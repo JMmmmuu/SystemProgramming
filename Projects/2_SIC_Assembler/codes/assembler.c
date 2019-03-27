@@ -27,6 +27,7 @@ int symbol() {
         return 0;
     }
 
+
     return 1;
 }
 
@@ -162,10 +163,13 @@ int tokenizeAsmFile(char*** token, char* input) {
 
 int addSym(char* label, int LOC) {
     // add symbol to the SYMTAB
-    // if label already exist, return 0. else 1
+    // if label already exist, return 0
+    // if add successfully, return 1
     // if (SYMTAB) freeSymTab();
 
     if (!SYMTAB) {
+        // no Symbol table.
+        // allocate memory and initialize the table
         SYMTAB = (symNode**)malloc(SYMTAB_SIZE * sizeof(symNode*));
         for (int i = 0; i < SYMTAB_SIZE; i++) SYMTAB[i] = NULL;
     }
@@ -183,13 +187,85 @@ int addSym(char* label, int LOC) {
     pNew->link = NULL;
 
     int idx = symHashFunc(label);
-    if (!SYMTAB[idx])
+    if (!SYMTAB[idx]) {
         SYMTAB[idx] = pNew;
-    else {
-        symNode* pMove = SYMTAB[idx];
-        for ( ; pMove; pMove->link = pMove->link) ;
-        pMove->link = pNew;
+        return 1;
     }
+
+    symNode* pMove = SYMTAB[idx];
+    // take shorter symbol's length
+    int len = (int)strlen(pNew->symbol) > (int)strlen(pMove->symbol) ? (int)strlen(pMove->symbol) : (int)strlen(pNew->symbol);
+    int flag = 0, i;
+
+    for (i = 0; i < len; i++) {
+        if (pNew->symbol[i] > pMove->symbol[i]) {
+            flag = 1;
+            break;
+        }
+    }
+    if (flag) {
+        // new node must place at the header
+        pNew->link = pMove;
+        SYMTAB[idx] = pNew;
+        return 1;
+    }
+
+    if (i == len) {
+        if (len == (int)strlen(pNew->symbol))
+            // strlen(pNew->symbol) < strlen(pMove->symbol)
+            // header - pMove - pNew
+            pMove->link = pNew;
+        else {
+            // header - pNew - pMove
+            pNew->link = pMove;
+            SYMTAB[idx] = pNew;
+        }
+        return 1;
+    }
+
+    if (!pMove->link) {
+        // if the header has only one node
+        pMove->link = pNew;
+        return 1;
+    }
+
+    // if the header has more than two nodes
+    symNode* ptmp = pMove->link;
+    // HEADER - ... - pMove - ptmp - ...
+
+    while (ptmp) {
+        len = (int)strlen(pNew->symbol) > (int)strlen(ptmp->symbol) ? (int)strlen(ptmp->symbol) : (int)strlen(pNew->symbol);
+        for (i = 0; i < len; i++) {
+            if (pNew->symbol[i] > ptmp->symbol[i]) {
+                // pNew must place after pMove, before ptmp
+                flag = 1;
+                break;
+            }
+            if (flag) {
+                // pMove - pNew - ptmp
+                pNew->link = ptmp;
+                pMove->link = pNew;
+                return 1;
+            }
+        }
+        if (i == len) {
+            if (len == (int)strlen(pNew->symbol)) {
+                // strlen(ptmp) > strlen(pNew->symbol)
+                // ... - pMove - ptmp - pNew
+                pNew->link = ptmp->link;
+                ptmp->link = pNew;
+            }
+            else {
+                // ... - pMove - pNew - ptmp
+                pNew->link = ptmp;
+                pMove->link = pNew;
+            }
+            return 1;
+        }
+        pMove = pMove->link;
+        ptmp = pMove->link;
+    }
+    pMove->link = pNew;
 
     return 1;
 }
