@@ -248,6 +248,7 @@ int main() {
 
                 case 0xA0:
                     printf("command not found: %s\n", cmd);
+                    pass1(stdin);
                     break;
             }
         }

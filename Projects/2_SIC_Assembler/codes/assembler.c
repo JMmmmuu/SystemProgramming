@@ -58,7 +58,7 @@ int pass1(FILE* fp) {
     int format;
     char* line = (char*)malloc(30 * sizeof(char));
     char programName[10];
-    fseek(fp, 0, SEEK_SET);     // move to the first
+    //fseek(fp, 0, SEEK_SET);     // move to the first
 
     if ( !isStr(fgets(line, 30, fp)) ) {
             // file with no content
@@ -84,6 +84,14 @@ int pass1(FILE* fp) {
     char** token = (char**)malloc(MAX_TOKEN_NUM * sizeof(char*));
     line = toUpperCase(line);
     int tokenNum = tokenizeAsmFile(&token, line);
+
+    printf("%d\n", tokenNum);
+    for (i = 0; i < tokenNum; i++) {
+        printf("%s\n", token[i]);
+    }
+    return 0;
+
+
     for (i = 0; i < tokenNum; i++) {
         if (isDirective(token[i]) == 1) {
             // if token[i] == "START"
@@ -128,19 +136,17 @@ int pass1(FILE* fp) {
                 // no label
                 instructionSize = getInstructionSize(token, lineNum, 0);
                 if (!instructionSize) return 0;
-
             }
             else {
                 // contains label, instruction, notes, ...
                 // add to symbol table
                 instructionSize = getInstructionSize(token, lineNum, 1);
+                if (!instructionSize) return 0;
 
-
-
+                addSym(token[0], LOCCTR);
             }
             
         }
-
 
         LOCCTR += instructionSize;
         memset(line, '\0', (int)sizeof(line));
@@ -148,28 +154,6 @@ int pass1(FILE* fp) {
         fgets(line, 30, fp);
 
     }
-    
-    while ( !feof(fp) ) {
-        memset(line, '\0', (int)sizeof(line));
-        for (i = 0; i < MAX_TOKEN_NUM; i++) token[i] = NULL;
-        fgets(line, 30, fp);
-        lineNum++;
-
-        tokenNum = tokenizeAsmFile(&token, line);
-
-        if (strcmp(token[0], "END") == 0) break;
-
-        if (tokenNum >= 2) {
-            if (opcode(token[1], 0)) {
-                //addSym(token[0], LOCCTR);
-            }
-        }
-
-        
-    }
-
-
-
 
     return 1;
 }
@@ -187,13 +171,13 @@ int getInstructionSize(char** token, int lineNum, int isLabel) {
     if (size == 0) {
         switch (isDirective(token[opIdx])) {
             case 3:     // BYTE
-                size = byteSize(token[opIdx+1]); 
+                //size = byteSize(token[opIdx+1]); 
             case 4:     // WORD
-                size = wordSize(token[opIdx+1]);
+                //size = wordSize(token[opIdx+1]);
             case 5:     // RESB
-                size = resbSize(token[opIdx+1]);
+                //size = resbSize(token[opIdx+1]);
             case 6:     // RESW
-                size = reswSize(token[opIdx+1]);
+                //size = reswSize(token[opIdx+1]);
             default:
                 // wrong operation
                 printf("Error occured at [%d] line: No matching operation code\n", lineNum);
@@ -235,19 +219,19 @@ int tokenizeAsmFile(char*** token, char* input) {
     char* tmp;
     int commaFlag = removeSpaceAroundComma(input);
     input = removeSpace(input);
-    
-    *token[cnt] = strtok(input, " \t");
-    while (cnt < 5 && *token[cnt]) {
+
+    (*token)[cnt] = strtok(input, " \t");
+    while (cnt < 5 && (*token)[cnt]) {
         tmp = strtok(NULL, "\0");
         if (!tmp) break;
-        *token[++cnt] = strtok(removeSpace(tmp), " \t");
+        (*token)[++cnt] = strtok(removeSpace(tmp), " \t");
     }
     cnt++;
 
     if (commaFlag) {
         // contain comma
-        strtok(*token[cnt], ",");
-        *token[++cnt] = strtok(NULL, "\0");
+        strtok((*token)[cnt], ",");
+        (*token)[++cnt] = strtok(NULL, "\0");
     }
 
     return cnt;
@@ -347,7 +331,7 @@ int symHashFunc(char* label) {
     int idx = 0;
     int rmd = (toUpper(label[0])  - 'A') % 7;
 
-    for (int i = 0; i < strlen(label); i++)
+    for (int i = 0; i < (int)strlen(label); i++)
         idx += label[i];
 
     int quo = idx % 4;
