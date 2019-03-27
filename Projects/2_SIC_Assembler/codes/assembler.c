@@ -67,20 +67,18 @@ int pass1(FILE* fp) {
     }
     
     lineNum++;
-    //line = removeSpace(line);
-    while (line[0] == '.') {
-        // skip comment lines
+    while (line[0] == '.' || isBlankLine(line)) {
+        // skip comment lines & blank lines
         memset(line, '\0', (int)sizeof(line));
         if ( !isStr(fgets(line, 30, fp)) ) {
             // .asm file includes only comments
             // do not create any symbol table
             return 1;
         }
-        //line = removeSpace(line);
         lineNum++;
     }
 
-    // First line except comment
+    // First line except comments & blank line
     char** token = (char**)malloc(MAX_TOKEN_NUM * sizeof(char*));
     line = toUpperCase(line);
     int tokenNum = tokenizeAsmFile(&token, line);
@@ -126,8 +124,8 @@ int pass1(FILE* fp) {
 
     while (isDirective(token[0]) != 2) {
         // while not END
-        if (line[0] == '.')
-            // input is comment line
+        if (line[0] == '.' || isBlankLine(line))
+            // input is comment line or blank line
             instructionSize = 0;
         else {
             line = toUpperCase(line);
@@ -388,6 +386,12 @@ int removeSpaceAroundComma(char* input) {
 
 int isWhiteSpace(char ch) {
     return (ch == ' ' || ch == '\n' || ch == '\t') ? 1 : 0;
+}
+
+int isBlankLine(char* input) {
+    for (int i = 0; i < (int)strlen(input); i++)
+        if (!isWhiteSpace(input[i])) return 0;
+    return 1;
 }
 
 int isDirective(char* token){

@@ -116,6 +116,7 @@ int findSym(char* label);
 
 int removeSpaceAroundComma(char* input);
 int isWhiteSpace(char ch);
+int isBlankLine(char* input);
 int isDirective(char* token);
 
 char toUpper(char ch);
