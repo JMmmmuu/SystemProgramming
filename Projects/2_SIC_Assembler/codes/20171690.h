@@ -16,6 +16,8 @@
 #define COMMAND_SIZE 100
 #define OPCODE "opcode.txt"
 #define ONE_BYTE (unsigned char)0xFF
+#define MAX_TOKEN_NUM 5
+#define SYMTAB_SIZE 28
 
 // STRUCTUREs
 typedef struct hist {
@@ -32,7 +34,7 @@ typedef struct opT {
 } opNode;
 
 typedef struct symT {
-    int addr;
+    int Loc;
     char symbol[10];
     struct symT* link;
 } symNode;
@@ -90,7 +92,7 @@ int isHex(char ch);
 /**************************************************
  ************* OPCODE TABLE COMMANDS **************
  **************************************************/
-int opcode(char* mnemonic);                  // 0x20
+int opcode(char* mnemonic, int type);                  // 0x20
 int opcodeList();              // 0x21
 
 int readOpTable();
@@ -106,6 +108,13 @@ int pass1(FILE* fp);
 int pass2(FILE* fp);
 int isStr(char* Str);
 int tokenizeAsmFile(char*** token, char* input);
+int addSym(char* label, int LOC);
+void freeSymTab();
+int symHashFunc(char* label);
+int findSym(char* label);
 
 int removeSpaceAroundComma(char* input);
 int isWhiteSpace(char ch);
+int isDirective(char* token);
+
+char toUpper(char ch);

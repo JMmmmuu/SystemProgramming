@@ -205,7 +205,7 @@ int main() {
                     }
 
                     params = removeSpace(params);
-                    if (opcode(params))
+                    if (opcode(params, 1))
                         addHistory(input);
                     else 
                         printf("%s: No matching mnemonic\n", params);
