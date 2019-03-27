@@ -16,8 +16,9 @@
 #define COMMAND_SIZE 100
 #define OPCODE "opcode.txt"
 #define ONE_BYTE (unsigned char)0xFF
-#define MAX_TOKEN_NUM 5
+#define MAX_TOKEN_NUM 6
 #define SYMTAB_SIZE 28
+#define WORD_SIZE 3
 
 // STRUCTUREs
 typedef struct hist {
@@ -118,5 +119,6 @@ int isWhiteSpace(char ch);
 int isDirective(char* token);
 
 char toUpper(char ch);
+char* toUpperCase(char* input);
 int getBiggerStr(char* str1, char* str2);
 int getMaxofFour(char* str1, char* str2, char* str3, char* str4);

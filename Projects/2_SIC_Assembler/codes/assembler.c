@@ -54,8 +54,10 @@ int pass1(FILE* fp) {
     int LOCCTR, startingAddr = 0, i;
     int lineNum = 0;
     int flag = 0;
+    int instructionSize;
+    int format;
     char* line = (char*)malloc(30 * sizeof(char));
-    char filename[10];
+    char programName[10];
     fseek(fp, 0, SEEK_SET);     // move to the first
 
     if ( !isStr(fgets(line, 30, fp)) ) {
@@ -65,29 +67,33 @@ int pass1(FILE* fp) {
     }
     
     lineNum++;
-    line = removeSpace(line);
+    //line = removeSpace(line);
     while (line[0] == '.') {
         // skip comment lines
         memset(line, '\0', (int)sizeof(line));
         if ( !isStr(fgets(line, 30, fp)) ) {
+            // .asm file includes only comments
+            // do not create any symbol table
             return 1;
         }
-        line = removeSpace(line);
+        //line = removeSpace(line);
         lineNum++;
     }
 
-    // First line
+    // First line except comment
     char** token = (char**)malloc(MAX_TOKEN_NUM * sizeof(char*));
-    int num = tokenizeAsmFile(&token, line);
-    for (i = 0; i < num; i++) {
+    line = toUpperCase(line);
+    int tokenNum = tokenizeAsmFile(&token, line);
+    for (i = 0; i < tokenNum; i++) {
         if (isDirective(token[i]) == 1) {
             // if token[i] == "START"
-            if (i+1 >= num || num == 1) {
-                printf("No name or starting address at [%d] line\n", lineNum);
+            if (i+1 >= tokenNum || tokenNum == 1) {
+                printf("Error occured at [%d] line: No name or starting address\n", lineNum);
                 return 0;
             }
             if ( (startingAddr = strToHex(token[i+1])) == -1 ) {
-                printf("Error occured in .asm file\nWrong Starting Address at [%d] line\n", lineNum);
+                printf("Error occured at [%d] line: Wrong Starting Address\n", lineNum);
+                startingAddr = 0;
                 return 0;
             }
             flag = 1;
@@ -95,35 +101,87 @@ int pass1(FILE* fp) {
         }
     }
     if (flag) {
-        // if there's START directive, get next line
+        // if there's START directive, save program name
+        // and get next line
+        strcpy(programName, token[0]);
+
         memset(line, '\0', (int)sizeof(line));
         for (i = 0; i < MAX_TOKEN_NUM; i++) token[i] = NULL;
         if ( !isStr(fgets(line, 30, fp)) ) return 1;
 
         lineNum++;
-        num = tokenizeAsmFile(&token, line);
+        line = toUpperCase(line);
+        tokenNum = tokenizeAsmFile(&token, line);
+    }
+    else strcpy(programName, "\0");
+    LOCCTR = startingAddr;
+
+    while (isDirective(token[0]) != 2) {
+        // while not END
+        if (line[0] == '.')
+            // input is comment line
+            instructionSize = 0;
+        else {
+            line = toUpperCase(line);
+            tokenNum = tokenizeAsmFile(&token, line);
+            if (line[0] == ' ' || line[0] == '\t') {
+                // no label
+                if (token[0][0] == '+') instructionSize = 4;
+                else {
+                    instructionSize = opcode(token[0], 3);
+                    if (instructionSize == 0) {
+                        switch (isDirective(token[0]) {
+                            case 3:     // BYTE
+                                
+                            case 4:     // WORD
+                            case 5:     // RESB
+                            case 6:     // RESW
+
+                            default:
+                                // wrong operation
+                                printf("Error occured at [%d] line: No matching operation code\n", lineNum);
+                                return 0;
+
+                        }
+
+                    }
+            }
+            else {
+                // contains label, instruction, notes, ...
+
+            }
+            
+        }
+
+
+        tokenNum = tokenizeAsmFile(&token, line);
+
+
+
+        LOCCTR += instructionSize;
+        memset(line, '\0', (int)sizeof(line));
+        for (i = 0; i < MAX_TOKEN_NUM; i++) token[i] = NULL;
+        fgets(line, 30, fp);
 
     }
-
-
+    
     while ( !feof(fp) ) {
         memset(line, '\0', (int)sizeof(line));
         for (i = 0; i < MAX_TOKEN_NUM; i++) token[i] = NULL;
         fgets(line, 30, fp);
         lineNum++;
 
-        num = tokenizeAsmFile(&token, line);
+        tokenNum = tokenizeAsmFile(&token, line);
 
         if (strcmp(token[0], "END") == 0) break;
 
-        if (num >= 2) {
+        if (tokenNum >= 2) {
             if (opcode(token[1], 0)) {
                 //addSym(token[0], LOCCTR);
             }
         }
 
         
-
     }
 
 
@@ -156,6 +214,7 @@ int tokenizeAsmFile(char*** token, char* input) {
     int cnt = 0;
     char* tmp;
     int commaFlag = removeSpaceAroundComma(input);
+    input = removeSpace(input);
     
     *token[cnt] = strtok(input, " \t");
     while (cnt < 5 && *token[cnt]) {
@@ -348,6 +407,11 @@ char toUpper(char ch){
     return ch;
 }
 
+char* toUpperCase(char* input) {
+    for (int i = 0; i < (int)strlen(input); i++)
+        if (input[i] >= 'a' && input[i] <= 'z') input[i] -= 'a' - 'A';
+    return input;
+}
 
 int getBiggerStr(char* str1, char* str2){
     // Bigger means closer to Z
