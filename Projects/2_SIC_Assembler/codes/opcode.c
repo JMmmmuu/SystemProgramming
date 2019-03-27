@@ -6,20 +6,22 @@
  *************************************************/
 #include "20171690.h"
 
-int opcode(char* mnemonic) {
+int opcode(char* mnemonic, int type) {
     // if found correct mnemonic, return 1, else return 0
+    // if type is 1, print opcode. else, just return value
     int idx = hashFunction(mnemonic);
     opNode* pMove;
 
     for (pMove = opTable[idx]; pMove; pMove = pMove->link) {
         if (strcmp(pMove->operation, mnemonic) == 0) {
-            printf("opcode is %X\n", pMove->opcode);
+            if (type) printf("opcode is %X\n", pMove->opcode);
             return 1;
         }
     }
     printf("Wrong mnemonic\n");
     return 0;
 }
+
 int opcodeList() {
     if (!opTable) return 0;
 
