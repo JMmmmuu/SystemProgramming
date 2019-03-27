@@ -122,3 +122,9 @@ char toUpper(char ch);
 char* toUpperCase(char* input);
 int getBiggerStr(char* str1, char* str2);
 int getMaxofFour(char* str1, char* str2, char* str3, char* str4);
+int getInstructionSize(char** token, int lineNum, int isLabel);
+
+int byteSize(char* input);
+int wordSize(char* input);
+int resbSize(char* input);
+int reswSize(char* input);

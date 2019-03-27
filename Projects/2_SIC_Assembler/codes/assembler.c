@@ -126,36 +126,20 @@ int pass1(FILE* fp) {
             tokenNum = tokenizeAsmFile(&token, line);
             if (line[0] == ' ' || line[0] == '\t') {
                 // no label
-                if (token[0][0] == '+') instructionSize = 4;
-                else {
-                    instructionSize = opcode(token[0], 3);
-                    if (instructionSize == 0) {
-                        switch (isDirective(token[0]) {
-                            case 3:     // BYTE
-                                
-                            case 4:     // WORD
-                            case 5:     // RESB
-                            case 6:     // RESW
+                instructionSize = getInstructionSize(token, lineNum, 0);
+                if (!instructionSize) return 0;
 
-                            default:
-                                // wrong operation
-                                printf("Error occured at [%d] line: No matching operation code\n", lineNum);
-                                return 0;
-
-                        }
-
-                    }
             }
             else {
                 // contains label, instruction, notes, ...
+                // add to symbol table
+                instructionSize = getInstructionSize(token, lineNum, 1);
+
+
 
             }
             
         }
-
-
-        tokenNum = tokenizeAsmFile(&token, line);
-
 
 
         LOCCTR += instructionSize;
@@ -188,6 +172,42 @@ int pass1(FILE* fp) {
 
 
     return 1;
+}
+
+int getInstructionSize(char** token, int lineNum, int isLabel) {
+    // return instructionSize
+    // if isLabel is on, it has label. else no
+    // if error occured, return 0
+    int opIdx = isLabel ? 1 : 0;
+    int size = 0;
+
+    if (token[opIdx][0] == '+') return 4;
+
+    size = opcode(token[opIdx], 3);
+    if (size == 0) {
+        switch (isDirective(token[opIdx])) {
+            case 3:     // BYTE
+                size = byteSize(token[opIdx+1]); 
+            case 4:     // WORD
+                size = wordSize(token[opIdx+1]);
+            case 5:     // RESB
+                size = resbSize(token[opIdx+1]);
+            case 6:     // RESW
+                size = reswSize(token[opIdx+1]);
+            default:
+                // wrong operation
+                printf("Error occured at [%d] line: No matching operation code\n", lineNum);
+                return 0;
+        }
+        if (size == 0) {
+            // wrong syntax. 
+            // ex) no input || no hexa, ...
+            printf("Error occured at [%d] line: Wrong Syntax\n", lineNum);
+            return 0;
+        }
+    }
+
+    return size;
 }
 
 int pass2(FILE* fp) {
