@@ -14,17 +14,67 @@ int symbol() {
         return 0;
     }
 
-    symNode *tmp1, *tmp2, *tmp3, *tmp4;
+    int idx[4];
+    int ptIdx;
+
+    symNode* ptPtr[28];
+    for (int i = 0; i < 28; i++)
+        ptPtr[i] = SYMTAB[i];
 
     for (char ch = 'Z'; ch >= 'A'; ch--) {
-        int idx = (ch - 'A') / 7;
-        tmp1 = SYMTAB[idx];
-        tmp2 = SYMTAB[7 + idx];
-        tmp3 = SYMTAB[14 + idx];
-        tmp4 = SYMTAB[21 + idx];
+        ptIdx = -1;
+        for (int i = 0; i < 4; i++) idx[i] = (ch - 'A') % 7 + i * 7;
 
+        while (ptPtr[idx[0]] && ptPtr[idx[1]] && ptPtr[idx[2]] && ptPtr[idx[3]]) {
+            if ( (ptIdx = getMaxofFour(ptPtr[idx[0]]->symbol, ptPtr[idx[1]]->symbol, ptPtr[idx[2]]->symbol, ptPtr[idx[3]]->symbol)) == -1) return 0;;
+            printf("\t%s\t%06X\n", ptPtr[ptIdx]->symbol, ptPtr[ptIdx]->Loc);
+            ptPtr[ptIdx] = ptPtr[ptIdx]->link;
+            if (!ptPtr[ptIdx]) break;
+            if ( (ptPtr[ptIdx]->symbol)[0] != ch ) break;
+        }
+
+        if (ptIdx == -1) {
+            if (!ptPtr[idx[0]]) idx[0] = idx[3];
+            if (!ptPtr[idx[1]]) idx[1] = idx[3];
+            if (!ptPtr[idx[2]]) idx[2] = idx[3];
+        }
+        else 
+            idx[ptIdx] = idx[3];
+
+        while (ptPtr[idx[0]] && ptPtr[idx[1]] && ptPtr[idx[2]]) {
+            if ( (ptIdx = getMaxofThree(ptPtr[idx[0]]->symbol, ptPtr[idx[1]]->symbol, ptPtr[idx[2]]->symbol)) == -1) return 0;;
+            printf("\t%s\t%06X\n", ptPtr[ptIdx]->symbol, ptPtr[ptIdx]->Loc);
+            ptPtr[ptIdx] = ptPtr[ptIdx]->link;
+            if (!ptPtr[ptIdx]) break;
+            if ( (ptPtr[ptIdx]->symbol)[0] != ch ) break;
+        }
+
+        if (ptIdx == -1) {
+            if (!ptPtr[idx[0]]) idx[0] = idx[2];
+            if (!ptPtr[idx[1]]) idx[1] = idx[2];
+        }
+        else
+            idx[ptIdx] = idx[2];
+
+        while (ptPtr[idx[0]] && ptPtr[idx[1]]) {
+            ptIdx = getBiggerStr(ptPtr[idx[0]]->symbol, ptPtr[idx[1]]->symbol);
+            printf("\t%s\t%06X\n", ptPtr[ptIdx]->symbol, ptPtr[ptIdx]->Loc);
+            ptPtr[ptIdx] = ptPtr[ptIdx]->link;
+            if (!ptPtr[ptIdx]) break;
+            if ( (ptPtr[ptIdx]->symbol)[0] != ch ) break;
+        }
+
+        while (ptPtr[idx[0]]) {
+            if ( (ptPtr[idx[0]]->symbol)[0] != ch ) break;
+            printf("\t%s\t%06X\n", ptPtr[ptIdx]->symbol, ptPtr[ptIdx]->Loc);
+            ptPtr[ptIdx] = ptPtr[ptIdx]->link;
+        }
+        while (ptPtr[idx[1]]) {
+            if ( (ptPtr[idx[1]]->symbol)[1] != ch ) break;
+            printf("\t%s\t%06X\n", ptPtr[ptIdx]->symbol, ptPtr[ptIdx]->Loc);
+            ptPtr[ptIdx] = ptPtr[ptIdx]->link;
+        }
     }
-
 
     return 1;
 }
@@ -53,6 +103,7 @@ int addSym(char* label, int LOC) {
 
     int idx = symHashFunc(label);
     if (!SYMTAB[idx]) {
+        // no node at the header
         SYMTAB[idx] = pNew;
         return 1;
     }
@@ -107,7 +158,7 @@ void freeSymTab() {
 int symHashFunc(char* label) {
     // Assum proper label input
     int idx = 0;
-    int rmd = (toUpper(label[0])  - 'A') % 7;
+    int rmd = (label[0]  - 'A') % 7;
 
     for (int i = 0; i < (int)strlen(label); i++)
         idx += label[i];
@@ -149,6 +200,8 @@ int getBiggerStr(char* str1, char* str2){
     for (i = 0; i < shorterLen; i++) {
         if (str1[i] > str2[i])
             return 0;
+        else if (str1[i] < str2[i])
+            return 1;
     }
 
     // longer one is bigger
@@ -158,9 +211,17 @@ int getBiggerStr(char* str1, char* str2){
 
 int getMaxofFour(char* str1, char* str2, char* str3, char* str4) {
     if ( getBiggerStr(str2, str1) * getBiggerStr(str3, str1) * getBiggerStr(str4, str1) ) return 0;
-    if ( getBiggerStr(str1, str2) * getBiggerStr(str3, str2) * getBiggerStr(str4, str2) ) return 0;
-    if ( getBiggerStr(str1, str3) * getBiggerStr(str2, str3) * getBiggerStr(str4, str3) ) return 0;
-    if ( getBiggerStr(str1, str4) * getBiggerStr(str2, str4) * getBiggerStr(str3, str4) ) return 0;
+    if ( getBiggerStr(str1, str2) * getBiggerStr(str3, str2) * getBiggerStr(str4, str2) ) return 1;
+    if ( getBiggerStr(str1, str3) * getBiggerStr(str2, str3) * getBiggerStr(str4, str3) ) return 2;
+    if ( getBiggerStr(str1, str4) * getBiggerStr(str2, str4) * getBiggerStr(str3, str4) ) return 3;
+
+    return -1;
+}
+
+int getMaxofThree(char* str1, char* str2, char* str3) {
+    if ( getBiggerStr(str2, str1) * getBiggerStr(str3, str2) ) return 0;
+    if ( getBiggerStr(str1, str2) * getBiggerStr(str3, str2) ) return 1;
+    if ( getBiggerStr(str1, str3) * getBiggerStr(str2, str3) ) return 2;
 
     return -1;
 }

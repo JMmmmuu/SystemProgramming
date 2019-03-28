@@ -134,15 +134,18 @@ int pass1(FILE* fp) {
                 instructionSize = getInstructionSize(token, lineNum, 1);
                 if (!instructionSize) return 0;
 
-                if( addSym(token[0], LOCCTR) ) printf("\tsymbol added\n");
+                if( !addSym(token[0], LOCCTR) ) { 
+                    printf("Wrong\n");
+                    return 0;
+                }
             }
             
         }
 
         LOCCTR += instructionSize;
-        printf("%d\ttokenNum: %d - ", lineNum, tokenNum);
-        for (i = 0; i < tokenNum; i++) printf("\t%s ", token[i]);
-        printf("\n\n");
+        //printf("%d\ttokenNum: %d - ", lineNum, tokenNum);
+        //for (i = 0; i < tokenNum; i++) printf("\t%s ", token[i]);
+        //printf("\n\n");
         memset(line, '\0', (int)sizeof(line));
         for (i = 0; i < MAX_TOKEN_NUM; i++) token[i] = NULL;
         fgets(line, MAX_ASM_LINE, fp);
@@ -261,7 +264,7 @@ int removeSpaceAroundComma(char* input) {
         }
     }
 
-    printf("%s", input);
+    //printf("%s", input);
     return flag ? 1 : 0;
 }
 
