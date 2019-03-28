@@ -58,45 +58,35 @@ int addSym(char* label, int LOC) {
     }
 
     symNode* pMove = SYMTAB[idx];
-    // take shorter symbol's length
-    if ( getBiggerStr(pNew->symbol, pMove->symbol) ) {
-        // header - pMove - pNew
-        pNew->link = pMove;
-        pMove->link = pNew;
-    }
-    else {
-        // header - pNew - pMove
+    if ( getBiggerStr(pNew->symbol, pMove->symbol) == 0 ) {
+        // header - pNew - pMove - ...
         pNew->link = pMove;
         SYMTAB[idx] = pNew;
-    }
-
-    if (!pMove->link) 
-        // if the header has only one node
         return 1;
+    }
+    else {
+        // header - pMove - pNew - ...
+        pNew->link = pMove->link;
+        pMove->link = pNew;
+
+        if ( !(pNew->link) ) return 1;
+    }
 
     // if the header has more than two nodes
-    symNode* ptmp = pMove->link;
-    // HEADER - ... - pMove - ptmp - ...
-
+    symNode* ptmp = pNew->link;
     while (ptmp) {
+        // header - ... - pMove - pNew - ptmp - ...
+        if ( getBiggerStr(pNew->symbol, ptmp->symbol) == 0)
+            return 1;
 
-        if ( getBiggerStr(pNew->symbol, ptmp->symbol) ) {
-            // pMove - pNew - ptmp
-            pNew->link = ptmp;
-            pMove->link = pNew;
-            return 1;
-        }
-        else {
-            // pMove - ptmp - pNew
-            pNew->link = ptmp;
-            ptmp->link = pNew;
-            return 1;
-        }
+        pMove->link = ptmp;
+        pNew->link = ptmp->link;
+        ptmp->link = pNew;
+        // ... - pMove - ptmp - pNew - ...
 
         pMove = pMove->link;
-        ptmp = pMove->link;
+        ptmp = pNew->link;
     }
-    pMove->link = pNew;
 
     return 1;
 }
