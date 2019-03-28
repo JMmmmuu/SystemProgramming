@@ -142,24 +142,18 @@ int getBiggerStr(char* str1, char* str2){
     // return 1 : str1 < str2
     int len1 = (int)strlen(str1);
     int len2 = (int)strlen(str2);
-    int shorterLen = len1 > len2 ? len2 : len1;
+    int shorterLen = (len1 > len2) ? len2 : len1;
     // if flag set, str1 > str2
-    int flag = 0;
     int i;
 
     for (i = 0; i < shorterLen; i++) {
-        if (str1[i] > str2[i]) {
-            flag = 1;
-            break;
-        }
+        if (str1[i] > str2[i])
+            return 0;
     }
 
-    if (i == shorterLen) {
-        // longer one is bigger
-        flag = (shorterLen == len1) ? 0 : 1;
-    }
-
-    return flag ? 0 : 1;
+    // longer one is bigger
+    if (shorterLen == len1) return 1;
+    return 0;
 }
 
 int getMaxofFour(char* str1, char* str2, char* str3, char* str4) {
