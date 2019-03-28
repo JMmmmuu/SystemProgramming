@@ -86,8 +86,8 @@ int type(char* filename) {
 
     char ch = fgetc(fp);
     while (!feof(fp)) {
-        ch = fgetc(fp);
         printf("%c", ch);
+        ch = fgetc(fp);
     }
 
 
