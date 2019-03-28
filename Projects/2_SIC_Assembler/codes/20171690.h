@@ -19,6 +19,7 @@
 #define MAX_TOKEN_NUM 6
 #define SYMTAB_SIZE 28
 #define WORD_SIZE 3
+#define MAX_ASM_LINE 100
 
 // STRUCTUREs
 typedef struct hist {

@@ -15,12 +15,12 @@ int opcode(char* mnemonic, int type) {
 
     for (pMove = opTable[idx]; pMove; pMove = pMove->link) {
         if (strcmp(pMove->operation, mnemonic) == 0) {
-            if (type) printf("opcode is %X\n", pMove->opcode);
+            if (type == 1) printf("opcode is %X\n", pMove->opcode);
             if (type == 3) return pMove->format;
             return 1;
         }
     }
-    printf("Wrong mnemonic\n");
+    if (type == 1) printf("Wrong mnemonic\n");
     return 0;
 }
 

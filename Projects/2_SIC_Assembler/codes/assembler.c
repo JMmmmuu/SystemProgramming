@@ -16,7 +16,6 @@ int assemble(char* filename) {
         return 0;
     }
     
-    printf("%s\n", filename);
     if (pass1(asmFP)) {
         printf("pass1 completed\n");
         printSymbol();
@@ -37,11 +36,11 @@ int pass1(FILE* fp) {
     int lineNum = 0;
     int flag = 0;
     int instructionSize;
-    char* line = (char*)malloc(30 * sizeof(char));
+    char* line = (char*)malloc(MAX_ASM_LINE * sizeof(char));
     char programName[10];
     fseek(fp, 0, SEEK_SET);     // move to the first
 
-    if ( !isStr(fgets(line, 30, fp)) ) {
+    if ( !isStr(fgets(line, MAX_ASM_LINE, fp)) ) {
             // file with no content
             printf("No content in the file\n");
             return 0;
@@ -51,7 +50,7 @@ int pass1(FILE* fp) {
     while (line[0] == '.' || isBlankLine(line)) {
         // skip comment lines & blank lines
         memset(line, '\0', (int)sizeof(line));
-        if ( !isStr(fgets(line, 30, fp)) ) {
+        if ( !isStr(fgets(line, MAX_ASM_LINE, fp)) ) {
             // .asm file includes only comments
             // do not create any symbol table
             return 1;
@@ -94,7 +93,7 @@ int pass1(FILE* fp) {
 
         memset(line, '\0', (int)sizeof(line));
         for (i = 0; i < MAX_TOKEN_NUM; i++) token[i] = NULL;
-        if ( !isStr(fgets(line, 30, fp)) ) return 1;
+        if ( !isStr(fgets(line, MAX_ASM_LINE, fp)) ) return 1;
 
         lineNum++;
         line = toUpperCase(line);
@@ -102,6 +101,15 @@ int pass1(FILE* fp) {
     }
     else strcpy(programName, "\0");
     LOCCTR = startingAddr;
+
+
+    if (SYMTAB) freeSymTab();
+    SYMTAB = (symNode**)malloc(SYMTAB_SIZE * sizeof(symNode*));
+    for (i = 0; i < SYMTAB_SIZE; i++) SYMTAB[i] = NULL;
+        
+
+
+
 
     while (isDirective(token[0]) != 2) {
         // while not END
@@ -122,15 +130,19 @@ int pass1(FILE* fp) {
                 instructionSize = getInstructionSize(token, lineNum, 1);
                 if (!instructionSize) return 0;
 
-                addSym(token[0], LOCCTR);
+                if( addSym(token[0], LOCCTR) ) printf("\tsymbol added\n");
             }
             
         }
 
         LOCCTR += instructionSize;
+        printf("%d\ttokenNum: %d - ", lineNum, tokenNum);
+        for (i = 0; i < tokenNum; i++) printf("\t%s ", token[i]);
+        printf("\n\n");
         memset(line, '\0', (int)sizeof(line));
         for (i = 0; i < MAX_TOKEN_NUM; i++) token[i] = NULL;
-        fgets(line, 30, fp);
+        fgets(line, MAX_ASM_LINE, fp);
+        lineNum++;
 
     }
 
@@ -157,9 +169,12 @@ int getInstructionSize(char** token, int lineNum, int isLabel) {
                 //size = resbSize(token[opIdx+1]);
             case 6:     // RESW
                 //size = reswSize(token[opIdx+1]);
+            case 7:
+                size = WORD_SIZE;
+                break;
             default:
                 // wrong operation
-                printf("Error occured at [%d] line: No matching operation code\n", lineNum);
+                printf("Error occured at [%d] line: No matching operation code - %s\n", lineNum, token[opIdx]);
                 return 0;
         }
         if (size == 0) {
@@ -235,7 +250,8 @@ int removeSpaceAroundComma(char* input) {
             }
         }
     }
-    printf("%s\n", input);
+
+    printf("%s", input);
     return flag ? 1 : 0;
 }
 
@@ -261,6 +277,8 @@ int isDirective(char* token){
     if (strcmp(token, "WORD") == 0) return 4;
     if (strcmp(token, "RESB") == 0) return 5;
     if (strcmp(token, "RESW") == 0) return 6;
+
+    if (strcmp(token, "BASE") == 0) return 7;
 
     return 0;
 }

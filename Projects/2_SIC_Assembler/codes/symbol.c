@@ -39,13 +39,6 @@ int addSym(char* label, int LOC) {
     // if label already exist, return 0
     // if add successfully, return 1
 
-    if (!SYMTAB) {
-        // no Symbol table.
-        // allocate memory and initialize the table
-        SYMTAB = (symNode**)malloc(SYMTAB_SIZE * sizeof(symNode*));
-        for (int i = 0; i < SYMTAB_SIZE; i++) SYMTAB[i] = NULL;
-    }
-
     if (findSym(label) != -1) {
         // label exist
         printf("Label already exist\n");
