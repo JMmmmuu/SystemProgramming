@@ -103,16 +103,10 @@ int hashFunction(char* op);
  ******************** ASSEMBLER *******************
  **************************************************/
 int assemble(char* filename);               // 0x30
-int symbol();                               // 0x31
 
 int pass1(FILE* fp);
 int pass2(FILE* fp);
-int isStr(char* Str);
 int tokenizeAsmFile(char*** token, char* input);
-int addSym(char* label, int LOC);
-void freeSymTab();
-int symHashFunc(char* label);
-int findSym(char* label);
 
 int removeSpaceAroundComma(char* input);
 int isWhiteSpace(char ch);
@@ -121,11 +115,23 @@ int isDirective(char* token);
 
 char toUpper(char ch);
 char* toUpperCase(char* input);
-int getBiggerStr(char* str1, char* str2);
-int getMaxofFour(char* str1, char* str2, char* str3, char* str4);
 int getInstructionSize(char** token, int lineNum, int isLabel);
 
 int byteSize(char* input);
 int wordSize(char* input);
 int resbSize(char* input);
 int reswSize(char* input);
+
+/**************************************************
+ ********************** SYMBOL ********************
+ **************************************************/
+int symbol();                               // 0x31
+
+int addSym(char* label, int LOC);
+void freeSymTab();
+int symHashFunc(char* label);
+int findSym(char* label);
+
+int isStr(char* Str);
+int getBiggerStr(char* str1, char* str2);
+int getMaxofFour(char* str1, char* str2, char* str3, char* str4);
