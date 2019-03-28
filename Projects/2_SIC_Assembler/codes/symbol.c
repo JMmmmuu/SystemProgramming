@@ -181,7 +181,7 @@ void printSymbol() {
     char ch[4];
     for (int i = 0; i < SYMTAB_SIZE; i++) {
         for (int j = 0; j < 4; j++)
-            ch[j] = i / 7 * 7 + i % 7 + 'A';
+            ch[j] = 'A' + i % 7 + j * 7;
         printf("%d [%c %c %c %c]: ", i, ch[0], ch[1], ch[2], ch[3]);
         pMove = SYMTAB[i];
         if (pMove) {

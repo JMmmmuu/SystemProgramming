@@ -109,9 +109,9 @@ int pass1(FILE* fp) {
         
 
 
+    flag = 0;
 
-
-    while (isDirective(token[0]) != 2) {
+    while ( !feof(fp) ) { //isDirective(token[0]) != 2) {
         // while not END
         if (line[0] == '.' || isBlankLine(line))
             // input is comment line or blank line
@@ -119,6 +119,10 @@ int pass1(FILE* fp) {
         else {
             line = toUpperCase(line);
             tokenNum = tokenizeAsmFile(&token, line);
+            if (isDirective(token[0]) == 2) {
+                flag = 1;
+                break;
+            }
             if (line[0] == ' ' || line[0] == '\t') {
                 // no label
                 instructionSize = getInstructionSize(token, lineNum, 0);
@@ -146,6 +150,11 @@ int pass1(FILE* fp) {
 
     }
 
+    if (!flag) {
+        printf("No END Directive\n");
+        return 0;
+    }
+
     return 1;
 }
 
@@ -161,6 +170,7 @@ int getInstructionSize(char** token, int lineNum, int isLabel) {
     size = opcode(token[opIdx], 3);
     if (size == 0) {
         switch (isDirective(token[opIdx])) {
+            //case 1: case 2:
             case 3:     // BYTE
                 //size = byteSize(token[opIdx+1]); 
             case 4:     // WORD
