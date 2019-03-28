@@ -16,8 +16,13 @@ int assemble(char* filename) {
         return 0;
     }
     
-    pass1(asmFP);
+    printf("%s\n", filename);
+    if (pass1(asmFP)) {
+        printf("pass1 completed\n");
+        printSymbol();
+    }
 
+    fclose(asmFP);
     return 1;
 }
 
@@ -32,10 +37,9 @@ int pass1(FILE* fp) {
     int lineNum = 0;
     int flag = 0;
     int instructionSize;
-    int format;
     char* line = (char*)malloc(30 * sizeof(char));
     char programName[10];
-    //fseek(fp, 0, SEEK_SET);     // move to the first
+    fseek(fp, 0, SEEK_SET);     // move to the first
 
     if ( !isStr(fgets(line, 30, fp)) ) {
             // file with no content
@@ -60,11 +64,11 @@ int pass1(FILE* fp) {
     line = toUpperCase(line);
     int tokenNum = tokenizeAsmFile(&token, line);
 
+    /*
     printf("%d\n", tokenNum);
     for (i = 0; i < tokenNum; i++) {
         printf("%s\n", token[i]);
-    }
-    return 0;
+    }*/
 
 
     for (i = 0; i < tokenNum; i++) {

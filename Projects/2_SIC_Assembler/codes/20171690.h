@@ -135,3 +135,5 @@ int findSym(char* label);
 int isStr(char* Str);
 int getBiggerStr(char* str1, char* str2);
 int getMaxofFour(char* str1, char* str2, char* str3, char* str4);
+
+void printSymbol();

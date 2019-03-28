@@ -77,8 +77,6 @@ int addSym(char* label, int LOC) {
         SYMTAB[idx] = pNew;
     }
 
-    int flag = 0, i;
-
     if (!pMove->link) 
         // if the header has only one node
         return 1;
@@ -188,4 +186,26 @@ int getMaxofFour(char* str1, char* str2, char* str3, char* str4) {
     if ( getBiggerStr(str1, str4) * getBiggerStr(str2, str4) * getBiggerStr(str3, str4) ) return 0;
 
     return -1;
+}
+
+void printSymbol() {
+    if (!SYMTAB) {
+        printf("No SYMTAB\n");
+        return ;
+    }
+
+    symNode* pMove;
+    char ch[4];
+    for (int i = 0; i < SYMTAB_SIZE; i++) {
+        for (int j = 0; j < 4; j++)
+            ch[j] = i / 7 * 7 + i % 7 + 'A';
+        printf("%d [%c %c %c %c]: ", i, ch[0], ch[1], ch[2], ch[3]);
+        pMove = SYMTAB[i];
+        if (pMove) {
+            for ( ; pMove->link; pMove = pMove->link)
+                printf("[%s, %X] -> ", pMove->symbol, pMove->Loc);
+            printf("[%s, %X]", pMove->symbol, pMove->Loc);
+        }
+        printf("\n");
+    }
 }
