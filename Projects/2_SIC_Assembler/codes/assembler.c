@@ -349,7 +349,7 @@ int pass2(FILE* fp, char* filename) {
                 // exist matching operation
                 objCode = getObjCode(token, format, 0);
 
-                fprintf(LF, "\t%d\t%04X\t", pCurrent->lineNum, pCurrent->LOC);
+                fprintf(LF, "\t%d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
                 for (i = 0; i < tokenNum; i++)
                     fprintf(LF, "\t%s", token[i]);
 
@@ -370,14 +370,24 @@ int pass2(FILE* fp, char* filename) {
                 // directive!
                 switch (directiveNum) {
                     case 3:     // BYTE
-                        objCode = getObjCode(token, format, 1);
-                        fprintf(LF, "\t%d\t%04X\t", pCurrent->lineNum, pCurrent->LOC);
+                        objCode = getObjCode(token, 5, 1);
+                        fprintf(LF, "\t%d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
                         for (i = 0; i < tokenNum; i++)
                             fprintf(LF, "\t%s", token[i]);
+                        fprintf(LF,  "\t\t\t\t");
+                        printObjCode(3, objCode, LF);
+                        fprintf(LF, "\n");
+                        enqueue(objCode, 3, pCurrent->LOC, OF);
 
-
+                        break;
                     case 4:     // WORD
-
+                        objCode = getObjCode(token, 5, 2);
+                        fprintf(LF, "\t%d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
+                        for (i = 0; i < tokenNum; i++)
+                            fprintf(LF, "\t%s", token[i]);
+                        fprintf(LF,  "\t\t\t\t");
+                        printObjCode(3, objCode, LF);
+                        enqueue(objCode, 3, pCurrent->LOC, OF);
 
                         break;
                     case 5:     // RESB
@@ -418,7 +428,7 @@ int pass2(FILE* fp, char* filename) {
 }
 
 int getObjCode(char** token, int format, int type) {
-    // format: operation code format
+    // format: operation code format / or size
     // type:    if 0, operation
     //          if 1, BYTE Const
     //          if 2, WORD Const
