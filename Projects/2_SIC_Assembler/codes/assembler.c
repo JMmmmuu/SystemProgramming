@@ -230,15 +230,16 @@ int pass2(FILE* fp, char* filename) {
     // Perform processing of assembler directives not done during Pass 1
     // Write obj program and assembly listing.
 
-    fseek(fp, 0, SEEK_SET);     // move to the first
-    int i, tokenNum;
+    fseek(fp, 0, SEEK_SET);     // move to the start
+    int i, tokenNum, startingAddr, endAddr;
     numNode* pCurrent = numHead;
     char* line = (char*)malloc(MAX_ASM_LINE * sizeof(char));
     char** token = (char**)malloc(MAX_TOKEN_NUM * sizeof(char*));
     for (i = 0; i < MAX_TOKEN_NUM; i++) token[i] = NULL;
+    tRHead = NULL; tRTail = NULL;
 
-    FILE* LF = fopen(nameToListing(filename), "w");
-    FILE* OF = fopen(nameToObj(filename), "w");
+    FILE* LF = fopen(nameToListing(filename), "w");     // listing file pointer
+    FILE* OF = fopen(nameToObj(filename), "w");         // object file pointer
 
     if (!pCurrent) {
         printf("No content in the [%s] file", filename);
@@ -246,23 +247,28 @@ int pass2(FILE* fp, char* filename) {
     }
 
     if (pCurrent->s_flag) {
-        fgets(line, MAX_ASM_LINE, fp);
         // exist START directive
-        fprintf(LF, "\t%d\t%04X", pCurrent->lineNum, pCurrent->LOC);
+        fgets(line, MAX_ASM_LINE, fp);
         tokenNum = tokenizeAsmFile(&token, line);
+
+        fprintf(LF, "\t%d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
         for (i = 0; i < tokenNum; i++)
             fprintf(LF, "\t%s", token[i]);
-        int startingAddr = strToHex(token[2]);
+        fprintf(LF, "\n");
+
+        startingAddr = strToHex(token[2]);
         numNode* pMove;
         for (pMove = numHead; pMove->link; pMove = pMove->link) ;
-        int endAddr = pMove->LOC;
+        endAddr = pMove->LOC;
         fprintf(OF, "H%-6s%06X%06X", token[0], startingAddr, endAddr - startingAddr);
         pCurrent = pCurrent->link;
     }
     else {
+        // no START directive
+        // starting addr == 0. no program name
         numNode* pMove;
         for (pMove = numHead; pMove->link; pMove = pMove->link) ;
-        int endAddr = pMove->LOC;
+        endAddr = pMove->LOC;
         fprintf(OF, "H      000000%06X", endAddr);
     }
 
@@ -274,28 +280,125 @@ int pass2(FILE* fp, char* filename) {
 
         if (pCurrent->skip_flag) {
             // if the  line is comment or blank
-            fprintf(LF, "\t%d\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
+            fprintf(LF, "\t%d\t\t\t\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
             pCurrent = pCurrent->link;
             continue;
         }
         if (pCurrent->e_flag) {
             // END directive
             fprintf(OF, "E%06X", numHead->LOC);
-            fprintf(LF, "\t%d\t%s", pCurrent->lineNum, removeSpace(line));
+            fprintf(LF, "\t%d\t\t\t\t\t\t%s", pCurrent->lineNum * 5, removeSpace(line));
             break;
         }
 
         // TEXT RECORD
         line = toUpperCase(line);
         tokenNum = tokenizeAsmFile(&token, line);
+        int format, directiveNum;
+        int objCode;
+
+        // set Program Counter
+        if (pCurrent->link) PC = pCurrent->link->LOC;
+
+        if (line[0] == ' ' || line[0] == '\t') {
+            // no label follows
+            format = opcode(token[0], 3);
+            if ( (token[0])[0] == '+') format = 4;
+            if ( format ) {
+                // There exist matching operation
+                objCode = getObjCode(token, format, 0);
+
+                fprintf(LF, "\t%d\t%04X\t\t\t",  pCurrent->lineNum * 5, pCurrent->LOC);
+                for (i = 0; i < tokenNum; i++)
+                    fprintf(LF, "\t%s", token[i]);
+
+                fprintf(LF, "\t\t\t\t");
+                printObjCode(format, objCode, LF);
+                fprintf(LF, "\n");
+                enqueue(objCode, format, pCurrent->LOC, OF);
+            }
+            else {
+                // no matching operation
+                // it can be directives
+                // or wrong input
+                directiveNum = isDirective(token[0]);
+                if ( !directiveNum ) {
+                    // wrong input
+                    printf("Wrong!!\n");
+                    return 0;
+                }
+                switch (directiveNum) {
+                    case 5:     // RESB
+                    case 6:     // RESW
+                        dequeue(OF);
+                    case 7:
+                        // No need to create opcode
+                        fprintf(LF, "\t%d\t%04X\t\t\t", pCurrent->lineNum * 5, pCurrent->LOC);
+                        for (i = 0; i < tokenNum; i++)
+                            fprintf(LF, "\t%s", token[i]);
+                        fprintf(LF, "\n");
+                        continue;
+                }
+            }
+        }
+        else {
+            // label!!
+            format = opcode(token[1], 3);
+            if ( (token[1])[0] == '+' ) format = 4;
+            if ( format ) {
+                // exist matching operation
+                objCode = getObjCode(token, format, 0);
+
+                fprintf(LF, "\t%d\t%04X\t", pCurrent->lineNum, pCurrent->LOC);
+                for (i = 0; i < tokenNum; i++)
+                    fprintf(LF, "\t%s", token[i]);
+
+                fprintf(LF, "\t\t\t\t");
+                printObjCode(format, objCode, LF);
+                fprintf(LF, "\n");
+                enqueue(objCode, format, pCurrent->LOC, OF);
+            }
+            else {
+                // no matching operation
+                // directives or wrong input
+                directiveNum = isDirective(token[1]);
+                if ( !directiveNum ) {
+                    // wrong input
+                    printf("Wrong!\n");
+                    return 0;
+                }
+                // directive!
+                switch (directiveNum) {
+                    case 3:     // BYTE
+                        objCode = getObjCode(token, format, 1);
+                        //fprintf(LF, "\t%d
+
+                    case 4:     // WORD
 
 
+                        break;
+                    case 5:     // RESB
+                    case 6:     // RESW
+                        fprintf(LF, "\t%d\t%04X\t", pCurrent->lineNum, pCurrent->LOC);
+                        for (i = 0; i < tokenNum; i++)
+                            fprintf(LF, "\t%s", token[i]);
+                        fprintf(LF, "\n");
 
-        
+                        dequeue(OF);
+                        break;
 
+                    case 7:
+                        // No need to create opcode
+                        fprintf(LF, "\t%d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
+                        for (i = 0; i < tokenNum; i++)
+                            fprintf(LF, "\t%s", token[i]);
+                        fprintf(LF, "\n");
+                        continue;
+                }
+            }
+            
 
-
-        
+        }
 
 
 
@@ -311,9 +414,26 @@ int pass2(FILE* fp, char* filename) {
     return 1;
 }
 
-int getObjCode(char** token, int format) {
+int getObjCode(char** token, int format, int type) {
+    // format: operation code format
+    // type:    if 0, operation
+    //          if 1, BYTE Const
+    //          if 2, WORD Const
     
     return 0;
+}
+
+void printObjCode(int format, int objCode, FILE* fp) {
+    switch (format) {
+        case 1:
+            fprintf(fp, "%02X", objCode);
+        case 2:
+            fprintf(fp, "%04X", objCode);
+        case 3:
+            fprintf(fp, "%06X", objCode);
+        case 4:
+            fprintf(fp, "%08X", objCode);
+    }
 }
 
 int tokenizeAsmFile(char*** token, char* input) {
@@ -427,8 +547,6 @@ char* nameToObj(char* filename) {
     return objName;
 }
 
-
-
 char toUpper(char ch){
     if (ch >= 'a' && ch <= 'z') ch -= 'a' - 'A';
     return ch;
@@ -526,4 +644,56 @@ void printNums() {
     numNode* pMove;
     for (pMove = numHead; pMove; pMove = pMove->link)
         printf("\t%d\t%06X\n", pMove->lineNum, pMove->LOC);
+}
+
+void enqueue(int addr, int size, int LOC, FILE* OF) {
+    tRecord* pNew = (tRecord*)malloc(sizeof(tRecord));
+    pNew->addr = addr;
+    pNew->size = size;
+    pNew->LOC = LOC;
+    pNew->link = NULL;
+
+    if ( !tRHead ) {
+        tRHead = pNew;
+        tRTail = pNew;
+        return ;
+    }
+
+    if (LOC - tRHead->LOC > MAX_OBJ_TRECORD) {
+        dequeue(OF);
+        tRHead = pNew;
+        tRTail= pNew;
+        return ;
+    }
+
+    tRTail->link = pNew;
+    tRTail = pNew;
+}
+
+void dequeue(FILE* OF) {
+    if (!tRHead) return ;
+        fprintf(OF, "T%06X%02X", tRHead->LOC, tRTail->LOC - tRHead->LOC);
+
+        while (tRHead) {
+            switch(tRHead->size) {
+                case 1:
+                    fprintf(OF, "%02X", tRHead->addr);
+                    break;
+                case 2:
+                    fprintf(OF, "%04X", tRHead->addr);
+                    break;
+                case 3:
+                    fprintf(OF, "%06X", tRHead->addr);
+                    break;
+                case 4:
+                    fprintf(OF, "%08X", tRHead->addr);
+                    break;
+                default: return ;
+            }
+            tRecord* pFree = tRHead;
+            tRHead = tRHead->link;
+            free(pFree);
+        }
+        tRHead = NULL;
+        tRTail = NULL;
 }
