@@ -274,11 +274,18 @@ int pass2(FILE* fp, char* filename) {
 
         if (pCurrent->skip_flag) {
             // if the  line is comment or blank
-            fprintf(LF, "\t%d\t%s", pCurrent->lineNum * 5, line);
+            fprintf(LF, "\t%d\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
             pCurrent = pCurrent->link;
             continue;
         }
+        if (pCurrent->e_flag) {
+            // END directive
+            fprintf(OF, "E%06X", numHead->LOC);
+            fprintf(LF, "\t%d\t%s", pCurrent->lineNum, removeSpace(line));
+            break;
+        }
 
+        // TEXT RECORD
         line = toUpperCase(line);
         tokenNum = tokenizeAsmFile(&token, line);
 
