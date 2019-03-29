@@ -20,6 +20,7 @@
 #define SYMTAB_SIZE 28
 #define WORD_SIZE 3
 #define MAX_ASM_LINE 100
+#define MAX_OBJ_TRECORD 0x1E
 
 // STRUCTUREs
 typedef struct hist {
@@ -55,20 +56,27 @@ typedef struct _inter {
     // CONST || VARS flag
     int lineNum;
     int LOC;
-    unsigned char s_flag;       // 0
-    unsigned char e_flag;       // 1
+    unsigned char s_flag;       // 1
+    unsigned char e_flag;       // 2
     unsigned char skip_flag;    // 2
-    unsigned char const_flag;
-    unsigned char var_flag;
-    unsigned char lable_flag;
     struct _inter* link;
 } numNode;
+
+typedef struct _tRecord {
+    int addr;
+    int size;
+    int LOC;
+    struct _tRecord* link;
+} tRecord;
 
 // GLOBAL VARIANTs
 HISTORY* hisHead;
 opNode** opTable;
 symNode** SYMTAB;
 numNode* numHead;
+tRecord* tRHead;
+tRecord* tRTail;
+
 unsigned char* MEMORY;
 int END_ADDR;
 
@@ -125,7 +133,8 @@ int assemble(char* filename);               // 0x30
 int pass1(FILE* fp);
 int pass2(FILE* fp, char* filename);
 int tokenizeAsmFile(char*** token, char* input);
-int getObjCode(char** token, int format);
+int getObjCode(char** token, int format, int type);
+void printObjCode(int format, int objCode, FILE* fp);
 
 int removeSpaceAroundComma(char* input);
 int isWhiteSpace(char ch);
@@ -148,6 +157,8 @@ numNode* addNum(int lineNum, int LOC, numNode* pLast, int flagType);
 void freeNums();
 void printNums();
 
+void enqueue(int data, int size, int LOC, FILE* OF);
+void dequeue(FILE* OF);
 
 /**************************************************
  ********************** SYMBOL ********************
