@@ -51,8 +51,14 @@ typedef struct __token {
 
 typedef struct _inter {
     // store intermidate info of asm file - LOC & line num
+    // include some flags such as START/ END directives
+    // CONST || VARS flag
     int lineNum;
     int LOC;
+    int s_flag;
+    int e_flag;
+    int const_flag;
+    int var_flag;
     struct _inter* link;
 } numNode;
 
@@ -115,13 +121,16 @@ int hashFunction(char* op);
 int assemble(char* filename);               // 0x30
 
 int pass1(FILE* fp);
-int pass2(FILE* fp);
+int pass2(FILE* fp, char* filename);
 int tokenizeAsmFile(char*** token, char* input);
 
 int removeSpaceAroundComma(char* input);
 int isWhiteSpace(char ch);
 int isBlankLine(char* input);
 int isDirective(char* token);
+
+char* nameToListing(char* filename);
+char* nameToObj(char* filename);
 
 char toUpper(char ch);
 char* toUpperCase(char* input);

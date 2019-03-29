@@ -21,7 +21,7 @@ int assemble(char* filename) {
         printSymbol();
         printNums();
     }
-    if (pass2(asmFP)) {
+    if (pass2(asmFP, filename)) {
         printf("pass2 completed\n");
     }
 
@@ -223,13 +223,33 @@ int getInstructionSize(char** token, int lineNum, int isLabel) {
     return size;
 }
 
-int pass2(FILE* fp) {
+int pass2(FILE* fp, char* filename) {
     // Assemble instructions (translating opcodes and looking up addrs)
     // Generate data values defined by BYTE, WORD, etc
     // Perform processing of assembler directives not done during Pass 1
     // Write obj program and assembly listing.
 
     fseek(fp, 0, SEEK_SET);     // move to the first
+    numNode* pCurrent = numHead;
+    char* line = (char*)malloc(MAX_ASM_LINE * sizeof(char));
+
+    FILE* LF = fopen(nameToListing(filename), "w");
+    FILE* OF = fopen(nameToObj(filename), "w");
+
+    while (pCurrent) {
+        fflush(stdin);
+        fgets(line, MAX_ASM_LINE, fp);
+
+        if (pCurrent->s_flag) {
+
+        }
+        
+
+
+
+
+        pCurrent = pCurrent->link;
+    }
 
 
 
@@ -321,6 +341,36 @@ int isDirective(char* token){
 
     return 0;
 }
+
+char* nameToListing(char* filename) {
+    char* lstName = (char*)malloc(50 * sizeof(char));
+
+    for (int i = 0; i < (int)strlen(filename); i++) {
+        if (filename[i] != '.') 
+            lstName[i] = filename[i];
+        else break;
+    }
+
+    strcat(lstName, ".lst");
+    
+    return lstName;
+}
+
+char* nameToObj(char* filename) {
+    char* objName = (char*)malloc(50 * sizeof(char));
+
+    for (int i = 0; i < (int)strlen(filename); i++) {
+        if (filename[i] != '.') 
+            objName[i] = filename[i];
+        else break;
+    }
+
+    strcat(objName, ".obj");
+    
+    return objName;
+}
+
+
 
 char toUpper(char ch){
     if (ch >= 'a' && ch <= 'z') ch -= 'a' - 'A';
