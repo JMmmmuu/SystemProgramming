@@ -19,6 +19,10 @@ int assemble(char* filename) {
     if (pass1(asmFP)) {
         printf("pass1 completed\n");
         printSymbol();
+        printNums();
+    }
+    if (pass2(asmFP)) {
+        printf("pass2 completed\n");
     }
 
     fclose(asmFP);
@@ -47,6 +51,9 @@ int pass1(FILE* fp) {
     }
     
     lineNum++;
+    if (!numHead) freeNums();
+    numNode* pLast = numHead;
+
     while (line[0] == '.' || isBlankLine(line)) {
         // skip comment lines & blank lines
         memset(line, '\0', (int)sizeof(line));
@@ -56,6 +63,7 @@ int pass1(FILE* fp) {
             return 1;
         }
         lineNum++;
+        pLast = addNum(lineNum, -1, pLast);
     }
 
     // First line except comments & blank line
@@ -101,7 +109,7 @@ int pass1(FILE* fp) {
     }
     else strcpy(programName, "\0");
     LOCCTR = startingAddr;
-    printf("%06X %s\n", LOCCTR, token[0]);
+    pLast = addNum(lineNum, LOCCTR, pLast);
 
     if (SYMTAB) freeSymTab();
     SYMTAB = (symNode**)malloc(SYMTAB_SIZE * sizeof(symNode*));
@@ -110,9 +118,11 @@ int pass1(FILE* fp) {
 
     while ( !feof(fp) ) { 
         // while not end of file
-        if (line[0] == '.' || isBlankLine(line))
+        if (line[0] == '.' || isBlankLine(line)) {
             // input is comment line or blank line
             instructionSize = 0;
+            pLast = addNum(lineNum, -1, pLast);
+        }
         else {
             line = toUpperCase(line);
             tokenNum = tokenizeAsmFile(&token, line);
@@ -137,11 +147,9 @@ int pass1(FILE* fp) {
                     return 0;
                 }
             }
-            
+            pLast = addNum(lineNum, LOCCTR, pLast);
         }
 
-        
-        printf("%06X %s\n", LOCCTR, token[0]);
         LOCCTR += instructionSize;
         //printf("%d\ttokenNum: %d - ", lineNum, tokenNum);
         //for (i = 0; i < tokenNum; i++) printf("\t%s ", token[i]);
@@ -360,4 +368,33 @@ int reswSize(char* input) {
     if ( (size = strToHex(input)) == -1 ) return -1;
 
     return size * WORD_SIZE;
+}
+
+numNode* addNum(int lineNum, int LOC, numNode* pLast) {
+    numNode* pNew = (numNode*)malloc(sizeof(numNode));
+    pNew->lineNum = lineNum; pNew->LOC = LOC;
+    pNew->link = NULL;
+
+    printf("%d %X\n", lineNum, LOC);
+    if (!numHead) {
+        numHead = pNew;
+        return pNew;
+    }
+    pLast->link = pNew;
+    return pNew;
+}
+
+void freeNums() {
+    numNode* pFree;
+    while (numHead) {
+        pFree = numHead;
+        numHead = numHead->link;
+        free(pFree);
+    }
+}
+
+void printNums() {
+    numNode* pMove;
+    for (pMove = numHead; pMove; pMove = pMove->link)
+        printf("\t%d\t%d\n", pMove->lineNum, pMove->LOC);
 }

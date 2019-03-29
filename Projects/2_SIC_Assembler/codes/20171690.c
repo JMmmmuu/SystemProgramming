@@ -267,6 +267,7 @@ void init() {
     // initialize variants & allocate memories
     hisHead = NULL;
     SYMTAB = NULL;
+    numHead = NULL;
 
     opTable = (opNode**)malloc(20 * sizeof(opNode*));
     for (int i = 0; i < 20; i++)

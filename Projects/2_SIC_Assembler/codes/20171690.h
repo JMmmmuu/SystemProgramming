@@ -49,10 +49,18 @@ typedef struct __token {
     char* tmp;
 } asmToken;
 
+typedef struct _inter {
+    // store intermidate info of asm file - LOC & line num
+    int lineNum;
+    int LOC;
+    struct _inter* link;
+} numNode;
+
 // GLOBAL VARIANTs
 HISTORY* hisHead;
 opNode** opTable;
 symNode** SYMTAB;
+numNode* numHead;
 unsigned char* MEMORY;
 int END_ADDR;
 
@@ -123,6 +131,11 @@ int byteSize(char* input);
 int wordSize(char* input);
 int resbSize(char* input);
 int reswSize(char* input);
+
+numNode* addNum(int lineNum, int LOC, numNode* pLast);
+void freeNums();
+void printNums();
+
 
 /**************************************************
  ********************** SYMBOL ********************
