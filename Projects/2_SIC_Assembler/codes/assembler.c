@@ -371,7 +371,10 @@ int pass2(FILE* fp, char* filename) {
                 switch (directiveNum) {
                     case 3:     // BYTE
                         objCode = getObjCode(token, format, 1);
-                        //fprintf(LF, "\t%d
+                        fprintf(LF, "\t%d\t%04X\t", pCurrent->lineNum, pCurrent->LOC);
+                        for (i = 0; i < tokenNum; i++)
+                            fprintf(LF, "\t%s", token[i]);
+
 
                     case 4:     // WORD
 
@@ -675,21 +678,8 @@ void dequeue(FILE* OF) {
         fprintf(OF, "T%06X%02X", tRHead->LOC, tRTail->LOC - tRHead->LOC);
 
         while (tRHead) {
-            switch(tRHead->size) {
-                case 1:
-                    fprintf(OF, "%02X", tRHead->addr);
-                    break;
-                case 2:
-                    fprintf(OF, "%04X", tRHead->addr);
-                    break;
-                case 3:
-                    fprintf(OF, "%06X", tRHead->addr);
-                    break;
-                case 4:
-                    fprintf(OF, "%08X", tRHead->addr);
-                    break;
-                default: return ;
-            }
+            printObjCode(tRHead->size, tRHead->addr, OF);
+
             tRecord* pFree = tRHead;
             tRHead = tRHead->link;
             free(pFree);
