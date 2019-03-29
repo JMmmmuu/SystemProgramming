@@ -15,7 +15,7 @@ int symbol() {
     }
 
     int idx[4];
-    int ptIdx;
+    int ptIdx, cnt, sign;
 
     symNode* ptPtr[28];
     for (int i = 0; i < 28; i++)
@@ -23,56 +23,86 @@ int symbol() {
 
     for (char ch = 'Z'; ch >= 'A'; ch--) {
         ptIdx = -1;
-        for (int i = 0; i < 4; i++) idx[i] = (ch - 'A') % 7 + i * 7;
-
-        while (ptPtr[idx[0]] && ptPtr[idx[1]] && ptPtr[idx[2]] && ptPtr[idx[3]]) {
-            if ( (ptIdx = getMaxofFour(ptPtr[idx[0]]->symbol, ptPtr[idx[1]]->symbol, ptPtr[idx[2]]->symbol, ptPtr[idx[3]]->symbol)) == -1) return 0;;
-            printf("\t%s\t%06X\n", ptPtr[ptIdx]->symbol, ptPtr[ptIdx]->Loc);
-            ptPtr[ptIdx] = ptPtr[ptIdx]->link;
-            if (!ptPtr[ptIdx]) break;
-            if ( (ptPtr[ptIdx]->symbol)[0] != ch ) break;
+        cnt = 0;
+        sign = 0;
+        for (int i = 0; i < 4; i++) {
+            idx[i] = (ch - 'A') % 7 + i * 7;
+            if (!ptPtr[idx[i]]) {
+                cnt++; 
+                sign += 1 << i;
+            }
         }
 
-        if (ptIdx == -1) {
-            if (!ptPtr[idx[0]]) idx[0] = idx[3];
-            if (!ptPtr[idx[1]]) idx[1] = idx[3];
-            if (!ptPtr[idx[2]]) idx[2] = idx[3];
-        }
-        else 
-            idx[ptIdx] = idx[3];
-
-        while (ptPtr[idx[0]] && ptPtr[idx[1]] && ptPtr[idx[2]]) {
-            if ( (ptIdx = getMaxofThree(ptPtr[idx[0]]->symbol, ptPtr[idx[1]]->symbol, ptPtr[idx[2]]->symbol)) == -1) return 0;;
-            printf("\t%s\t%06X\n", ptPtr[ptIdx]->symbol, ptPtr[ptIdx]->Loc);
-            ptPtr[ptIdx] = ptPtr[ptIdx]->link;
-            if (!ptPtr[ptIdx]) break;
-            if ( (ptPtr[ptIdx]->symbol)[0] != ch ) break;
+        if (cnt == 0) {
+            while (ptPtr[idx[0]] && ptPtr[idx[1]] && ptPtr[idx[2]] && ptPtr[idx[3]]) {
+                if ( (ptIdx = getMaxofFour(ptPtr[idx[0]]->symbol, ptPtr[idx[1]]->symbol, ptPtr[idx[2]]->symbol, ptPtr[idx[3]]->symbol)) == -1) return 0;
+                printf("\t%s\t%06X\n", ptPtr[idx[ptIdx]]->symbol, ptPtr[idx[ptIdx]]->Loc);
+                ptPtr[idx[ptIdx]] = ptPtr[idx[ptIdx]]->link;
+                if (!ptPtr[idx[ptIdx]]) break;
+                if ( (ptPtr[idx[ptIdx]]->symbol)[0] != ch ) break;
+            }
         }
 
-        if (ptIdx == -1) {
-            if (!ptPtr[idx[0]]) idx[0] = idx[2];
-            if (!ptPtr[idx[1]]) idx[1] = idx[2];
-        }
-        else
-            idx[ptIdx] = idx[2];
+        if (cnt <= 1) {
+            if (ptIdx == -1) {
+                switch (sign) {
+                    case 4: idx[2] = idx[3]; break;
+                    case 2: idx[1] = idx[3]; break;
+                    case 1: idx[0] = idx[3]; break;
+                }
+            }
+            else 
+                idx[ptIdx] = idx[3];
 
-        while (ptPtr[idx[0]] && ptPtr[idx[1]]) {
-            ptIdx = getBiggerStr(ptPtr[idx[0]]->symbol, ptPtr[idx[1]]->symbol);
-            printf("\t%s\t%06X\n", ptPtr[ptIdx]->symbol, ptPtr[ptIdx]->Loc);
-            ptPtr[ptIdx] = ptPtr[ptIdx]->link;
-            if (!ptPtr[ptIdx]) break;
-            if ( (ptPtr[ptIdx]->symbol)[0] != ch ) break;
+            while (ptPtr[idx[0]] && ptPtr[idx[1]] && ptPtr[idx[2]]) {
+                if ( (ptIdx = getMaxofThree(ptPtr[idx[0]]->symbol, ptPtr[idx[1]]->symbol, ptPtr[idx[2]]->symbol)) == -1) return 0;;
+                printf("\t%s\t%06X\n", ptPtr[idx[ptIdx]]->symbol, ptPtr[idx[ptIdx]]->Loc);
+                ptPtr[idx[ptIdx]] = ptPtr[idx[ptIdx]]->link;
+                if (!ptPtr[idx[ptIdx]]) break;
+                if ( (ptPtr[idx[ptIdx]]->symbol)[0] != ch ) break;
+            }
         }
 
-        while (ptPtr[idx[0]]) {
-            if ( (ptPtr[idx[0]]->symbol)[0] != ch ) break;
-            printf("\t%s\t%06X\n", ptPtr[ptIdx]->symbol, ptPtr[ptIdx]->Loc);
-            ptPtr[ptIdx] = ptPtr[ptIdx]->link;
+        if (cnt <= 2) {
+            if (ptIdx == -1) {
+                switch (sign) {
+                    case 12: break;
+                    case 10: idx[1] = idx[2]; break;
+                    case 6: idx[1] = idx[3]; break;
+                    case 9: idx[0] = idx[2]; break;
+                    case 5: idx[0] = idx[3]; break;
+                    case 3: idx[0] = idx[2]; idx[1] = idx[3]; break;
+                }
+            }
+            else
+                idx[ptIdx] = idx[2];
+
+            while (ptPtr[idx[0]] && ptPtr[idx[1]]) {
+                ptIdx = getBiggerStr(ptPtr[idx[0]]->symbol, ptPtr[idx[1]]->symbol);
+                printf("\t%s\t%06X\n", ptPtr[idx[ptIdx]]->symbol, ptPtr[idx[ptIdx]]->Loc);
+                ptPtr[idx[ptIdx]] = ptPtr[idx[ptIdx]]->link;
+                if (!ptPtr[idx[ptIdx]]) break;
+                if ( (ptPtr[idx[ptIdx]]->symbol)[0] != ch ) break;
+            }
         }
-        while (ptPtr[idx[1]]) {
-            if ( (ptPtr[idx[1]]->symbol)[1] != ch ) break;
-            printf("\t%s\t%06X\n", ptPtr[ptIdx]->symbol, ptPtr[ptIdx]->Loc);
-            ptPtr[ptIdx] = ptPtr[ptIdx]->link;
+
+        if (cnt <= 3) {
+            if (ptIdx == -1) {
+                switch (sign) {
+                    case 7: idx[0] = idx[3]; break;
+                    case 11: idx[0] = idx[2]; break;
+                    case 13: idx[0] = idx[1]; break;
+                }
+            }
+            else
+                idx[ptIdx] = idx[1];
+
+            while (ptPtr[idx[0]]) {
+                if ( (ptPtr[idx[0]]->symbol)[0] != ch ) break;
+                if (!ptPtr[idx[0]]) break;
+                printf("\t%s\t%06X\n", ptPtr[idx[0]]->symbol, ptPtr[idx[0]]->Loc);
+                ptPtr[idx[0]] = ptPtr[idx[0]]->link;
+            }
         }
     }
 

@@ -245,10 +245,13 @@ int main() {
                         printf("symbol: '%s' is an invalid option. See 'h[elp]'\n", removeSpace(params));
                         break;
                     }
+                    if (symbol())
+                        addHistory(input);
+                    
+                    break;
 
                 case 0xA0:
                     printf("command not found: %s\n", cmd);
-                    pass1(stdin);
                     break;
             }
         }

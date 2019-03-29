@@ -101,18 +101,15 @@ int pass1(FILE* fp) {
     }
     else strcpy(programName, "\0");
     LOCCTR = startingAddr;
-
+    printf("%06X %s\n", LOCCTR, token[0]);
 
     if (SYMTAB) freeSymTab();
     SYMTAB = (symNode**)malloc(SYMTAB_SIZE * sizeof(symNode*));
     for (i = 0; i < SYMTAB_SIZE; i++) SYMTAB[i] = NULL;
-        
-
-
     flag = 0;
 
-    while ( !feof(fp) ) { //isDirective(token[0]) != 2) {
-        // while not END
+    while ( !feof(fp) ) { 
+        // while not end of file
         if (line[0] == '.' || isBlankLine(line))
             // input is comment line or blank line
             instructionSize = 0;
@@ -120,19 +117,20 @@ int pass1(FILE* fp) {
             line = toUpperCase(line);
             tokenNum = tokenizeAsmFile(&token, line);
             if (isDirective(token[0]) == 2) {
+                // if END
                 flag = 1;
                 break;
             }
             if (line[0] == ' ' || line[0] == '\t') {
                 // no label
                 instructionSize = getInstructionSize(token, lineNum, 0);
-                if (!instructionSize) return 0;
+                if (instructionSize == -1) return 0;
             }
             else {
                 // contains label, instruction, notes, ...
                 // add to symbol table
                 instructionSize = getInstructionSize(token, lineNum, 1);
-                if (!instructionSize) return 0;
+                if (instructionSize == -1) return 0;
 
                 if( !addSym(token[0], LOCCTR) ) { 
                     printf("Wrong\n");
@@ -142,6 +140,8 @@ int pass1(FILE* fp) {
             
         }
 
+        
+        printf("%06X %s\n", LOCCTR, token[0]);
         LOCCTR += instructionSize;
         //printf("%d\ttokenNum: %d - ", lineNum, tokenNum);
         //for (i = 0; i < tokenNum; i++) printf("\t%s ", token[i]);
@@ -168,33 +168,43 @@ int getInstructionSize(char** token, int lineNum, int isLabel) {
     int opIdx = isLabel ? 1 : 0;
     int size = 0;
 
-    if (token[opIdx][0] == '+') return 4;
+    if (!token[opIdx]) return -1;
+    if (token[opIdx][0] == '+') 
+        // Foramt 4
+        return 4;
 
     size = opcode(token[opIdx], 3);
     if (size == 0) {
+        // token is no operation
+        // it can be directives
+        // or wrong input
         switch (isDirective(token[opIdx])) {
             //case 1: case 2:
             case 3:     // BYTE
-                //size = byteSize(token[opIdx+1]); 
-            case 4:     // WORD
-                //size = wordSize(token[opIdx+1]);
-            case 5:     // RESB
-                //size = resbSize(token[opIdx+1]);
-            case 6:     // RESW
-                //size = reswSize(token[opIdx+1]);
-            case 7:
-                size = WORD_SIZE;
+                size = byteSize(token[opIdx+1]); 
                 break;
-            default:
-                // wrong operation
-                printf("Error occured at [%d] line: No matching operation code - %s\n", lineNum, token[opIdx]);
+            case 4:     // WORD
+                size = wordSize(token[opIdx+1]);
+                break;
+            case 5:     // RESB
+                size = resbSize(token[opIdx+1]);
+                break;
+            case 6:     // RESW
+                size = reswSize(token[opIdx+1]);
+                break;
+            case 7:     // directives without memory allocation
                 return 0;
+
+            default:
+                // wrong input
+                printf("Error occured at [%d] line: No matching operation code - %s\n", lineNum, token[opIdx]);
+                return -1;
         }
-        if (size == 0) {
+        if (size == -1) {
             // wrong syntax. 
             // ex) no input || no hexa, ...
             printf("Error occured at [%d] line: Wrong Syntax\n", lineNum);
-            return 0;
+            return -1;
         }
     }
 
@@ -282,6 +292,7 @@ int isDirective(char* token){
     // check if the token is a directive
     // if it is, return corresponding number. else 0
     // START, END, BYTE, WORD, RESB, RESW
+    // BASE
     if (!token) return 0;
 
     if (strcmp(token, "START") == 0) return 1;
@@ -305,4 +316,48 @@ char* toUpperCase(char* input) {
     for (int i = 0; i < (int)strlen(input); i++)
         if (input[i] >= 'a' && input[i] <= 'z') input[i] -= 'a' - 'A';
     return input;
+}
+
+int byteSize(char* input) {
+    if (!input) return -1;
+    int size;
+
+    if (input[0] == 'C') {
+        if (input[1] == input[(int)strlen(input)-1] && input[1] == '\'') {
+            size = (int)strlen(input) - 3;
+        }
+        else return -1;
+    }
+    if (input[0] == 'X') {
+        if (input[1] == input[(int)strlen(input)-1] && input[1] == '\'') {
+            size = (int)strlen(input) - 3;
+            size = (size % 2 == 0) ? size / 2 : size / 2 + 1;
+        }
+        else return -1;
+    }
+
+    return size;
+}
+
+int wordSize(char* input) {
+    if (!input) return -1;
+    int size = WORD_SIZE;
+
+    return size;
+}
+
+int resbSize(char* input) {
+    if (!input) return -1;
+    int size;
+    if ( (size = strToDecimal(input)) == -1 ) return -1;
+
+    return size;
+}
+
+int reswSize(char* input) {
+    if (!input) return -1;
+    int size;
+    if ( (size = strToHex(input)) == -1 ) return -1;
+
+    return size * WORD_SIZE;
 }

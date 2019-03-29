@@ -89,6 +89,7 @@ void reset();                                       // 0x16
 int validAddr(int addr);
 int validAddrRange(int start, int end);
 int strToHex(char* param);
+int strToDecimal(char* param);
 int isHex(char ch);
 
 /**************************************************

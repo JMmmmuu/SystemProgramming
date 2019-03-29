@@ -182,3 +182,24 @@ int isHex(char ch) {
     else
         return 0;
 }
+
+int strToDecimal(char* param) {
+    // if parameter is not a hex, or incorrect parser return -1
+    for (int i = 0; i < (int)strlen(param); i++) {
+        if ( !isHex(param[i]) ) {
+            printf("Address is not a Hexadecimal!\n");
+            return -1;
+        }
+    }
+    
+    // else, return proper hexa decimal number
+    int dec;
+    int res = sscanf(param, "%d", &dec);
+    if (res == 0) {
+        printf("error occured. Please type again\n");
+        return -1;
+    }
+
+    return dec;
+}
+
