@@ -51,8 +51,13 @@ int pass1(FILE* fp) {
     }
     
     lineNum++;
-    if (!numHead) freeNums();
+    // initialize global vars
+    if (numHead) freeNums();
+    if (SYMTAB) freeSymTab();
     numNode* pLast = numHead;
+
+    if (line[0] == '.' || isBlankLine(line))
+        pLast = addNum(lineNum, -1, pLast);
 
     while (line[0] == '.' || isBlankLine(line)) {
         // skip comment lines & blank lines
@@ -98,6 +103,7 @@ int pass1(FILE* fp) {
         // if there's START directive, save program name
         // and get next line
         strcpy(programName, token[0]);
+        pLast = addNum(lineNum, startingAddr, pLast);
 
         memset(line, '\0', (int)sizeof(line));
         for (i = 0; i < MAX_TOKEN_NUM; i++) token[i] = NULL;
@@ -109,9 +115,7 @@ int pass1(FILE* fp) {
     }
     else strcpy(programName, "\0");
     LOCCTR = startingAddr;
-    pLast = addNum(lineNum, LOCCTR, pLast);
 
-    if (SYMTAB) freeSymTab();
     SYMTAB = (symNode**)malloc(SYMTAB_SIZE * sizeof(symNode*));
     for (i = 0; i < SYMTAB_SIZE; i++) SYMTAB[i] = NULL;
     flag = 0;
@@ -226,6 +230,9 @@ int pass2(FILE* fp) {
     // Write obj program and assembly listing.
 
     fseek(fp, 0, SEEK_SET);     // move to the first
+
+
+
 
 
 
@@ -375,7 +382,6 @@ numNode* addNum(int lineNum, int LOC, numNode* pLast) {
     pNew->lineNum = lineNum; pNew->LOC = LOC;
     pNew->link = NULL;
 
-    printf("%d %X\n", lineNum, LOC);
     if (!numHead) {
         numHead = pNew;
         return pNew;
@@ -385,16 +391,18 @@ numNode* addNum(int lineNum, int LOC, numNode* pLast) {
 }
 
 void freeNums() {
-    numNode* pFree;
+    if (!numHead) return ;
+    numNode* pFree = numHead;
     while (numHead) {
         pFree = numHead;
         numHead = numHead->link;
         free(pFree);
     }
+    numHead = NULL;
 }
 
 void printNums() {
     numNode* pMove;
     for (pMove = numHead; pMove; pMove = pMove->link)
-        printf("\t%d\t%d\n", pMove->lineNum, pMove->LOC);
+        printf("\t%d\t%06X\n", pMove->lineNum, pMove->LOC);
 }

@@ -183,6 +183,7 @@ void freeSymTab() {
         }
     }
     free(SYMTAB);
+    SYMTAB = NULL;
 }
 
 int symHashFunc(char* label) {
