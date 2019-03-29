@@ -55,10 +55,12 @@ typedef struct _inter {
     // CONST || VARS flag
     int lineNum;
     int LOC;
-    int s_flag;
-    int e_flag;
-    int const_flag;
-    int var_flag;
+    unsigned char s_flag;       // 0
+    unsigned char e_flag;       // 1
+    unsigned char skip_flag;    // 2
+    unsigned char const_flag;
+    unsigned char var_flag;
+    unsigned char lable_flag;
     struct _inter* link;
 } numNode;
 
@@ -123,6 +125,7 @@ int assemble(char* filename);               // 0x30
 int pass1(FILE* fp);
 int pass2(FILE* fp, char* filename);
 int tokenizeAsmFile(char*** token, char* input);
+int getObjCode(char** token, int format);
 
 int removeSpaceAroundComma(char* input);
 int isWhiteSpace(char ch);
@@ -141,7 +144,7 @@ int wordSize(char* input);
 int resbSize(char* input);
 int reswSize(char* input);
 
-numNode* addNum(int lineNum, int LOC, numNode* pLast);
+numNode* addNum(int lineNum, int LOC, numNode* pLast, int flagType);
 void freeNums();
 void printNums();
 

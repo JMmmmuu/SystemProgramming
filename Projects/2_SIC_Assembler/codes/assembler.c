@@ -57,7 +57,7 @@ int pass1(FILE* fp) {
     numNode* pLast = numHead;
 
     if (line[0] == '.' || isBlankLine(line))
-        pLast = addNum(lineNum, -1, pLast);
+        pLast = addNum(lineNum, -1, pLast, 3);
 
     while (line[0] == '.' || isBlankLine(line)) {
         // skip comment lines & blank lines
@@ -68,7 +68,7 @@ int pass1(FILE* fp) {
             return 1;
         }
         lineNum++;
-        pLast = addNum(lineNum, -1, pLast);
+        pLast = addNum(lineNum, -1, pLast, 3);
     }
 
     // First line except comments & blank line
@@ -103,7 +103,7 @@ int pass1(FILE* fp) {
         // if there's START directive, save program name
         // and get next line
         strcpy(programName, token[0]);
-        pLast = addNum(lineNum, startingAddr, pLast);
+        pLast = addNum(lineNum, startingAddr, pLast, 1);
 
         memset(line, '\0', (int)sizeof(line));
         for (i = 0; i < MAX_TOKEN_NUM; i++) token[i] = NULL;
@@ -125,7 +125,7 @@ int pass1(FILE* fp) {
         if (line[0] == '.' || isBlankLine(line)) {
             // input is comment line or blank line
             instructionSize = 0;
-            pLast = addNum(lineNum, -1, pLast);
+            pLast = addNum(lineNum, -1, pLast, 3);
         }
         else {
             line = toUpperCase(line);
@@ -151,7 +151,7 @@ int pass1(FILE* fp) {
                     return 0;
                 }
             }
-            pLast = addNum(lineNum, LOCCTR, pLast);
+            pLast = addNum(lineNum, LOCCTR, pLast, 0);
         }
 
         LOCCTR += instructionSize;
@@ -169,6 +169,7 @@ int pass1(FILE* fp) {
         printf("No END Directive\n");
         return 0;
     }
+    addNum(lineNum, LOCCTR, pLast, 0);
 
     return 1;
 }
@@ -230,19 +231,63 @@ int pass2(FILE* fp, char* filename) {
     // Write obj program and assembly listing.
 
     fseek(fp, 0, SEEK_SET);     // move to the first
+    int i, tokenNum;
     numNode* pCurrent = numHead;
     char* line = (char*)malloc(MAX_ASM_LINE * sizeof(char));
+    char** token = (char**)malloc(MAX_TOKEN_NUM * sizeof(char*));
+    for (i = 0; i < MAX_TOKEN_NUM; i++) token[i] = NULL;
 
     FILE* LF = fopen(nameToListing(filename), "w");
     FILE* OF = fopen(nameToObj(filename), "w");
 
+    if (!pCurrent) {
+        printf("No content in the [%s] file", filename);
+        return 0;
+    }
+
+    if (pCurrent->s_flag) {
+        fgets(line, MAX_ASM_LINE, fp);
+        // exist START directive
+        fprintf(LF, "\t%d\t%04X", pCurrent->lineNum, pCurrent->LOC);
+        tokenNum = tokenizeAsmFile(&token, line);
+        for (i = 0; i < tokenNum; i++)
+            fprintf(LF, "\t%s", token[i]);
+        int startingAddr = strToHex(token[2]);
+        numNode* pMove;
+        for (pMove = numHead; pMove->link; pMove = pMove->link) ;
+        int endAddr = pMove->LOC;
+        fprintf(OF, "H%-6s%06X%06X", token[0], startingAddr, endAddr - startingAddr);
+        pCurrent = pCurrent->link;
+    }
+    else {
+        numNode* pMove;
+        for (pMove = numHead; pMove->link; pMove = pMove->link) ;
+        int endAddr = pMove->LOC;
+        fprintf(OF, "H      000000%06X", endAddr);
+    }
+
     while (pCurrent) {
         fflush(stdin);
+        for (i = 0; i < MAX_TOKEN_NUM; i++) token[i] = NULL;
+        memset(line, '\0', (int)sizeof(line));
         fgets(line, MAX_ASM_LINE, fp);
 
-        if (pCurrent->s_flag) {
-
+        if (pCurrent->skip_flag) {
+            // if the  line is comment or blank
+            fprintf(LF, "\t%d\t%s", pCurrent->lineNum * 5, line);
+            pCurrent = pCurrent->link;
+            continue;
         }
+
+        line = toUpperCase(line);
+        tokenNum = tokenizeAsmFile(&token, line);
+
+
+
+        
+
+
+
         
 
 
@@ -257,6 +302,11 @@ int pass2(FILE* fp, char* filename) {
 
 
     return 1;
+}
+
+int getObjCode(char** token, int format) {
+    
+    return 0;
 }
 
 int tokenizeAsmFile(char*** token, char* input) {
@@ -427,9 +477,23 @@ int reswSize(char* input) {
     return size * WORD_SIZE;
 }
 
-numNode* addNum(int lineNum, int LOC, numNode* pLast) {
+numNode* addNum(int lineNum, int LOC, numNode* pLast, int flag_type) {
     numNode* pNew = (numNode*)malloc(sizeof(numNode));
     pNew->lineNum = lineNum; pNew->LOC = LOC;
+    switch (flag_type) {
+        case 0:
+            pNew->s_flag = 0; pNew->e_flag = 0; pNew->skip_flag = 0;
+            break;
+        case 1:
+            pNew->s_flag = 1; pNew->e_flag = 0; pNew->skip_flag = 0;
+            break;
+        case 2:
+            pNew->s_flag = 0; pNew->e_flag = 1; pNew->skip_flag = 0;
+            break;
+        case 3:
+            pNew->s_flag = 0; pNew->e_flag = 0; pNew->skip_flag = 1;
+            break;
+    }
     pNew->link = NULL;
 
     if (!numHead) {
