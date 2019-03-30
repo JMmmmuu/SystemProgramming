@@ -8,8 +8,10 @@
 
 int opcode(char* mnemonic, int type) {
     // if found correct mnemonic, return 1, else return 0
-    // if type is 1, print opcode. else, just return value
-    // type == 3: return format. if no mnemonic, return 0
+    // if   type == 1, print opcode & return flag
+    //      type == 2, just return flag
+    //      type == 3, return size
+    //      type == 4, return opcode
     int idx = hashFunction(mnemonic);
     opNode* pMove;
 
@@ -17,6 +19,7 @@ int opcode(char* mnemonic, int type) {
         if (strcmp(pMove->operation, mnemonic) == 0) {
             if (type == 1) printf("opcode is %X\n", pMove->opcode);
             if (type == 3) return pMove->format;
+            if (type == 4) return pMove->opcode;
             return 1;
         }
     }

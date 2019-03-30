@@ -7,6 +7,7 @@
 #include "20171690.h"
 
 int getRegNum(char* reg) {
+    if (!reg) return 0xFF;
     if (strcmp(reg, "A") == 0) return 0x00;
     if (strcmp(reg, "X") == 0) return 0x01;
     if (strcmp(reg, "L") == 0) return 0x02;
@@ -219,6 +220,7 @@ void dequeue(FILE* OF) {
 }
 
 int isComma(char* input) {
+    if (!input) return 0;
     for (int i = 0; i < (int)strlen(input); i++)
         if (input[i] == ',') return 1;
 

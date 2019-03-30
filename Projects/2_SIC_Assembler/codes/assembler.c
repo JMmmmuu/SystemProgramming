@@ -205,8 +205,14 @@ int pass2(FILE* fp, char* filename) {
         return 0;
     }
 
+    while (pCurrent->skip_flag) {
+        // while comment line or blank line
+        fgets(line, MAX_ASM_LINE, fp);
+        fprintf(LF, "\t  %s\n", line);
+        pCurrent = pCurrent->link;
+    }
     if (pCurrent->s_flag) {
-        // exist START directive
+        // START directive
         fgets(line, MAX_ASM_LINE, fp);
         tokenNum = tokenizeAsmFile(&token, line);
 
@@ -276,6 +282,7 @@ int pass2(FILE* fp, char* filename) {
                 for (i = 0; i < tokenNum; i++)
                     fprintf(LF, "\t%s", token[i]);
                 fprintf(LF, "\t\t");
+                if (tokenNum == 1) fprintf(LF, "\t");
                 printObjCode(format, objCode, LF);
                 fprintf(LF, "\n");
                 enqueue(objCode, format, pCurrent->LOC, OF);
@@ -339,7 +346,7 @@ int pass2(FILE* fp, char* filename) {
                         fprintf(LF, "\t  %d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
                         for (i = 0; i < tokenNum; i++)
                             fprintf(LF, "\t%s", token[i]);
-                        fprintf(LF,  "\t\t\t");
+                        fprintf(LF,  "\t\t");
                         printObjCode(3, objCode, LF);
                         fprintf(LF, "\n");
                         enqueue(objCode, 3, pCurrent->LOC, OF);
@@ -450,30 +457,45 @@ int getObjCode(char** token, int format, int type) {
     int disp, addr;
     int opCode, operand;
     int objCode = 0;
-    int tokenNum, lp, target;
+    int lc;
+    int tokenNum, target;
     for (tokenNum = 0; token[tokenNum]; tokenNum++) ;
+    char* operandStr[5];
+    char* tmp;
+    for (lc = 0; lc < 5; lc++) operandStr[lc] = NULL;
 
     if (type == 0) {
-        opCode = opcode(token[0], 2);
+        opCode = opcode(token[0], 4);
+
+        int commaFlag = isComma(token[1]);
+        if (commaFlag) {
+            tmp = (char*)malloc(50 * sizeof(char));
+            strcpy(tmp, token[1]);
+            lc = 0;
+            operandStr[lc] = strtok(tmp, ",");
+            while (operandStr[lc++] && lc <= 5)
+                operandStr[lc] = strtok(NULL, ",");
+        }
 
         switch (format) {
             case 1:
-                printf("%02X", objCode);
                 return objCode;
             case 2:
                 // get register code
-                if (isComma(token[tokenNum-1])) {
-                    token[tokenNum] = strtok(token[tokenNum-1], ",");
-                    while (token[tokenNum])
-                        token[++tokenNum] = strtok(NULL, ",");
-                    tokenNum--;
+
+                if (commaFlag) {
+                    r1 = getRegNum(operandStr[0]);
+                    r2 = getRegNum(operandStr[1]);
                 }
+                else {
+                    r1 = getRegNum(token[1]);
+                    r1 = 0x00;
+                }
+                reg = (r1 << 4) + r2;
 
-                r1 = token[1] ? getRegNum(token[1]) : 0x00;
-                r2 = token[2] ? getRegNum(token[2]) : 0x00;
-                reg = (r1 << 2) + r2;
+                //printf("%X %X %X\n", opCode, 1 << 8, opCode << 8);
+                objCode = (opCode * (1 << 8)) + reg;
 
-                printf("%04X\n", objCode);
                 return objCode;
             case 3:
                 // operand
@@ -483,12 +505,12 @@ int getObjCode(char** token, int format, int type) {
                     if (token[1][0] == '#') {
                         // immediate
                         n = 0; i = 1;
-                        token[1] = &(token[1][1]);
+                        token[1] += 1;
                     }
                     else if (token[1][0] == '@') {
                         // indirect
                         n = 1; i = 0;
-                        token[1] = &(token[1][1]);
+                        token[1] += 1;
                     }
                     else {
                         // simple
@@ -507,7 +529,7 @@ int getObjCode(char** token, int format, int type) {
                         // find symbol
                         target = findSym(token[1]);
                         if (target == -1) {
-                            printf("Error!!\n");
+                            printf("no Matching Symbol!!\n");
                             return 0;
                         }
                         disp = target - PC;
@@ -542,7 +564,6 @@ int getObjCode(char** token, int format, int type) {
                 b3 = disp % (1 << 8);
                 objCode = (b1 << 16) + (b2 << 8) + b3;
 
-                printf("%06X\n", objCode);
                 return objCode;
             case 4:
                 // get nixbpe
@@ -588,7 +609,7 @@ int getObjCode(char** token, int format, int type) {
                         addr = target;
                         if (target < 0 || target > 0xFFFFFF) return 0;
                     }
-                    else return 0;
+                    else objCode = operand;
 
                     b1 = opCode + n * 2 + i;
                     b2 = (x << 7) + (b << 6) + (p << 5) + (e << 4) + addr / (1<<16);
@@ -596,33 +617,33 @@ int getObjCode(char** token, int format, int type) {
                     b4 = addr % (1 << 8);
                     objCode = (b1 << 24) + (b2 << 16) + (b3 <<8 ) + b4;
                 }
-                printf("%08X\n", objCode);
                 break;
         }
     }
     else if (type == 1) {
         // BYTE CONST
-        int size = 0, i;
+        int size = 0;
         int tmp;
         char* strHex = (char*)malloc(3 * sizeof(char));
         if (token[1][0] == 'C') {
-            for (i = 2; i < (int)strlen(token[1]) - 1; i++) ;
-            size = i;
+            for (lc = 2; lc < (int)strlen(token[1]) - 1; lc++) ;
+            size = lc;
+            size = (int)strlen(token[1]) - 3;
 
-            for (i = 0; i < size; i++)
-                objCode += ((int)token[1][i+2]) << (4 * (size - i - 1));
+            for (lc = 0; lc < size; lc++)
+                objCode += (((int)token[1][lc+2]) << (8 * (size - lc - 1)));
         }
         else if (token[1][0] == 'X') {
-            for (i = 2; i < (int)strlen(token[1]) - 1; i++) ;
-            size = (i % 2 == 0) ? i / 2 : i / 2 + 1;
+            for (lc = 2; lc < (int)strlen(token[1]) - 1; lc++) ;
+            size = (lc % 2 == 0) ? lc / 2 : lc / 2 + 1;
             
-            for (i = 0; i < size; i++) {
-                strHex[0] = token[1][i+2];
-                strHex[1] = token[1][i+3];
+            for (lc = 0; lc < size; lc++) {
+                strHex[0] = token[1][lc+2];
+                strHex[1] = token[1][lc+3];
                 strHex[2] = '\0';
                 tmp = strToHex(strHex, 1);
 
-                objCode += (tmp << (size - i - 1));
+                objCode += (tmp << (size - lc - 1));
 
             }
         }
@@ -643,11 +664,13 @@ int getObjCode(char** token, int format, int type) {
 
 void printObjCode(int size, int objCode, FILE* fp) {
     int hex;
-    for (int i = size-1; i >= 0; i--) {
-        hex = (objCode / 1<<(4*i)) - (objCode / 1<<(4*(i+1)) * 1<<4);
+    for (int i = size-1; i >= 1; i--) {
+        hex = (objCode >> (8 * i)) - ((objCode >> (8 * i)) << (8 * i));
         hex &= ONE_BYTE;
         fprintf(fp, "%02X", hex);
     }
+    hex = objCode % (1 << 8);
+    fprintf(fp, "%02X", hex);
 }
 
 int tokenizeAsmFile(char*** token, char* input) {
@@ -655,7 +678,7 @@ int tokenizeAsmFile(char*** token, char* input) {
     // return number of strings
     int cnt = 0;
     char* tmp;
-    int commaFlag = removeSpaceAroundComma(input);
+    removeSpaceAroundComma(input);
     input = removeSpace(input);
 
     (*token)[cnt] = strtok(input, " \t");
@@ -666,19 +689,9 @@ int tokenizeAsmFile(char*** token, char* input) {
     }
     cnt++;
 
-    if (commaFlag) {
-        /*
-        // contain comma
-        printf("\n");
-        int tp;
-        while ((*token)[cnt]) {
-            tp = cnt;
-            (*token)[++cnt] = strtok((*token)[tp], ",");
-        }
-        */
-    }
+    printf("\t  ");
     for (int i = 0; i < cnt; i++)
-        printf("\t\t%s", (*token)[i]);
+        printf("\t%s", (*token)[i]);
     printf("\n");
 
     return cnt;
