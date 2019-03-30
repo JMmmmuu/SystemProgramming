@@ -69,6 +69,8 @@ typedef struct _tRecord {
     struct _tRecord* link;
 } tRecord;
 
+//enum _regCode {A, X, L, B, S, T, F, tmp, PC, SW} regCode;
+
 // GLOBAL VARIANTs
 HISTORY* hisHead;
 opNode** opTable;
@@ -133,8 +135,9 @@ int assemble(char* filename);               // 0x30
 int pass1(FILE* fp);
 int pass2(FILE* fp, char* filename);
 int tokenizeAsmFile(char*** token, char* input);
-int getObjCode(char** token, int format, int type);
-void printObjCode(int format, int objCode, FILE* fp);
+unsigned char* getObjCode(char** token, int format, int type);
+void printObjCode(int format, unsigned char* objCode, FILE* fp);
+unsigned char getRegNum(char* reg);
 
 int removeSpaceAroundComma(char* input);
 int isWhiteSpace(char ch);
@@ -159,6 +162,8 @@ void printNums();
 
 void enqueue(int data, int size, int LOC, FILE* OF);
 void dequeue(FILE* OF);
+
+int isComma(char* input);
 
 /**************************************************
  ********************** SYMBOL ********************

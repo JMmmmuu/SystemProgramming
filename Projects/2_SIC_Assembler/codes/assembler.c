@@ -21,9 +21,9 @@ int assemble(char* filename) {
         printSymbol();
         printNums();
     }
-    if (pass2(asmFP, filename)) {
-        printf("pass2 completed\n");
-    }
+    //if (pass2(asmFP, filename)) {
+    //    printf("pass2 completed\n");
+    //}
 
     fclose(asmFP);
     return 1;
@@ -110,8 +110,6 @@ int pass1(FILE* fp) {
         if ( !isStr(fgets(line, MAX_ASM_LINE, fp)) ) return 1;
 
         lineNum++;
-        line = toUpperCase(line);
-        tokenNum = tokenizeAsmFile(&token, line);
     }
     else strcpy(programName, "\0");
     LOCCTR = startingAddr;
@@ -268,9 +266,11 @@ int pass2(FILE* fp, char* filename) {
         // starting addr == 0. no program name
         numNode* pMove;
         for (pMove = numHead; pMove->link; pMove = pMove->link) ;
+        startingAddr = 0;
         endAddr = pMove->LOC;
         fprintf(OF, "H      000000%06X", endAddr);
     }
+    PC = startingAddr;
 
     while (pCurrent) {
         fflush(stdin);
@@ -306,14 +306,14 @@ int pass2(FILE* fp, char* filename) {
             if ( (token[0])[0] == '+') format = 4;
             if ( format ) {
                 // There exist matching operation
-                objCode = getObjCode(token, format, 0);
+                //objCode = getObjCode(token, format, 0);
 
                 fprintf(LF, "\t%d\t%04X\t\t\t",  pCurrent->lineNum * 5, pCurrent->LOC);
                 for (i = 0; i < tokenNum; i++)
                     fprintf(LF, "\t%s", token[i]);
 
                 fprintf(LF, "\t\t\t\t");
-                printObjCode(format, objCode, LF);
+                //printObjCode(format, objCode, LF);
                 fprintf(LF, "\n");
                 enqueue(objCode, format, pCurrent->LOC, OF);
             }
@@ -347,14 +347,14 @@ int pass2(FILE* fp, char* filename) {
             if ( (token[1])[0] == '+' ) format = 4;
             if ( format ) {
                 // exist matching operation
-                objCode = getObjCode(token, format, 0);
+                //objCode = getObjCode(&(token[1]), format, 0);
 
                 fprintf(LF, "\t%d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
                 for (i = 0; i < tokenNum; i++)
                     fprintf(LF, "\t%s", token[i]);
 
                 fprintf(LF, "\t\t\t\t");
-                printObjCode(format, objCode, LF);
+                //printObjCode(format, objCode, LF);
                 fprintf(LF, "\n");
                 enqueue(objCode, format, pCurrent->LOC, OF);
             }
@@ -370,23 +370,23 @@ int pass2(FILE* fp, char* filename) {
                 // directive!
                 switch (directiveNum) {
                     case 3:     // BYTE
-                        objCode = getObjCode(token, 5, 1);
+                        //objCode = getObjCode(&(token[1]), 5, 1);
                         fprintf(LF, "\t%d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
                         for (i = 0; i < tokenNum; i++)
                             fprintf(LF, "\t%s", token[i]);
                         fprintf(LF,  "\t\t\t\t");
-                        printObjCode(3, objCode, LF);
+                        //printObjCode(3, objCode, LF);
                         fprintf(LF, "\n");
                         enqueue(objCode, 3, pCurrent->LOC, OF);
 
                         break;
                     case 4:     // WORD
-                        objCode = getObjCode(token, 5, 2);
+                        //objCode = getObjCode(&(token[1]), 5, 2);
                         fprintf(LF, "\t%d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
                         for (i = 0; i < tokenNum; i++)
                             fprintf(LF, "\t%s", token[i]);
                         fprintf(LF,  "\t\t\t\t");
-                        printObjCode(3, objCode, LF);
+                        //printObjCode(3, objCode, LF);
                         enqueue(objCode, 3, pCurrent->LOC, OF);
 
                         break;
@@ -427,26 +427,78 @@ int pass2(FILE* fp, char* filename) {
     return 1;
 }
 
-int getObjCode(char** token, int format, int type) {
+unsigned char* getObjCode(char** token, int format, int type) {
     // format: operation code format / or size
     // type:    if 0, operation
     //          if 1, BYTE Const
     //          if 2, WORD Const
+    unsigned char n, i, x, b, p, e;
+    unsigned char r1, r2, reg;
+    int opCode;
+    unsigned char* objCode;
+    int tokenNum;
+    for (tokenNum = 0; token[tokenNum]; tokenNum++) ;
+
+    if (type == 0) {
+        objCode = (unsigned char*)malloc(format * sizeof(unsigned char));
+        opCode = opcode(token[0], 2);
+        opCode = opCode & ONE_BYTE;
+        memcpy(objCode, &opCode, 1);
+
+        switch (format) {
+            case 1:
+                return objCode;
+            case 2:
+                // get register code
+                if (isComma(token[tokenNum-1])) {
+                    token[tokenNum] = strtok(token[tokenNum-1], ",");
+                    while (token[tokenNum])
+                        token[++tokenNum] = strtok(NULL, ",");
+                    tokenNum--;
+                }
+
+                r1 = token[1] ? getRegNum(token[1]) : 0x00;
+                r2 = token[2] ? getRegNum(token[2]) : 0x00;
+                reg = (r1 << 4 & 0xF0) || (r2 & 0x0F);
+                memcpy(objCode + 1, &reg, 1);
+                return objCode;
+            case 3:
+
+                break;
+            case 4:
+                break;
+        }
+    }
+
     
     return 0;
 }
 
-void printObjCode(int format, int objCode, FILE* fp) {
+void printObjCode(int format, unsigned char* objCode, FILE* fp) {
     switch (format) {
         case 1:
-            fprintf(fp, "%02X", objCode);
+            fprintf(fp, "%02X", (unsigned int)objCode);
         case 2:
-            fprintf(fp, "%04X", objCode);
+            fprintf(fp, "%04X", (unsigned int)objCode);
         case 3:
-            fprintf(fp, "%06X", objCode);
+            fprintf(fp, "%06X", (unsigned int)objCode);
         case 4:
-            fprintf(fp, "%08X", objCode);
+            fprintf(fp, "%08X", (unsigned int)objCode);
     }
+}
+
+unsigned char getRegNum(char* reg) {
+    if (strcmp(reg, "A") == 0) return 0x00;
+    if (strcmp(reg, "X") == 0) return 0x01;
+    if (strcmp(reg, "L") == 0) return 0x02;
+    if (strcmp(reg, "B") == 0) return 0x03;
+    if (strcmp(reg, "S") == 0) return 0x04;
+    if (strcmp(reg, "T") == 0) return 0x05;
+    if (strcmp(reg, "F") == 0) return 0x06;
+    if (strcmp(reg, "PC") == 0) return 0x08;
+    if (strcmp(reg, "SW") == 0) return 0x09;
+
+    return 0xFF;
 }
 
 int tokenizeAsmFile(char*** token, char* input) {
@@ -458,28 +510,34 @@ int tokenizeAsmFile(char*** token, char* input) {
     input = removeSpace(input);
 
     (*token)[cnt] = strtok(input, " \t");
-    while (cnt < 5 && (*token)[cnt]) {
+    while (cnt < MAX_TOKEN_NUM && (*token)[cnt]) {
         tmp = strtok(NULL, "\0");
         if (!tmp) break;
         (*token)[++cnt] = strtok(removeSpace(tmp), " \t");
     }
     cnt++;
-
+/*
     if (commaFlag) {
         // contain comma
-        strtok((*token)[cnt], ",");
+        printf("\n");
+        strtok((*token)[cnt-1], ",");
         (*token)[++cnt] = strtok(NULL, "\0");
     }
+*/
+    for (int i = 0; i < cnt; i++)
+        printf("\t\t%s", (*token)[i]);
+    printf("\n");
 
     return cnt;
 }
 
 int removeSpaceAroundComma(char* input) {
     // if comma included, return 1, else 0
-    int flag = 0;
+    int isComma = 0;
     int cnt;
     for (int i = 1; input[i]; i++) {
         if (input[i] == ',') {
+            isComma = 1;
             if ( isWhiteSpace(input[i-1]) ) {
                 cnt = 0;    // num of spaces
                 while ( i - 1 - cnt >= 0 && isWhiteSpace(input[i - 1 - cnt]) ) cnt++;
@@ -500,7 +558,7 @@ int removeSpaceAroundComma(char* input) {
     }
 
     //printf("%s", input);
-    return flag ? 1 : 0;
+    return isComma;
 }
 
 int isWhiteSpace(char ch) {
@@ -688,7 +746,7 @@ void dequeue(FILE* OF) {
         fprintf(OF, "T%06X%02X", tRHead->LOC, tRTail->LOC - tRHead->LOC);
 
         while (tRHead) {
-            printObjCode(tRHead->size, tRHead->addr, OF);
+            //printObjCode(tRHead->size, tRHead->addr, OF);
 
             tRecord* pFree = tRHead;
             tRHead = tRHead->link;
@@ -696,4 +754,11 @@ void dequeue(FILE* OF) {
         }
         tRHead = NULL;
         tRTail = NULL;
+}
+
+int isComma(char* input) {
+    for (int i = 0; i < (int)strlen(input); i++)
+        if (input[i] == ',') return 1;
+
+    return 0;
 }
