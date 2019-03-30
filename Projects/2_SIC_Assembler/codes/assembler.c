@@ -15,15 +15,21 @@ int assemble(char* filename) {
         printf("%s: No such file in the directory\n", filename);
         return 0;
     }
+
+    // initialize Registers
+    A = 0; X = 0; L = 0; PC = 0;
+    SW = 0; B = 0; S = 0; T = 0; F = 0;
     
     if (pass1(asmFP)) {
         printf("pass1 completed\n");
         printSymbol();
         printNums();
+
+        /*
+        if (pass2(asmFP, filename)) 
+            printf("pass2 completed\n");
+            */
     }
-    //if (pass2(asmFP, filename)) {
-    //    printf("pass2 completed\n");
-    //}
 
     fclose(asmFP);
     return 1;
@@ -172,56 +178,6 @@ int pass1(FILE* fp) {
     return 1;
 }
 
-int getInstructionSize(char** token, int lineNum, int isLabel) {
-    // return instructionSize
-    // if isLabel is on, it has label. else no
-    // if error occured, return 0
-    int opIdx = isLabel ? 1 : 0;
-    int size = 0;
-
-    if (!token[opIdx]) return -1;
-    if (token[opIdx][0] == '+') 
-        // Foramt 4
-        return 4;
-
-    size = opcode(token[opIdx], 3);
-    if (size == 0) {
-        // token is no operation
-        // it can be directives
-        // or wrong input
-        switch (isDirective(token[opIdx])) {
-            //case 1: case 2:
-            case 3:     // BYTE
-                size = byteSize(token[opIdx+1]); 
-                break;
-            case 4:     // WORD
-                size = wordSize(token[opIdx+1]);
-                break;
-            case 5:     // RESB
-                size = resbSize(token[opIdx+1]);
-                break;
-            case 6:     // RESW
-                size = reswSize(token[opIdx+1]);
-                break;
-            case 7:     // directives without memory allocation
-                return 0;
-
-            default:
-                // wrong input
-                printf("Error occured at [%d] line: No matching operation code - %s\n", lineNum, token[opIdx]);
-                return -1;
-        }
-        if (size == -1) {
-            // wrong syntax. 
-            // ex) no input || no hexa, ...
-            printf("Error occured at [%d] line: Wrong Syntax\n", lineNum);
-            return -1;
-        }
-    }
-
-    return size;
-}
-
 int pass2(FILE* fp, char* filename) {
     // Assemble instructions (translating opcodes and looking up addrs)
     // Generate data values defined by BYTE, WORD, etc
@@ -306,7 +262,7 @@ int pass2(FILE* fp, char* filename) {
             if ( (token[0])[0] == '+') format = 4;
             if ( format ) {
                 // There exist matching operation
-                //objCode = getObjCode(token, format, 0);
+                objCode = getObjCode(token, format, 0);
 
                 fprintf(LF, "\t%d\t%04X\t\t\t",  pCurrent->lineNum * 5, pCurrent->LOC);
                 for (i = 0; i < tokenNum; i++)
@@ -413,9 +369,6 @@ int pass2(FILE* fp, char* filename) {
 
         }
 
-
-
-
         pCurrent = pCurrent->link;
     }
 
@@ -425,6 +378,56 @@ int pass2(FILE* fp, char* filename) {
 
 
     return 1;
+}
+
+int getInstructionSize(char** token, int lineNum, int isLabel) {
+    // return instructionSize
+    // if isLabel is on, it has label. else no
+    // if error occured, return 0
+    int opIdx = isLabel ? 1 : 0;
+    int size = 0;
+
+    if (!token[opIdx]) return -1;
+    if (token[opIdx][0] == '+') 
+        // Foramt 4
+        return 4;
+
+    size = opcode(token[opIdx], 3);
+    if (size == 0) {
+        // token is no operation
+        // it can be directives
+        // or wrong input
+        switch (isDirective(token[opIdx])) {
+            //case 1: case 2:
+            case 3:     // BYTE
+                size = byteSize(token[opIdx+1]); 
+                break;
+            case 4:     // WORD
+                size = wordSize(token[opIdx+1]);
+                break;
+            case 5:     // RESB
+                size = resbSize(token[opIdx+1]);
+                break;
+            case 6:     // RESW
+                size = reswSize(token[opIdx+1]);
+                break;
+            case 7:     // directives without memory allocation
+                return 0;
+
+            default:
+                // wrong input
+                printf("Error occured at [%d] line: No matching operation code - %s\n", lineNum, token[opIdx]);
+                return -1;
+        }
+        if (size == -1) {
+            // wrong syntax. 
+            // ex) no input || no hexa, ...
+            printf("Error occured at [%d] line: Wrong Syntax\n", lineNum);
+            return -1;
+        }
+    }
+
+    return size;
 }
 
 unsigned char* getObjCode(char** token, int format, int type) {
@@ -500,7 +503,7 @@ unsigned char* getObjCode(char** token, int format, int type) {
                             return 0;
                         }
                         disp = target - PC;
-                        if (disp >= (unsigned int)0xFFF && disp < 0x1000) {
+                        if ((signed int)disp >= (signed int)0xFFF && disp < 0x1000) {
                             b = 0; p = 1;
                         }
                         else disp = PC - B;
@@ -511,6 +514,10 @@ unsigned char* getObjCode(char** token, int format, int type) {
                             format = 4;
                             return 0;
                         }
+                    }
+                    else {
+                        b = 0; p = 0;
+                        disp = operand;
                     }
                     // e bit
                     e = 0;
@@ -561,6 +568,9 @@ unsigned char* getObjCode(char** token, int format, int type) {
                     // b & p bits
                     b = 0;
                     p = 0;
+
+                    // e bits
+                    e = 1;
                     
                     operand = strToHex(token[1]);
                     if (operand == -1) {
@@ -573,10 +583,11 @@ unsigned char* getObjCode(char** token, int format, int type) {
                         addr = target;
                         if (target < 0 || target > 0xFFFFFF) return 0;
                     }
+                    else return 0;
                     b1 = (opCode + n * 2 + i) & ONE_BYTE;
                     b2 = (((x * 8 + b * 4 + p * 2 + e) << 4 & 0xF0) | ((addr / (1<<16)) & 0x0F)) & ONE_BYTE;
-                    b3 = addr % (1<<16) >> 8;
-                    b4 = addr % (1<<8);
+                    b3 = (addr % (1<<16) - (addr / (1<<16))) & ONE_BYTE;
+                    b4 = (addr % (1<<8)) & ONE_BYTE;
                     memcpy(objCode, &b1, 1);
                     memcpy(objCode + 1, &b1, 1);
                     memcpy(objCode + 2, &b1, 1);
@@ -589,9 +600,48 @@ unsigned char* getObjCode(char** token, int format, int type) {
     }
     else if (type == 1) {
         // BYTE CONST
+        int size = 0, i;
+        unsigned char tmp;
+        char* strHex = (char*)malloc(3 * sizeof(char));
+        if (token[1][0] == 'C') {
+            for (i = 2; i < (int)strlen(token[1]) - 1; i++) ;
+            size = i;
+
+            objCode = (unsigned char*)malloc(size * sizeof(unsigned char));
+            for (i = 0; i < size; i++) {
+                tmp = token[1][i+2] & ONE_BYTE;
+                memcpy(objCode + i, &tmp, 1);
+            }
+                
+            return objCode;
+        }
+        else if (token[1][0] == 'X') {
+            for (i = 2; i < (int)strlen(token[1]) - 1; i++) ;
+            size = (i % 2 == 0) ? i / 2 : i / 2 + 1;
+
+            objCode = (unsigned char*)malloc(size * sizeof(unsigned char));
+            for (i = 0; i < size; i += 2) {
+                strHex[0] = token[1][i+2];
+                strHex[1] = token[1][i+3];
+                strHex[2] = '\0';
+                tmp = strToHex(strHex) & ONE_BYTE;
+                memcpy(objCode + 1, &tmp, 1);
+            }
+
+            return objCode;
+        }
     }
     else if (type == 2) {
         // WORD CONST
+        objCode = (unsigned char*)malloc(WORD_SIZE * sizeof(unsigned char));
+        operand = strToHex(token[1]);
+        b1 = (operand / (1<<16)) & ONE_BYTE;
+        b2 = (operand / (1<<8) - (b1 << 16)) & ONE_BYTE;
+        b3 = (operand % (1<<8)) & ONE_BYTE;
+        memcpy(objCode, &b1, 1);
+        memcpy(objCode + 1, &b2, 1);
+        memcpy(objCode + 2, &b3, 1);
+        return objCode;
     }
 
     
@@ -618,20 +668,6 @@ void printObjCode(int format, unsigned char* objCode, FILE* fp) {
     }
 }
 
-unsigned char getRegNum(char* reg) {
-    if (strcmp(reg, "A") == 0) return 0x00;
-    if (strcmp(reg, "X") == 0) return 0x01;
-    if (strcmp(reg, "L") == 0) return 0x02;
-    if (strcmp(reg, "B") == 0) return 0x03;
-    if (strcmp(reg, "S") == 0) return 0x04;
-    if (strcmp(reg, "T") == 0) return 0x05;
-    if (strcmp(reg, "F") == 0) return 0x06;
-    if (strcmp(reg, "PC") == 0) return 0x08;
-    if (strcmp(reg, "SW") == 0) return 0x09;
-
-    return 0xFF;
-}
-
 int tokenizeAsmFile(char*** token, char* input) {
     // tokenize all the possible options into token
     // return number of strings
@@ -647,8 +683,9 @@ int tokenizeAsmFile(char*** token, char* input) {
         (*token)[++cnt] = strtok(removeSpace(tmp), " \t");
     }
     cnt++;
-/*
+
     if (commaFlag) {
+        /*
         // contain comma
         printf("\n");
         int tp;
@@ -656,8 +693,8 @@ int tokenizeAsmFile(char*** token, char* input) {
             tp = cnt;
             (*token)[++cnt] = strtok((*token)[tp], ",");
         }
+        */
     }
-*/
     for (int i = 0; i < cnt; i++)
         printf("\t\t%s", (*token)[i]);
     printf("\n");
@@ -693,208 +730,4 @@ int removeSpaceAroundComma(char* input) {
 
     //printf("%s", input);
     return isComma;
-}
-
-int isWhiteSpace(char ch) {
-    return (ch == ' ' || ch == '\n' || ch == '\t') ? 1 : 0;
-}
-
-int isBlankLine(char* input) {
-    for (int i = 0; i < (int)strlen(input); i++)
-        if (!isWhiteSpace(input[i])) return 0;
-    return 1;
-}
-
-int isDirective(char* token){
-    // check if the token is a directive
-    // if it is, return corresponding number. else 0
-    // START, END, BYTE, WORD, RESB, RESW
-    // BASE
-    if (!token) return 0;
-
-    if (strcmp(token, "START") == 0) return 1;
-    if (strcmp(token, "END") == 0) return 2;
-    if (strcmp(token, "BYTE") == 0) return 3;
-    if (strcmp(token, "WORD") == 0) return 4;
-    if (strcmp(token, "RESB") == 0) return 5;
-    if (strcmp(token, "RESW") == 0) return 6;
-
-    if (strcmp(token, "BASE") == 0) return 7;
-
-    return 0;
-}
-
-char* nameToListing(char* filename) {
-    char* lstName = (char*)malloc(50 * sizeof(char));
-
-    for (int i = 0; i < (int)strlen(filename); i++) {
-        if (filename[i] != '.') 
-            lstName[i] = filename[i];
-        else break;
-    }
-
-    strcat(lstName, ".lst");
-    
-    return lstName;
-}
-
-char* nameToObj(char* filename) {
-    char* objName = (char*)malloc(50 * sizeof(char));
-
-    for (int i = 0; i < (int)strlen(filename); i++) {
-        if (filename[i] != '.') 
-            objName[i] = filename[i];
-        else break;
-    }
-
-    strcat(objName, ".obj");
-    
-    return objName;
-}
-
-char toUpper(char ch){
-    if (ch >= 'a' && ch <= 'z') ch -= 'a' - 'A';
-    return ch;
-}
-
-char* toUpperCase(char* input) {
-    for (int i = 0; i < (int)strlen(input); i++)
-        if (input[i] >= 'a' && input[i] <= 'z') input[i] -= 'a' - 'A';
-    return input;
-}
-
-int byteSize(char* input) {
-    if (!input) return -1;
-    int size;
-
-    if (input[0] == 'C') {
-        if (input[1] == input[(int)strlen(input)-1] && input[1] == '\'') {
-            size = (int)strlen(input) - 3;
-        }
-        else return -1;
-    }
-    if (input[0] == 'X') {
-        if (input[1] == input[(int)strlen(input)-1] && input[1] == '\'') {
-            size = (int)strlen(input) - 3;
-            size = (size % 2 == 0) ? size / 2 : size / 2 + 1;
-        }
-        else return -1;
-    }
-
-    return size;
-}
-
-int wordSize(char* input) {
-    if (!input) return -1;
-    int size = WORD_SIZE;
-
-    return size;
-}
-
-int resbSize(char* input) {
-    if (!input) return -1;
-    int size;
-    if ( (size = strToDecimal(input)) == -1 ) return -1;
-
-    return size;
-}
-
-int reswSize(char* input) {
-    if (!input) return -1;
-    int size;
-    if ( (size = strToHex(input)) == -1 ) return -1;
-
-    return size * WORD_SIZE;
-}
-
-numNode* addNum(int lineNum, int LOC, numNode* pLast, int flag_type) {
-    numNode* pNew = (numNode*)malloc(sizeof(numNode));
-    pNew->lineNum = lineNum; pNew->LOC = LOC;
-    switch (flag_type) {
-        case 0:
-            pNew->s_flag = 0; pNew->e_flag = 0; pNew->skip_flag = 0;
-            break;
-        case 1:
-            pNew->s_flag = 1; pNew->e_flag = 0; pNew->skip_flag = 0;
-            break;
-        case 2:
-            pNew->s_flag = 0; pNew->e_flag = 1; pNew->skip_flag = 0;
-            break;
-        case 3:
-            pNew->s_flag = 0; pNew->e_flag = 0; pNew->skip_flag = 1;
-            break;
-    }
-    pNew->link = NULL;
-
-    if (!numHead) {
-        numHead = pNew;
-        return pNew;
-    }
-    pLast->link = pNew;
-    return pNew;
-}
-
-void freeNums() {
-    if (!numHead) return ;
-    numNode* pFree = numHead;
-    while (numHead) {
-        pFree = numHead;
-        numHead = numHead->link;
-        free(pFree);
-    }
-    numHead = NULL;
-}
-
-void printNums() {
-    numNode* pMove;
-    for (pMove = numHead; pMove; pMove = pMove->link)
-        printf("\t%d\t%06X\n", pMove->lineNum, pMove->LOC);
-}
-
-void enqueue(unsigned char* objCode, int size, int LOC, FILE* OF) {
-    tRecord* pNew = (tRecord*)malloc(sizeof(tRecord));
-    memcpy(pNew->objCode, objCode, size);
-    pNew->size = size;
-    pNew->LOC = LOC;
-    pNew->link = NULL;
-
-    if ( !tRHead ) {
-        tRHead = pNew;
-        tRTail = pNew;
-        return ;
-    }
-
-    if (LOC - tRHead->LOC > MAX_OBJ_TRECORD) {
-        dequeue(OF);
-        tRHead = pNew;
-        tRTail= pNew;
-        return ;
-    }
-
-    tRTail->link = pNew;
-    tRTail = pNew;
-}
-
-void dequeue(FILE* OF) {
-    // pop node from the queue
-    // and print obj codes in the .obj file
-    if (!tRHead) return ;
-        // print T, starting LOC, and Length of the record
-        fprintf(OF, "T%06X%02X", tRHead->LOC, tRTail->LOC - tRHead->LOC);
-
-        while (tRHead) {
-            printObjCode(tRHead->size, tRHead->objCode, OF);
-            tRecord* pFree = tRHead;
-            tRHead = tRHead->link;
-            free(pFree);
-        }
-        tRHead = NULL;
-        tRTail = NULL;
-}
-
-int isComma(char* input) {
-    for (int i = 0; i < (int)strlen(input); i++)
-        if (input[i] == ',') return 1;
-
-    return 0;
 }
