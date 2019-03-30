@@ -42,14 +42,6 @@ typedef struct symT {
     struct symT* link;
 } symNode;
 
-typedef struct __token {
-    char* r1, *r2;
-    char* symbol;
-    char* operation;
-    char* target;
-    char* tmp;
-} asmToken;
-
 typedef struct _inter {
     // store intermidate info of asm file - LOC & line num
     // include some flags such as START/ END directives
@@ -63,7 +55,7 @@ typedef struct _inter {
 } numNode;
 
 typedef struct _tRecord {
-    unsigned char* objCode;
+    int objCode;
     int size;
     int LOC;
     struct _tRecord* link;
@@ -114,7 +106,7 @@ void reset();                                       // 0x16
 
 int validAddr(int addr);
 int validAddrRange(int start, int end);
-int strToHex(char* param);
+int strToHex(char* param, int type);
 int strToDecimal(char* param);
 int isHex(char ch);
 
@@ -135,9 +127,9 @@ int assemble(char* filename);               // 0x30
 int pass1(FILE* fp);
 int pass2(FILE* fp, char* filename);
 int tokenizeAsmFile(char*** token, char* input);
-unsigned char* getObjCode(char** token, int format, int type);
-void printObjCode(int format, unsigned char* objCode, FILE* fp);
-unsigned char getRegNum(char* reg);
+int getObjCode(char** token, int format, int type);
+void printObjCode(int format, int objCode, FILE* fp);
+int getRegNum(char* reg);
 
 int removeSpaceAroundComma(char* input);
 int isWhiteSpace(char ch);
@@ -160,7 +152,7 @@ numNode* addNum(int lineNum, int LOC, numNode* pLast, int flagType);
 void freeNums();
 void printNums();
 
-void enqueue(unsigned char* objCode, int size, int LOC, FILE* OF);
+void enqueue(int objCode, int size, int LOC, FILE* OF);
 void dequeue(FILE* OF);
 
 int isComma(char* input);

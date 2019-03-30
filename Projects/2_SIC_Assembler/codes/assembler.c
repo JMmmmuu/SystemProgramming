@@ -19,16 +19,18 @@ int assemble(char* filename) {
     // initialize Registers
     A = 0; X = 0; L = 0; PC = 0;
     SW = 0; B = 0; S = 0; T = 0; F = 0;
+    tRHead = NULL;
+    tRTail = NULL;
     
     if (pass1(asmFP)) {
         printf("pass1 completed\n");
         printSymbol();
         printNums();
 
-        /*
+        //*
         if (pass2(asmFP, filename)) 
             printf("pass2 completed\n");
-            */
+            //*/
     }
 
     fclose(asmFP);
@@ -96,7 +98,7 @@ int pass1(FILE* fp) {
                 printf("Error occured at [%d] line: No name or starting address\n", lineNum);
                 return 0;
             }
-            if ( (startingAddr = strToHex(token[i+1])) == -1 ) {
+            if ( (startingAddr = strToHex(token[i+1], 0)) == -1 ) {
                 printf("Error occured at [%d] line: Wrong Starting Address\n", lineNum);
                 startingAddr = 0;
                 return 0;
@@ -205,12 +207,16 @@ int pass2(FILE* fp, char* filename) {
         fgets(line, MAX_ASM_LINE, fp);
         tokenNum = tokenizeAsmFile(&token, line);
 
-        fprintf(LF, "\t%d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
-        for (i = 0; i < tokenNum; i++)
+        printf("\t%d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
+        fprintf(LF, "\t%d\t%04X", pCurrent->lineNum * 5, pCurrent->LOC);
+        for (i = 0; i < tokenNum; i++){
+            printf("\t%s", token[i]);
             fprintf(LF, "\t%s", token[i]);
+        }
         fprintf(LF, "\n");
+        printf("\n");
 
-        startingAddr = strToHex(token[2]);
+        startingAddr = strToHex(token[2], 1);
         numNode* pMove;
         for (pMove = numHead; pMove->link; pMove = pMove->link) ;
         endAddr = pMove->LOC;
@@ -251,15 +257,18 @@ int pass2(FILE* fp, char* filename) {
         line = toUpperCase(line);
         tokenNum = tokenizeAsmFile(&token, line);
         int format, directiveNum;
-        unsigned char* objCode;
+        int objCode;
 
         // set Program Counter
         if (pCurrent->link) PC = pCurrent->link->LOC;
 
         if (line[0] == ' ' || line[0] == '\t') {
-            // no label follows
+            // no label
             format = opcode(token[0], 3);
-            if ( (token[0])[0] == '+') format = 4;
+            if ( (token[0])[0] == '+') {
+                format = 4;
+                token[0] += 1;
+            }
             if ( format ) {
                 // There exist matching operation
                 objCode = getObjCode(token, format, 0);
@@ -300,7 +309,10 @@ int pass2(FILE* fp, char* filename) {
         else {
             // label!!
             format = opcode(token[1], 3);
-            if ( (token[1])[0] == '+' ) format = 4;
+            if ( (token[1])[0] == '+' ) {
+                format = 4;
+                token[1] += 1;
+            }
             if ( format ) {
                 // exist matching operation
                 objCode = getObjCode(&(token[1]), format, 0);
@@ -362,6 +374,8 @@ int pass2(FILE* fp, char* filename) {
                         for (i = 0; i < tokenNum; i++)
                             fprintf(LF, "\t%s", token[i]);
                         fprintf(LF, "\n");
+                        
+                        pCurrent = pCurrent->link;
                         continue;
                 }
             }
@@ -371,11 +385,6 @@ int pass2(FILE* fp, char* filename) {
 
         pCurrent = pCurrent->link;
     }
-
-
-
-
-
 
     return 1;
 }
@@ -430,28 +439,27 @@ int getInstructionSize(char** token, int lineNum, int isLabel) {
     return size;
 }
 
-unsigned char* getObjCode(char** token, int format, int type) {
+int getObjCode(char** token, int format, int type) {
     // format: operation code format / or size
     // type:    if 0, operation
     //          if 1, BYTE Const
     //          if 2, WORD Const
     unsigned char n, i, x, b, p, e;
-    unsigned char r1, r2, reg;
-    unsigned char b1, b2, b3, b4;
+    unsigned char r1, r2;
+    int reg;
+    int b1, b2, b3, b4;
     int disp, addr;
     int opCode, operand;
-    unsigned char* objCode;
+    int objCode = 0;
     int tokenNum, lp, target;
     for (tokenNum = 0; token[tokenNum]; tokenNum++) ;
 
     if (type == 0) {
-        objCode = (unsigned char*)malloc(format * sizeof(unsigned char));
         opCode = opcode(token[0], 2);
-        opCode = opCode & ONE_BYTE;
-        memcpy(objCode, &opCode, 1);
 
         switch (format) {
             case 1:
+                printf("%02X", objCode);
                 return objCode;
             case 2:
                 // get register code
@@ -464,8 +472,9 @@ unsigned char* getObjCode(char** token, int format, int type) {
 
                 r1 = token[1] ? getRegNum(token[1]) : 0x00;
                 r2 = token[2] ? getRegNum(token[2]) : 0x00;
-                reg = (r1 << 4 & 0xF0) || (r2 & 0x0F);
-                memcpy(objCode + 1, &reg, 1);
+                reg = (r1 << 2) + r2;
+
+                printf("%04X\n", objCode);
                 return objCode;
             case 3:
                 // operand
@@ -475,12 +484,12 @@ unsigned char* getObjCode(char** token, int format, int type) {
                     if (token[1][0] == '#') {
                         // immediate
                         n = 0; i = 1;
-                        token[1] += 1;
+                        token[1] = &(token[1][1]);
                     }
                     else if (token[1][0] == '@') {
                         // indirect
                         n = 1; i = 0;
-                        token[1] += 1;
+                        token[1] = &(token[1][1]);
                     }
                     else {
                         // simple
@@ -494,10 +503,10 @@ unsigned char* getObjCode(char** token, int format, int type) {
                             x = 1;
 
                     // b & p bits
-                    operand = strToHex(token[1]);
+                    operand = strToHex(token[1], 0);
                     if (operand == -1) {
                         // find symbol
-                        target = findSym(token[-1]);
+                        target = findSym(token[1]);
                         if (target == -1) {
                             printf("Error!!\n");
                             return 0;
@@ -521,23 +530,20 @@ unsigned char* getObjCode(char** token, int format, int type) {
                     }
                     // e bit
                     e = 0;
-
-                    b1 = (opCode + n * 2 + i) & ONE_BYTE;
-                    b2 = (((x * 8 + b * 4 + p * 2 + e) << 4 & 0xF0) | ((disp / (1<<8)) & 0x0F)) & ONE_BYTE;
-                    b3 = (disp % 256) & ONE_BYTE;
-                    memcpy(objCode, &b1, 1);
-                    memcpy(objCode + 1, &b2, 1);
-                    memcpy(objCode + 2, &b3, 1);
                 }
                 else {
                     // no operand
                     n = 1; i = 1;
-                    objCode[0] += n * 2 + i;
-                    b2 = 0x00;
-                    for (lp = 1; lp < 3; lp++)
-                        memcpy(objCode + i, &b2, 1);
+                    x = 0; b = 0; p = 0; e = 0;
+                    disp = 0;
                 }
 
+                b1 = opCode + n * 2 + i;
+                b2 = (x << 7) + (b << 6) + (p << 5) + (e << 4) + disp / (1<<8);
+                b3 = disp % (1 << 8);
+                objCode = (b1 << 16) + (b2 << 8) + b3;
+
+                printf("%06X\n", objCode);
                 return objCode;
             case 4:
                 // get nixbpe
@@ -572,99 +578,76 @@ unsigned char* getObjCode(char** token, int format, int type) {
                     // e bits
                     e = 1;
                     
-                    operand = strToHex(token[1]);
+                    operand = strToHex(token[1], 0);
                     if (operand == -1) {
                         // find symbol
                         target = findSym(token[1]);
                         if (target == -1) {
-                            printf("Error!\n");
+                            printf("no Symbol Found!\n");
                             return 0;
                         }
                         addr = target;
                         if (target < 0 || target > 0xFFFFFF) return 0;
                     }
                     else return 0;
-                    b1 = (opCode + n * 2 + i) & ONE_BYTE;
-                    b2 = (((x * 8 + b * 4 + p * 2 + e) << 4 & 0xF0) | ((addr / (1<<16)) & 0x0F)) & ONE_BYTE;
-                    b3 = (addr % (1<<16) - (addr / (1<<16))) & ONE_BYTE;
-                    b4 = (addr % (1<<8)) & ONE_BYTE;
-                    memcpy(objCode, &b1, 1);
-                    memcpy(objCode + 1, &b1, 1);
-                    memcpy(objCode + 2, &b1, 1);
-                    memcpy(objCode + 3, &b1, 1);
-                }
-                
 
+                    b1 = opCode + n * 2 + i;
+                    b2 = (x << 7) + (b << 6) + (p << 5) + (e << 4) + addr / (1<<16);
+                    b3 = addr % (1 << 16) - ((addr / (1 << 16)) << 4);
+                    b4 = addr % (1 << 8);
+                    objCode = (b1 << 24) + (b2 << 16) + (b3 <<8 ) + b4;
+                }
+                printf("%08X\n", objCode);
                 break;
         }
     }
     else if (type == 1) {
         // BYTE CONST
         int size = 0, i;
-        unsigned char tmp;
+        int tmp;
         char* strHex = (char*)malloc(3 * sizeof(char));
         if (token[1][0] == 'C') {
             for (i = 2; i < (int)strlen(token[1]) - 1; i++) ;
             size = i;
 
-            objCode = (unsigned char*)malloc(size * sizeof(unsigned char));
-            for (i = 0; i < size; i++) {
-                tmp = token[1][i+2] & ONE_BYTE;
-                memcpy(objCode + i, &tmp, 1);
-            }
-                
-            return objCode;
+            for (i = 0; i < size; i++)
+                objCode += ((int)token[1][i+2]) << (4 * (size - i - 1));
         }
         else if (token[1][0] == 'X') {
             for (i = 2; i < (int)strlen(token[1]) - 1; i++) ;
             size = (i % 2 == 0) ? i / 2 : i / 2 + 1;
-
-            objCode = (unsigned char*)malloc(size * sizeof(unsigned char));
-            for (i = 0; i < size; i += 2) {
+            
+            for (i = 0; i < size; i++) {
                 strHex[0] = token[1][i+2];
                 strHex[1] = token[1][i+3];
                 strHex[2] = '\0';
-                tmp = strToHex(strHex) & ONE_BYTE;
-                memcpy(objCode + 1, &tmp, 1);
-            }
+                tmp = strToHex(strHex, 1);
 
-            return objCode;
+                objCode += (tmp << (size - i - 1));
+
+            }
         }
     }
     else if (type == 2) {
         // WORD CONST
-        objCode = (unsigned char*)malloc(WORD_SIZE * sizeof(unsigned char));
-        operand = strToHex(token[1]);
-        b1 = (operand / (1<<16)) & ONE_BYTE;
-        b2 = (operand / (1<<8) - (b1 << 16)) & ONE_BYTE;
-        b3 = (operand % (1<<8)) & ONE_BYTE;
-        memcpy(objCode, &b1, 1);
-        memcpy(objCode + 1, &b2, 1);
-        memcpy(objCode + 2, &b3, 1);
-        return objCode;
+
+        operand = strToHex(token[1], 1);
+        b1 = operand / (1 << 16);
+        b2 = operand / (1 << 8) - (b1 << 8);
+        b3 = operand % (1 << 8);
+        objCode = (b1 << 16) + (b2 << 8) + b3;
     }
 
     
-    return 0;
+    return objCode;
 }
 
-void printObjCode(int format, unsigned char* objCode, FILE* fp) {
-    switch (format) {
-        case 1:
-            fprintf(fp, "%02X", (unsigned int)objCode);
-            break;
-        case 2:
-            fprintf(fp, "%04X", (unsigned int)objCode);
-            break;
-        case 3:
-            fprintf(fp, "%06X", (unsigned int)objCode);
-            break;
-        case 4:
-            fprintf(fp, "%08X", (unsigned int)objCode);
-            break;
-        default:
-            // print as longer as the size (format)
-            break;
+void printObjCode(int size, int objCode, FILE* fp) {
+    int hex;
+    for (int i = size-1; i >= 0; i--) {
+        hex = (objCode / 1<<(4*i)) - (objCode / 1<<(4*(i+1)) * 1<<4);
+        hex &= ONE_BYTE;
+        fprintf(fp, "%02X", hex);
     }
 }
 
