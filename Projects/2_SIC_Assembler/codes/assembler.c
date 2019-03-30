@@ -190,7 +190,7 @@ int pass2(FILE* fp, char* filename) {
     // Write obj program and assembly listing.
 
     fseek(fp, 0, SEEK_SET);     // move to the start
-    int i, tokenNum, startingAddr, endAddr;
+    int i, tokenNum, startingAddr, endAddr, size;
     numNode* pCurrent = numHead;
     char* line = (char*)malloc(MAX_ASM_LINE * sizeof(char));
     char** token = (char**)malloc(MAX_TOKEN_NUM * sizeof(char*));
@@ -346,8 +346,10 @@ int pass2(FILE* fp, char* filename) {
                         fprintf(LF, "\t  %d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
                         for (i = 0; i < tokenNum; i++)
                             fprintf(LF, "\t%s", token[i]);
+                        size = (int)strlen(token[2]) - 3;
+                        size = (token[2][0] == 'X') ? size / 2 : size;
                         fprintf(LF,  "\t\t");
-                        printObjCode(3, objCode, LF);
+                        printObjCode(size, objCode, LF);
                         fprintf(LF, "\n");
                         enqueue(objCode, 3, pCurrent->LOC, OF);
 
@@ -489,7 +491,7 @@ int getObjCode(char** token, int format, int type) {
                 }
                 else {
                     r1 = getRegNum(token[1]);
-                    r1 = 0x00;
+                    r2 = 0x00;
                 }
                 reg = (r1 << 4) + r2;
 
@@ -609,7 +611,10 @@ int getObjCode(char** token, int format, int type) {
                         addr = target;
                         if (target < 0 || target > 0xFFFFFF) return 0;
                     }
-                    else objCode = operand;
+                    else {
+                        objCode = operand;
+                        return 1;
+                    }
 
                     b1 = opCode + n * 2 + i;
                     b2 = (x << 7) + (b << 6) + (p << 5) + (e << 4) + addr / (1<<16);
@@ -623,27 +628,24 @@ int getObjCode(char** token, int format, int type) {
     else if (type == 1) {
         // BYTE CONST
         int size = 0;
-        int tmp;
+        int hex;
         char* strHex = (char*)malloc(3 * sizeof(char));
         if (token[1][0] == 'C') {
-            for (lc = 2; lc < (int)strlen(token[1]) - 1; lc++) ;
-            size = lc;
             size = (int)strlen(token[1]) - 3;
 
             for (lc = 0; lc < size; lc++)
                 objCode += (((int)token[1][lc+2]) << (8 * (size - lc - 1)));
         }
         else if (token[1][0] == 'X') {
-            for (lc = 2; lc < (int)strlen(token[1]) - 1; lc++) ;
-            size = (lc % 2 == 0) ? lc / 2 : lc / 2 + 1;
+            size = ((int)strlen(token[1]) - 3) / 2;
             
             for (lc = 0; lc < size; lc++) {
                 strHex[0] = token[1][lc+2];
                 strHex[1] = token[1][lc+3];
                 strHex[2] = '\0';
-                tmp = strToHex(strHex, 1);
+                hex = strToHex(strHex, 1);
 
-                objCode += (tmp << (size - lc - 1));
+                objCode += (hex << (8 * (size - lc - 1)));
 
             }
         }
