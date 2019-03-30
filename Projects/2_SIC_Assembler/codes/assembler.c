@@ -295,7 +295,7 @@ int pass2(FILE* fp, char* filename) {
         line = toUpperCase(line);
         tokenNum = tokenizeAsmFile(&token, line);
         int format, directiveNum;
-        int objCode;
+        unsigned char* objCode;
 
         // set Program Counter
         if (pCurrent->link) PC = pCurrent->link->LOC;
@@ -313,7 +313,7 @@ int pass2(FILE* fp, char* filename) {
                     fprintf(LF, "\t%s", token[i]);
 
                 fprintf(LF, "\t\t\t\t");
-                //printObjCode(format, objCode, LF);
+                printObjCode(format, objCode, LF);
                 fprintf(LF, "\n");
                 enqueue(objCode, format, pCurrent->LOC, OF);
             }
@@ -347,14 +347,14 @@ int pass2(FILE* fp, char* filename) {
             if ( (token[1])[0] == '+' ) format = 4;
             if ( format ) {
                 // exist matching operation
-                //objCode = getObjCode(&(token[1]), format, 0);
+                objCode = getObjCode(&(token[1]), format, 0);
 
                 fprintf(LF, "\t%d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
                 for (i = 0; i < tokenNum; i++)
                     fprintf(LF, "\t%s", token[i]);
 
                 fprintf(LF, "\t\t\t\t");
-                //printObjCode(format, objCode, LF);
+                printObjCode(format, objCode, LF);
                 fprintf(LF, "\n");
                 enqueue(objCode, format, pCurrent->LOC, OF);
             }
@@ -370,23 +370,23 @@ int pass2(FILE* fp, char* filename) {
                 // directive!
                 switch (directiveNum) {
                     case 3:     // BYTE
-                        //objCode = getObjCode(&(token[1]), 5, 1);
+                        objCode = getObjCode(&(token[1]), 5, 1);
                         fprintf(LF, "\t%d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
                         for (i = 0; i < tokenNum; i++)
                             fprintf(LF, "\t%s", token[i]);
                         fprintf(LF,  "\t\t\t\t");
-                        //printObjCode(3, objCode, LF);
+                        printObjCode(3, objCode, LF);
                         fprintf(LF, "\n");
                         enqueue(objCode, 3, pCurrent->LOC, OF);
 
                         break;
                     case 4:     // WORD
-                        //objCode = getObjCode(&(token[1]), 5, 2);
+                        objCode = getObjCode(&(token[1]), 5, 2);
                         fprintf(LF, "\t%d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
                         for (i = 0; i < tokenNum; i++)
                             fprintf(LF, "\t%s", token[i]);
                         fprintf(LF,  "\t\t\t\t");
-                        //printObjCode(3, objCode, LF);
+                        printObjCode(3, objCode, LF);
                         enqueue(objCode, 3, pCurrent->LOC, OF);
 
                         break;
@@ -436,7 +436,7 @@ unsigned char* getObjCode(char** token, int format, int type) {
     unsigned char r1, r2, reg;
     unsigned char b1, b2, b3, b4;
     int disp, addr;
-    int opCode;
+    int opCode, operand;
     unsigned char* objCode;
     int tokenNum, lp, target;
     for (tokenNum = 0; token[tokenNum]; tokenNum++) ;
@@ -468,7 +468,7 @@ unsigned char* getObjCode(char** token, int format, int type) {
                 // operand
                 // get nixbpe
                 if (token[1]) {
-                    e = 0;
+                    // n & i bits
                     if (token[1][0] == '#') {
                         // immediate
                         n = 0; i = 1;
@@ -484,7 +484,15 @@ unsigned char* getObjCode(char** token, int format, int type) {
                         n = 1; i = 1;
                     }
 
-                    if (strToHex(token[1]) == -1) {
+                    // x bit
+                    x = 0;
+                    if (token[2])
+                        if (strcmp(token[2], "X") == 0)
+                            x = 1;
+
+                    // b & p bits
+                    operand = strToHex(token[1]);
+                    if (operand == -1) {
                         // find symbol
                         target = findSym(token[-1]);
                         if (target == -1) {
@@ -503,18 +511,16 @@ unsigned char* getObjCode(char** token, int format, int type) {
                             format = 4;
                             return 0;
                         }
-
-                        b1 = (opCode + n * 2 + i) & ONE_BYTE;
-                        b2 = (((x * 8 + b * 4 + p * 2 + e) << 4 & 0xF0) | ((disp / 256) & 0x0F)) & ONE_BYTE;
-                        b3 = (disp % 256) & ONE_BYTE;
-                        memcpy(objCode, &b1, 1);
-                        memcpy(objCode, &b2, 1);
-                        memcpy(objCode, &b3, 1);
                     }
+                    // e bit
+                    e = 0;
 
-
-
-
+                    b1 = (opCode + n * 2 + i) & ONE_BYTE;
+                    b2 = (((x * 8 + b * 4 + p * 2 + e) << 4 & 0xF0) | ((disp / (1<<8)) & 0x0F)) & ONE_BYTE;
+                    b3 = (disp % 256) & ONE_BYTE;
+                    memcpy(objCode, &b1, 1);
+                    memcpy(objCode + 1, &b2, 1);
+                    memcpy(objCode + 2, &b3, 1);
                 }
                 else {
                     // no operand
@@ -525,14 +531,67 @@ unsigned char* getObjCode(char** token, int format, int type) {
                         memcpy(objCode + i, &b2, 1);
                 }
 
-
-
-                // get disp
-
-                break;
+                return objCode;
             case 4:
+                // get nixbpe
+                if (token[1]) {
+                    // operand exist
+                    // n & i bits
+                    if (token[1][0] == '#') {
+                        // immdeditae
+                        n = 0; i = 1;
+                        token[1] += 1;
+                    }
+                    else if (token[1][0] == '@') {
+                        // indirect
+                        n = 1; i = 0;
+                        token[1] += 1;
+                    }
+                    else {
+                        // simple
+                        n = 1; i = 1;
+                    }
+
+                    // x bit
+                    x = 0;
+                    if (token[2])
+                        if (strcmp(token[2], "X") == 0)
+                            x = 1;
+
+                    // b & p bits
+                    b = 0;
+                    p = 0;
+                    
+                    operand = strToHex(token[1]);
+                    if (operand == -1) {
+                        // find symbol
+                        target = findSym(token[1]);
+                        if (target == -1) {
+                            printf("Error!\n");
+                            return 0;
+                        }
+                        addr = target;
+                        if (target < 0 || target > 0xFFFFFF) return 0;
+                    }
+                    b1 = (opCode + n * 2 + i) & ONE_BYTE;
+                    b2 = (((x * 8 + b * 4 + p * 2 + e) << 4 & 0xF0) | ((addr / (1<<16)) & 0x0F)) & ONE_BYTE;
+                    b3 = addr % (1<<16) >> 8;
+                    b4 = addr % (1<<8);
+                    memcpy(objCode, &b1, 1);
+                    memcpy(objCode + 1, &b1, 1);
+                    memcpy(objCode + 2, &b1, 1);
+                    memcpy(objCode + 3, &b1, 1);
+                }
+                
+
                 break;
         }
+    }
+    else if (type == 1) {
+        // BYTE CONST
+    }
+    else if (type == 2) {
+        // WORD CONST
     }
 
     
@@ -543,12 +602,19 @@ void printObjCode(int format, unsigned char* objCode, FILE* fp) {
     switch (format) {
         case 1:
             fprintf(fp, "%02X", (unsigned int)objCode);
+            break;
         case 2:
             fprintf(fp, "%04X", (unsigned int)objCode);
+            break;
         case 3:
             fprintf(fp, "%06X", (unsigned int)objCode);
+            break;
         case 4:
             fprintf(fp, "%08X", (unsigned int)objCode);
+            break;
+        default:
+            // print as longer as the size (format)
+            break;
     }
 }
 
@@ -785,9 +851,9 @@ void printNums() {
         printf("\t%d\t%06X\n", pMove->lineNum, pMove->LOC);
 }
 
-void enqueue(int addr, int size, int LOC, FILE* OF) {
+void enqueue(unsigned char* objCode, int size, int LOC, FILE* OF) {
     tRecord* pNew = (tRecord*)malloc(sizeof(tRecord));
-    pNew->addr = addr;
+    memcpy(pNew->objCode, objCode, size);
     pNew->size = size;
     pNew->LOC = LOC;
     pNew->link = NULL;
@@ -810,12 +876,14 @@ void enqueue(int addr, int size, int LOC, FILE* OF) {
 }
 
 void dequeue(FILE* OF) {
+    // pop node from the queue
+    // and print obj codes in the .obj file
     if (!tRHead) return ;
+        // print T, starting LOC, and Length of the record
         fprintf(OF, "T%06X%02X", tRHead->LOC, tRTail->LOC - tRHead->LOC);
 
         while (tRHead) {
-            //printObjCode(tRHead->size, tRHead->addr, OF);
-
+            printObjCode(tRHead->size, tRHead->objCode, OF);
             tRecord* pFree = tRHead;
             tRHead = tRHead->link;
             free(pFree);

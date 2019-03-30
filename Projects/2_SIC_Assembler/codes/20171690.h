@@ -63,7 +63,7 @@ typedef struct _inter {
 } numNode;
 
 typedef struct _tRecord {
-    int addr;
+    unsigned char* objCode;
     int size;
     int LOC;
     struct _tRecord* link;
@@ -160,7 +160,7 @@ numNode* addNum(int lineNum, int LOC, numNode* pLast, int flagType);
 void freeNums();
 void printNums();
 
-void enqueue(int data, int size, int LOC, FILE* OF);
+void enqueue(unsigned char* objCode, int size, int LOC, FILE* OF);
 void dequeue(FILE* OF);
 
 int isComma(char* input);
