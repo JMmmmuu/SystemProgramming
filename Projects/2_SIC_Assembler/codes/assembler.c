@@ -434,9 +434,11 @@ unsigned char* getObjCode(char** token, int format, int type) {
     //          if 2, WORD Const
     unsigned char n, i, x, b, p, e;
     unsigned char r1, r2, reg;
+    unsigned char b1, b2, b3, b4;
+    int disp, addr;
     int opCode;
     unsigned char* objCode;
-    int tokenNum;
+    int tokenNum, lp, target;
     for (tokenNum = 0; token[tokenNum]; tokenNum++) ;
 
     if (type == 0) {
@@ -463,6 +465,69 @@ unsigned char* getObjCode(char** token, int format, int type) {
                 memcpy(objCode + 1, &reg, 1);
                 return objCode;
             case 3:
+                // operand
+                // get nixbpe
+                if (token[1]) {
+                    e = 0;
+                    if (token[1][0] == '#') {
+                        // immediate
+                        n = 0; i = 1;
+                        token[1] += 1;
+                    }
+                    else if (token[1][0] == '@') {
+                        // indirect
+                        n = 1; i = 0;
+                        token[1] += 1;
+                    }
+                    else {
+                        // simple
+                        n = 1; i = 1;
+                    }
+
+                    if (strToHex(token[1]) == -1) {
+                        // find symbol
+                        target = findSym(token[-1]);
+                        if (target == -1) {
+                            printf("Error!!\n");
+                            return 0;
+                        }
+                        disp = target - PC;
+                        if (disp >= (unsigned int)0xFFF && disp < 0x1000) {
+                            b = 0; p = 1;
+                        }
+                        else disp = PC - B;
+                        if (disp >= 0 && disp < 0x1000) {
+                            b = 1; p = 0;
+                        }
+                        else {
+                            format = 4;
+                            return 0;
+                        }
+
+                        b1 = (opCode + n * 2 + i) & ONE_BYTE;
+                        b2 = (((x * 8 + b * 4 + p * 2 + e) << 4 & 0xF0) | ((disp / 256) & 0x0F)) & ONE_BYTE;
+                        b3 = (disp % 256) & ONE_BYTE;
+                        memcpy(objCode, &b1, 1);
+                        memcpy(objCode, &b2, 1);
+                        memcpy(objCode, &b3, 1);
+                    }
+
+
+
+
+                }
+                else {
+                    // no operand
+                    n = 1; i = 1;
+                    objCode[0] += n * 2 + i;
+                    b2 = 0x00;
+                    for (lp = 1; lp < 3; lp++)
+                        memcpy(objCode + i, &b2, 1);
+                }
+
+
+
+                // get disp
 
                 break;
             case 4:
@@ -520,8 +585,11 @@ int tokenizeAsmFile(char*** token, char* input) {
     if (commaFlag) {
         // contain comma
         printf("\n");
-        strtok((*token)[cnt-1], ",");
-        (*token)[++cnt] = strtok(NULL, "\0");
+        int tp;
+        while ((*token)[cnt]) {
+            tp = cnt;
+            (*token)[++cnt] = strtok((*token)[tp], ",");
+        }
     }
 */
     for (int i = 0; i < cnt; i++)
