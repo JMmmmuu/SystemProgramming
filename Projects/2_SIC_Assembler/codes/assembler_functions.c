@@ -173,7 +173,7 @@ void freeNums() {
 void printNums() {
     numNode* pMove;
     for (pMove = numHead; pMove; pMove = pMove->link)
-        printf("\t%d\t%06X\n", pMove->lineNum, pMove->LOC);
+        printf("\t%d\t%06X\t%X %X %X\n", pMove->lineNum, pMove->LOC, pMove->s_flag, pMove->e_flag, pMove->skip_flag);
 }
 
 void enqueue(int objCode, int size, int LOC, FILE* OF) {
@@ -213,6 +213,7 @@ void dequeue(FILE* OF) {
             tRHead = tRHead->link;
             free(pFree);
         }
+        fprintf(OF, "\n");
         tRHead = NULL;
         tRTail = NULL;
 }

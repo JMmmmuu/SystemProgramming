@@ -24,8 +24,8 @@ int assemble(char* filename) {
     
     if (pass1(asmFP)) {
         printf("pass1 completed\n");
-        printSymbol();
-        printNums();
+        //printSymbol();
+        //{printNums();
 
         //*
         if (pass2(asmFP, filename)) 
@@ -157,7 +157,10 @@ int pass1(FILE* fp) {
                     return 0;
                 }
             }
-            pLast = addNum(lineNum, LOCCTR, pLast, 0);
+            if (instructionSize == 0)
+                pLast = addNum(lineNum, -1, pLast, 3);
+            else 
+                pLast = addNum(lineNum, LOCCTR, pLast, 0);
         }
 
         LOCCTR += instructionSize;
@@ -175,7 +178,7 @@ int pass1(FILE* fp) {
         printf("No END Directive\n");
         return 0;
     }
-    addNum(lineNum, LOCCTR, pLast, 0);
+    addNum(lineNum, LOCCTR, pLast, 2);
 
     return 1;
 }
@@ -207,20 +210,16 @@ int pass2(FILE* fp, char* filename) {
         fgets(line, MAX_ASM_LINE, fp);
         tokenNum = tokenizeAsmFile(&token, line);
 
-        printf("\t%d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
-        fprintf(LF, "\t%d\t%04X", pCurrent->lineNum * 5, pCurrent->LOC);
-        for (i = 0; i < tokenNum; i++){
-            printf("\t%s", token[i]);
+        fprintf(LF, "\t  %d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
+        for (i = 0; i < tokenNum; i++)
             fprintf(LF, "\t%s", token[i]);
-        }
         fprintf(LF, "\n");
-        printf("\n");
 
         startingAddr = strToHex(token[2], 1);
         numNode* pMove;
         for (pMove = numHead; pMove->link; pMove = pMove->link) ;
         endAddr = pMove->LOC;
-        fprintf(OF, "H%-6s%06X%06X", token[0], startingAddr, endAddr - startingAddr);
+        fprintf(OF, "H%-6s%06X%06X\n", token[0], startingAddr, endAddr - startingAddr);
         pCurrent = pCurrent->link;
     }
     else {
@@ -242,14 +241,14 @@ int pass2(FILE* fp, char* filename) {
 
         if (pCurrent->skip_flag) {
             // if the  line is comment or blank
-            fprintf(LF, "\t%d\t\t\t\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
+            fprintf(LF, "\t  %d\t\t\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
             pCurrent = pCurrent->link;
             continue;
         }
         if (pCurrent->e_flag) {
             // END directive
-            fprintf(OF, "E%06X", numHead->LOC);
-            fprintf(LF, "\t%d\t\t\t\t\t\t%s", pCurrent->lineNum * 5, removeSpace(line));
+            fprintf(OF, "E%06X\n", numHead->LOC);
+            fprintf(LF, "\t  %d\t\t\t\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
             break;
         }
 
@@ -273,11 +272,10 @@ int pass2(FILE* fp, char* filename) {
                 // There exist matching operation
                 objCode = getObjCode(token, format, 0);
 
-                fprintf(LF, "\t%d\t%04X\t\t\t",  pCurrent->lineNum * 5, pCurrent->LOC);
+                fprintf(LF, "\t  %d\t%04X\t\t",  pCurrent->lineNum * 5, pCurrent->LOC);
                 for (i = 0; i < tokenNum; i++)
                     fprintf(LF, "\t%s", token[i]);
-
-                fprintf(LF, "\t\t\t\t");
+                fprintf(LF, "\t\t");
                 printObjCode(format, objCode, LF);
                 fprintf(LF, "\n");
                 enqueue(objCode, format, pCurrent->LOC, OF);
@@ -298,7 +296,7 @@ int pass2(FILE* fp, char* filename) {
                         dequeue(OF);
                     case 7:
                         // No need to create opcode
-                        fprintf(LF, "\t%d\t%04X\t\t\t", pCurrent->lineNum * 5, pCurrent->LOC);
+                        fprintf(LF, "\t  %d\t%04X\t\t", pCurrent->lineNum * 5, pCurrent->LOC);
                         for (i = 0; i < tokenNum; i++)
                             fprintf(LF, "\t%s", token[i]);
                         fprintf(LF, "\n");
@@ -317,11 +315,10 @@ int pass2(FILE* fp, char* filename) {
                 // exist matching operation
                 objCode = getObjCode(&(token[1]), format, 0);
 
-                fprintf(LF, "\t%d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
+                fprintf(LF, "\t  %d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
                 for (i = 0; i < tokenNum; i++)
                     fprintf(LF, "\t%s", token[i]);
-
-                fprintf(LF, "\t\t\t\t");
+                fprintf(LF, "\t\t");
                 printObjCode(format, objCode, LF);
                 fprintf(LF, "\n");
                 enqueue(objCode, format, pCurrent->LOC, OF);
@@ -339,10 +336,10 @@ int pass2(FILE* fp, char* filename) {
                 switch (directiveNum) {
                     case 3:     // BYTE
                         objCode = getObjCode(&(token[1]), 5, 1);
-                        fprintf(LF, "\t%d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
+                        fprintf(LF, "\t  %d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
                         for (i = 0; i < tokenNum; i++)
                             fprintf(LF, "\t%s", token[i]);
-                        fprintf(LF,  "\t\t\t\t");
+                        fprintf(LF,  "\t\t\t");
                         printObjCode(3, objCode, LF);
                         fprintf(LF, "\n");
                         enqueue(objCode, 3, pCurrent->LOC, OF);
@@ -350,17 +347,18 @@ int pass2(FILE* fp, char* filename) {
                         break;
                     case 4:     // WORD
                         objCode = getObjCode(&(token[1]), 5, 2);
-                        fprintf(LF, "\t%d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
+                        fprintf(LF, "\t  %d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
                         for (i = 0; i < tokenNum; i++)
                             fprintf(LF, "\t%s", token[i]);
-                        fprintf(LF,  "\t\t\t\t");
+                        fprintf(LF,  "\t\t");
                         printObjCode(3, objCode, LF);
+                        fprintf(LF, "\n");
                         enqueue(objCode, 3, pCurrent->LOC, OF);
 
                         break;
                     case 5:     // RESB
                     case 6:     // RESW
-                        fprintf(LF, "\t%d\t%04X\t", pCurrent->lineNum, pCurrent->LOC);
+                        fprintf(LF, "\t  %d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
                         for (i = 0; i < tokenNum; i++)
                             fprintf(LF, "\t%s", token[i]);
                         fprintf(LF, "\n");
@@ -370,7 +368,7 @@ int pass2(FILE* fp, char* filename) {
 
                     case 7:
                         // No need to create opcode
-                        fprintf(LF, "\t%d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
+                        fprintf(LF, "\t  %d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
                         for (i = 0; i < tokenNum; i++)
                             fprintf(LF, "\t%s", token[i]);
                         fprintf(LF, "\n");
@@ -386,6 +384,7 @@ int pass2(FILE* fp, char* filename) {
         pCurrent = pCurrent->link;
     }
 
+    fclose(LF); fclose(OF);
     return 1;
 }
 
