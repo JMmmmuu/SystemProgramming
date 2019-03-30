@@ -19,14 +19,14 @@ int dump(char* start, char* end, int type) {
             END_ADDR = e + 0x1;
             break;  
         case 1:         // du[mp] start
-            s = strToHex(start);
+            s = strToHex(start, 1);
             e = ((s + 0x9F) > 0xFFFFF) ? 0xFFFFF : s + 0x9F;
 
             END_ADDR = e + 0x1;
             break;
         case 2:         // du[mp] start, end
-            s = strToHex(start);
-            e = strToHex(end);
+            s = strToHex(start, 1);
+            e = strToHex(end, 1);
 
             END_ADDR = e + 0x1;
             break;
@@ -78,8 +78,8 @@ int dump(char* start, char* end, int type) {
 
 int edit(char* address, char* value) {
     // e[dit] address, value
-    int addr = strToHex(address);
-    int val = strToHex(value);
+    int addr = strToHex(address, 1);
+    int val = strToHex(value, 1);
 
     // incorrect input or addr and val are not hex
     if (addr == -1 || val == -1) {
@@ -101,9 +101,9 @@ int edit(char* address, char* value) {
 int fill(char* start, char* end, char* value) {
     // f[ill] start, end, value
     int s, e, v;
-    s = strToHex(start);
-    e = strToHex(end);
-    v = strToHex(value);
+    s = strToHex(start, 1);
+    e = strToHex(end, 1);
+    v = strToHex(value, 1);
 
     // incorrect input or addr and val are not hex
     if (s == -1 || e == -1 || v == -1) {
@@ -156,11 +156,12 @@ int validAddrRange(int start, int end) {
     return 1;
 }
 
-int strToHex(char* param) {
+int strToHex(char* param, int type) {
     // if parameter is not a hex, or incorrect parser return -1
+    // if type == 1, print error message
     for (int i = 0; i < (int)strlen(param); i++) {
         if ( !isHex(param[i]) ) {
-            printf("Address is not a Hexadecimal!\n");
+            if (type) printf("Address is not a Hexadecimal!\n");
             return -1;
         }
     }
@@ -169,7 +170,7 @@ int strToHex(char* param) {
     int hex;
     int res = sscanf(param, "%x", &hex);
     if (res == 0) {
-        printf("error occured. Please type again\n");
+        if (type)printf("error occured. Please type again\n");
         return -1;
     }
 

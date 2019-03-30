@@ -207,6 +207,10 @@ int findSym(char* label) {
         printf("No Symbol Table. Please assemble file first\n");
         return -1;
     }
+    if (!isStr(label)) {
+        printf("Wrong Lable\n");
+        return -1;
+    }
     int idx = symHashFunc(label);
     symNode* pMove;
     for (pMove = SYMTAB[idx]; pMove; pMove = pMove->link) {

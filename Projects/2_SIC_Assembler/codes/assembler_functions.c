@@ -6,7 +6,7 @@
  *************************************************/
 #include "20171690.h"
 
-unsigned char getRegNum(char* reg) {
+int getRegNum(char* reg) {
     if (strcmp(reg, "A") == 0) return 0x00;
     if (strcmp(reg, "X") == 0) return 0x01;
     if (strcmp(reg, "L") == 0) return 0x02;
@@ -127,7 +127,7 @@ int resbSize(char* input) {
 int reswSize(char* input) {
     if (!input) return -1;
     int size;
-    if ( (size = strToHex(input)) == -1 ) return -1;
+    if ( (size = strToHex(input, 0)) == -1 ) return -1;
 
     return size * WORD_SIZE;
 }
@@ -176,9 +176,9 @@ void printNums() {
         printf("\t%d\t%06X\n", pMove->lineNum, pMove->LOC);
 }
 
-void enqueue(unsigned char* objCode, int size, int LOC, FILE* OF) {
+void enqueue(int objCode, int size, int LOC, FILE* OF) {
     tRecord* pNew = (tRecord*)malloc(sizeof(tRecord));
-    memcpy(pNew->objCode, objCode, size);
+    pNew->objCode = objCode;
     pNew->size = size;
     pNew->LOC = LOC;
     pNew->link = NULL;
