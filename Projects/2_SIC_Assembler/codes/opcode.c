@@ -24,6 +24,7 @@ int opcode(char* mnemonic, int type) {
         }
     }
     if (type == 1) printf("Wrong mnemonic\n");
+    if (type == 4) return -1;
     return 0;
 }
 

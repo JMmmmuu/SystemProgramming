@@ -464,6 +464,7 @@ int getObjCode(char** token, int format, int type) {
     for (tokenNum = 0; token[tokenNum]; tokenNum++) ;
     char* operandStr[5];
     char* tmp;
+    char* sym;
     for (lc = 0; lc < 5; lc++) operandStr[lc] = NULL;
 
     if (type == 0) {
@@ -484,7 +485,6 @@ int getObjCode(char** token, int format, int type) {
                 return objCode;
             case 2:
                 // get register code
-
                 if (commaFlag) {
                     r1 = getRegNum(operandStr[0]);
                     r2 = getRegNum(operandStr[1]);
@@ -494,57 +494,61 @@ int getObjCode(char** token, int format, int type) {
                     r2 = 0x00;
                 }
                 reg = (r1 << 4) + r2;
-
-                //printf("%X %X %X\n", opCode, 1 << 8, opCode << 8);
                 objCode = (opCode * (1 << 8)) + reg;
 
                 return objCode;
             case 3:
                 // operand
                 // get nixbpe
+                
                 if (token[1]) {
+                    sym = token[1];
+                    // x bit
+                    x = 0;
+                    if (commaFlag) {
+                        sym = operandStr[0];
+                        if (strcmp(operandStr[0], "X") == 0)
+                            x = 1;
+                    }
+
                     // n & i bits
                     if (token[1][0] == '#') {
                         // immediate
                         n = 0; i = 1;
-                        token[1] += 1;
+                        sym += 1;
                     }
                     else if (token[1][0] == '@') {
                         // indirect
                         n = 1; i = 0;
-                        token[1] += 1;
+                        sym += 1;
                     }
                     else {
                         // simple
                         n = 1; i = 1;
                     }
 
-                    // x bit
-                    x = 0;
-                    if (token[2])
-                        if (strcmp(token[2], "X") == 0)
-                            x = 1;
-
                     // b & p bits
-                    operand = strToHex(token[1], 0);
+                    operand = strToHex(sym, 0);
                     if (operand == -1) {
                         // find symbol
-                        target = findSym(token[1]);
+                        target = findSym(sym);
                         if (target == -1) {
                             printf("no Matching Symbol!!\n");
                             return 0;
                         }
                         disp = target - PC;
-                        if ((signed int)disp >= (signed int)0xFFF && disp < 0x1000) {
+                        if (disp >= -0xFFF && disp < 0x1000) {
                             b = 0; p = 1;
                         }
-                        else disp = PC - B;
-                        if (disp >= 0 && disp < 0x1000) {
-                            b = 1; p = 0;
-                        }
                         else {
-                            format = 4;
-                            return 0;
+                            disp = PC - B;
+                            if (disp >= 0 && disp < 0x1000) {
+                                b = 1; p = 0;
+                            }
+                            else {
+                                format = 4;
+                                return 0;
+                            }
                         }
                     }
                     else {
@@ -562,7 +566,7 @@ int getObjCode(char** token, int format, int type) {
                 }
 
                 b1 = opCode + n * 2 + i;
-                b2 = (x << 7) + (b << 6) + (p << 5) + (e << 4) + disp / (1<<8);
+                b2 = (x << 7) + (b << 6) + (p << 5) + (e << 4) + (disp >> 8);
                 b3 = disp % (1 << 8);
                 objCode = (b1 << 16) + (b2 << 8) + b3;
 
@@ -571,27 +575,31 @@ int getObjCode(char** token, int format, int type) {
                 // get nixbpe
                 if (token[1]) {
                     // operand exist
+                    sym = token[1];
+
+                    // x bit
+                    x = 0;
+                    if (commaFlag) {
+                        sym = operandStr[0];
+                        if (strcmp(operandStr[0], "X") == 0)
+                            x = 1;
+                    }
+
                     // n & i bits
                     if (token[1][0] == '#') {
                         // immdeditae
                         n = 0; i = 1;
-                        token[1] += 1;
+                        sym += 1;
                     }
                     else if (token[1][0] == '@') {
                         // indirect
                         n = 1; i = 0;
-                        token[1] += 1;
+                        sym += 1;
                     }
                     else {
                         // simple
                         n = 1; i = 1;
                     }
-
-                    // x bit
-                    x = 0;
-                    if (token[2])
-                        if (strcmp(token[2], "X") == 0)
-                            x = 1;
 
                     // b & p bits
                     b = 0;
@@ -600,10 +608,10 @@ int getObjCode(char** token, int format, int type) {
                     // e bits
                     e = 1;
                     
-                    operand = strToHex(token[1], 0);
+                    operand = strToDecimal(sym);
                     if (operand == -1) {
                         // find symbol
-                        target = findSym(token[1]);
+                        target = findSym(sym);
                         if (target == -1) {
                             printf("no Symbol Found!\n");
                             return 0;
@@ -612,15 +620,15 @@ int getObjCode(char** token, int format, int type) {
                         if (target < 0 || target > 0xFFFFFF) return 0;
                     }
                     else {
-                        objCode = operand;
-                        return 1;
+                        addr = operand;
+                        printf("%X\n", addr);
                     }
 
                     b1 = opCode + n * 2 + i;
-                    b2 = (x << 7) + (b << 6) + (p << 5) + (e << 4) + addr / (1<<16);
-                    b3 = addr % (1 << 16) - ((addr / (1 << 16)) << 4);
+                    b2 = (x << 7) + (b << 6) + (p << 5) + (e << 4) + (addr >> 16);
+                    b3 = (addr >> 8) - ((addr / (1 << 16)) << 8);
                     b4 = addr % (1 << 8);
-                    objCode = (b1 << 24) + (b2 << 16) + (b3 <<8 ) + b4;
+                    objCode = (b1 << 24) + (b2 << 16) + (b3 << 8) + b4;
                 }
                 break;
         }
