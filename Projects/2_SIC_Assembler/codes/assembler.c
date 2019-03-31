@@ -247,7 +247,7 @@ int pass2(FILE* fp, char* filename) {
 
         if (pCurrent->skip_flag) {
             // if the  line is comment or blank
-            fprintf(LF, "\t  %d\t\t\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
+            fprintf(LF, "\t  %d\t\t\t\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
             pCurrent = pCurrent->link;
             continue;
         }
@@ -265,7 +265,16 @@ int pass2(FILE* fp, char* filename) {
         int objCode;
 
         // set Program Counter
-        if (pCurrent->link) PC = pCurrent->link->LOC;
+        numNode* pMove = pCurrent->link;
+        while (pMove->link) {
+            if (pMove->LOC == -1) {
+                // comment line or blank line
+                pMove = pMove->link;
+                continue;
+            }
+            break;
+        }
+        PC = pMove->LOC;
 
         if (line[0] == ' ' || line[0] == '\t') {
             // no label
@@ -277,12 +286,23 @@ int pass2(FILE* fp, char* filename) {
             if ( format ) {
                 // There exist matching operation
                 objCode = getObjCode(token, format, 0);
+                if (opcode(token[0], 4) == 0x68) {
+                    if (token[1][0] == '#')
+                        B = findSym(token[1]+1);
+                    else if (strToHex(token[1], 0) != -1)
+                        B = strToHex(token[1], 0);
+                    printf("%X\n", B);
+                }
 
                 fprintf(LF, "\t  %d\t%04X\t\t",  pCurrent->lineNum * 5, pCurrent->LOC);
+                if (format == 4) token[0] -= 1;
                 for (i = 0; i < tokenNum; i++)
                     fprintf(LF, "\t%s", token[i]);
-                fprintf(LF, "\t\t");
-                if (tokenNum == 1) fprintf(LF, "\t");
+                if (tokenNum == 1) fprintf(LF, "\t\t\t");
+                else {
+                    if ((int)strlen(token[1]) >= 8) fprintf(LF, "\t");
+                    else fprintf(LF, "\t\t");
+                }
                 printObjCode(format, objCode, LF);
                 fprintf(LF, "\n");
                 enqueue(objCode, format, pCurrent->LOC, OF);
@@ -321,8 +341,15 @@ int pass2(FILE* fp, char* filename) {
             if ( format ) {
                 // exist matching operation
                 objCode = getObjCode(&(token[1]), format, 0);
+                if (opcode(token[1], 4) == 0x68) {
+                    if (token[2][0] == '#')
+                        B = findSym(token[2]+1);
+                    else if (strToHex(token[2], 0) != -1)
+                        B = strToHex(token[2], 0);
+                }
 
                 fprintf(LF, "\t  %d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
+                if (format == 4) token[1] -= 1;
                 for (i = 0; i < tokenNum; i++)
                     fprintf(LF, "\t%s", token[i]);
                 fprintf(LF, "\t\t");
@@ -507,7 +534,7 @@ int getObjCode(char** token, int format, int type) {
                     x = 0;
                     if (commaFlag) {
                         sym = operandStr[0];
-                        if (strcmp(operandStr[0], "X") == 0)
+                        if (strcmp(operandStr[1], "X") == 0)
                             x = 1;
                     }
 
@@ -536,12 +563,13 @@ int getObjCode(char** token, int format, int type) {
                             printf("no Matching Symbol!!\n");
                             return 0;
                         }
+
                         disp = target - PC;
                         if (disp >= -0xFFF && disp < 0x1000) {
                             b = 0; p = 1;
                         }
                         else {
-                            disp = PC - B;
+                            disp = target - B;
                             if (disp >= 0 && disp < 0x1000) {
                                 b = 1; p = 0;
                             }
@@ -565,6 +593,8 @@ int getObjCode(char** token, int format, int type) {
                     disp = 0;
                 }
 
+                if (disp < 0)
+                    disp = disp & 0x0FFF;
                 b1 = opCode + n * 2 + i;
                 b2 = (x << 7) + (b << 6) + (p << 5) + (e << 4) + (disp >> 8);
                 b3 = disp % (1 << 8);
@@ -581,7 +611,7 @@ int getObjCode(char** token, int format, int type) {
                     x = 0;
                     if (commaFlag) {
                         sym = operandStr[0];
-                        if (strcmp(operandStr[0], "X") == 0)
+                        if (strcmp(operandStr[1], "X") == 0)
                             x = 1;
                     }
 
