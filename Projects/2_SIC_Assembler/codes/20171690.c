@@ -236,7 +236,7 @@ int main() {
                     if (assemble(params))
                             addHistory(input);
                     else
-                        printf("error\n");
+                        //printf("error\n");
 
                     
                     break;

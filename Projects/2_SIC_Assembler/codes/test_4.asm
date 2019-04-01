@@ -41,7 +41,7 @@ INPUT   BYTE    X'F1'
 .
 WRREC   CLEAR   X
         LDT     LENGTH
-WLOOP   D       OUTPUT
+WLOOP   TD       OUTPUT
         JEQ     WLOOP
         LDCH    BUFFER, X
         WD      OUTPUT
@@ -49,8 +49,16 @@ WLOOP   D       OUTPUT
         JLT     WLOOP
         RSUB
 
-        SHIFTL  r1, 7
-        SHIFTR  
+.
+.       MY CODE APPENDING TO 2_4.asm FILE
+.
+        SHIFTL  A, 7
+        SVC     10
+        TIXR    B
+        SIO
+        FIX
+        FLOAT
+
 
 
 OUTPUT  BYTE    X'05'

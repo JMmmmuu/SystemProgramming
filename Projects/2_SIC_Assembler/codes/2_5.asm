@@ -41,7 +41,7 @@ INPUT   BYTE    X'F1'
 .
 WRREC   CLEAR   X
         LDT     LENGTH
-WLOOP   D       OUTPUT
+WLOOP   TD       OUTPUT
         JEQ     WLOOP
         LDCH    BUFFER, X
         WD      OUTPUT

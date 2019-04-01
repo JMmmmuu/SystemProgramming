@@ -159,6 +159,7 @@ int validAddrRange(int start, int end) {
 int strToHex(char* param, int type) {
     // if parameter is not a hex, or incorrect parser return -1
     // if type == 1, print error message
+    if (!param) return -1;
     for (int i = 0; i < (int)strlen(param); i++) {
         if ( !isHex(param[i]) ) {
             if (type) printf("Address is not a Hexadecimal!\n");

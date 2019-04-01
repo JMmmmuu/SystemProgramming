@@ -534,12 +534,12 @@ int getObjCode(char** token, int format, int type, numNode* pCurrent) {
                 if (commaFlag) {
                     r1 = getRegNum(operandStr[0]);
                     r2 = getRegNum(operandStr[1]);
-                    if (r1 == 0xFF) r1 = strToHex(operandStr[0], 0);
-                    if (r2 == 0xFF) r2 = strToHex(operandStr[1], 0);
+                    if (r1 == 0xFF) r1 = strToDecimal(operandStr[0]) - 1;
+                    if (r2 == 0xFF) r2 = strToDecimal(operandStr[1]) - 1;
                 }
                 else {
                     r1 = getRegNum(token[1]);
-                    if (r1 == 0xFF) r1 = strToHex(operandStr[0], 0);
+                    if (r1 == 0xFF) r1 = strToDecimal(token[1]);
                     r2 = 0x00;
                 }
                 reg = (r1 << 4) + r2;
