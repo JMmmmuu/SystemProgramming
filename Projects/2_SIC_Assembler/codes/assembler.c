@@ -23,14 +23,18 @@ int assemble(char* filename) {
     tRTail = NULL;
     
     if (pass1(asmFP)) {
-        printf("pass1 completed\n");
-        printSymbol();
-        printNums();
+        printf("output file : [%s], [%s]\n", nameToListing(filename), nameToObj(filename));
+        //printSymbol();
+        //printNums();
 
-        //*
-        if (pass2(asmFP, filename)) 
-            printf("pass2 completed\n");
-            //*/
+        if (!pass2(asmFP, filename)) {
+            printf("Program halted in Pass 2\n");
+            return 0;
+        }
+    }
+    else {
+        printf("program halted in Pass 1\n");
+        return 0;
     }
 
     fclose(asmFP);
@@ -84,13 +88,6 @@ int pass1(FILE* fp) {
     line = toUpperCase(line);
     int tokenNum = tokenizeAsmFile(&token, line);
 
-    /*
-    printf("%d\n", tokenNum);
-    for (i = 0; i < tokenNum; i++) {
-        printf("%s\n", token[i]);
-    }*/
-
-
     for (i = 0; i < tokenNum; i++) {
         if (isDirective(token[i]) == 1) {
             // if token[i] == "START"
@@ -125,7 +122,6 @@ int pass1(FILE* fp) {
     SYMTAB = (symNode**)malloc(SYMTAB_SIZE * sizeof(symNode*));
     for (i = 0; i < SYMTAB_SIZE; i++) SYMTAB[i] = NULL;
     flag = 0;
-
     while ( !feof(fp) ) { 
         // while not end of file
         if (line[0] == '.' || isBlankLine(line)) {
@@ -164,9 +160,7 @@ int pass1(FILE* fp) {
         }
 
         LOCCTR += instructionSize;
-        //printf("%d\ttokenNum: %d - ", lineNum, tokenNum);
-        //for (i = 0; i < tokenNum; i++) printf("\t%s ", token[i]);
-        //printf("\n\n");
+
         memset(line, '\0', (int)sizeof(line));
         for (i = 0; i < MAX_TOKEN_NUM; i++) token[i] = NULL;
         fgets(line, MAX_ASM_LINE, fp);
@@ -210,6 +204,10 @@ int pass2(FILE* fp, char* filename) {
         fgets(line, MAX_ASM_LINE, fp);
         fprintf(LF, "\t  %s\n", line);
         pCurrent = pCurrent->link;
+        if (!pCurrent) {
+            printf("Warning! - no content except comment / blank lines\n");
+            return 1;
+        }
     }
     if (pCurrent->s_flag) {
         // START directive
@@ -245,7 +243,6 @@ int pass2(FILE* fp, char* filename) {
         memset(line, '\0', (int)sizeof(line));
         fgets(line, MAX_ASM_LINE, fp);
 
-        printf("%d %d %d\n", pCurrent->s_flag, pCurrent->e_flag, pCurrent->skip_flag);
         if (pCurrent->skip_flag) {
             // if the  line is comment or blank
             fprintf(LF, "\t  %d\t\t\t\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
@@ -438,10 +435,7 @@ int pass2(FILE* fp, char* filename) {
                         continue;
                 }
             }
-            
-
         }
-
         pCurrent = pCurrent->link;
     }
 
@@ -756,10 +750,10 @@ int tokenizeAsmFile(char*** token, char* input) {
     }
     cnt++;
 
-    printf("\t  ");
-    for (int i = 0; i < cnt; i++)
-        printf("\t%s", (*token)[i]);
-    printf("\n");
+/**     printf("\t  "); */
+    /** for (int i = 0; i < cnt; i++) */
+    /**     printf("\t%s", (*token)[i]); */
+    /** printf("\n"); */
 
     return cnt;
 }
@@ -790,6 +784,5 @@ int removeSpaceAroundComma(char* input) {
         }
     }
 
-    //printf("%s", input);
     return isComma;
 }

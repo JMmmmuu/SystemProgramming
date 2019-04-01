@@ -188,7 +188,6 @@ int strToDecimal(char* param) {
     // if parameter is not a hex, or incorrect parser return -1
     for (int i = 0; i < (int)strlen(param); i++) {
         if ( !isHex(param[i]) ) {
-            printf("Address is not a Hexadecimal!\n");
             return -1;
         }
     }
