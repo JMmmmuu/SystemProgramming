@@ -24,7 +24,7 @@ int assemble(char* filename) {
     
     if (pass1(asmFP)) {
         printf("output file : [%s], [%s]\n", nameToListing(filename), nameToObj(filename));
-        //printSymbol();
+        printSymbol();
         //printNums();
 
         if (!pass2(asmFP, filename)) {
@@ -597,7 +597,7 @@ int getObjCode(char** token, int format, int type, numNode* pCurrent) {
                             }
                             else {
                                 format = 4;
-                                printf("format 4 with no + sign\n");
+                                printf("Error at [%d] line: format 4 with no + sign\n", pCurrent->lineNum);
                                 return -1;
                             }
                         }
