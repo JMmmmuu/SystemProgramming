@@ -85,6 +85,10 @@ int readOpTable() {
 
 int hashFunction(char* op) {
     int idx = 0;
+    if (!isStr(op)) {
+        printf("Wrong input in hash Function\n");
+        return 0;
+    }
     for (int i = 0; i < (int)strlen(op); i++)
         idx += op[i];
 

@@ -24,8 +24,8 @@ int assemble(char* filename) {
     
     if (pass1(asmFP)) {
         printf("pass1 completed\n");
-        //printSymbol();
-        //{printNums();
+        printSymbol();
+        printNums();
 
         //*
         if (pass2(asmFP, filename)) 
@@ -64,8 +64,8 @@ int pass1(FILE* fp) {
     if (SYMTAB) freeSymTab();
     numNode* pLast = numHead;
 
-    if (line[0] == '.' || isBlankLine(line))
-        pLast = addNum(lineNum, -1, pLast, 3);
+    /** if (line[0] == '.' || isBlankLine(line)) */
+        /** pLast = addNum(lineNum, -1, pLast, 3); */
 
     while (line[0] == '.' || isBlankLine(line)) {
         // skip comment lines & blank lines
@@ -190,7 +190,7 @@ int pass2(FILE* fp, char* filename) {
     // Write obj program and assembly listing.
 
     fseek(fp, 0, SEEK_SET);     // move to the start
-    int i, tokenNum, startingAddr, endAddr, size;
+    int i, tokenNum, startingAddr, endAddr, size, tmp;
     numNode* pCurrent = numHead;
     char* line = (char*)malloc(MAX_ASM_LINE * sizeof(char));
     char** token = (char**)malloc(MAX_TOKEN_NUM * sizeof(char*));
@@ -245,6 +245,7 @@ int pass2(FILE* fp, char* filename) {
         memset(line, '\0', (int)sizeof(line));
         fgets(line, MAX_ASM_LINE, fp);
 
+        printf("%d %d %d\n", pCurrent->s_flag, pCurrent->e_flag, pCurrent->skip_flag);
         if (pCurrent->skip_flag) {
             // if the  line is comment or blank
             fprintf(LF, "\t  %d\t\t\t\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
@@ -285,13 +286,23 @@ int pass2(FILE* fp, char* filename) {
             }
             if ( format ) {
                 // There exist matching operation
-                objCode = getObjCode(token, format, 0);
+                objCode = getObjCode(token, format, 0, pCurrent);
+                if (objCode == -1) return 0;
                 if (opcode(token[0], 4) == 0x68) {
-                    if (token[1][0] == '#')
+                    // Load operand value in the B register
+                    if (token[1][0] == '#' || token[1][0] == '@')
                         B = findSym(token[1]+1);
-                    else if (strToHex(token[1], 0) != -1)
-                        B = strToHex(token[1], 0);
-                    printf("%X\n", B);
+                    else if ( (tmp = strToHex(token[1], 0)) != -1)
+                        B = tmp;
+
+                    if (B == -1) {
+                        if ( (tmp = strToHex(token[1]+1, 0)) != -1)
+                            B = tmp;
+                        else {
+                            printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", pCurrent->LOC, token[1]+1);
+                            return 0;
+                        }
+                    }
                 }
 
                 fprintf(LF, "\t  %d\t%04X\t\t",  pCurrent->lineNum * 5, pCurrent->LOC);
@@ -340,12 +351,24 @@ int pass2(FILE* fp, char* filename) {
             }
             if ( format ) {
                 // exist matching operation
-                objCode = getObjCode(&(token[1]), format, 0);
+                objCode = getObjCode(&(token[1]), format, 0, pCurrent);
+                if (objCode == -1) return 0;
                 if (opcode(token[1], 4) == 0x68) {
-                    if (token[2][0] == '#')
+                    // LOAD operand value to B register
+                    if (token[2][0] == '#' || token[2][0] == '@')
                         B = findSym(token[2]+1);
-                    else if (strToHex(token[2], 0) != -1)
-                        B = strToHex(token[2], 0);
+                    else if ( (tmp = strToHex(token[2], 0)) != -1)
+                        B = tmp;
+
+                    if (B == -1) {
+                        if ( (tmp = strToHex(token[2]+1, 0)) != -1)
+                            B = tmp;
+                        else {
+                            printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", pCurrent->LOC, token[2]+1);
+                            return 0;
+                        }
+
+                    }
                 }
 
                 fprintf(LF, "\t  %d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
@@ -369,7 +392,8 @@ int pass2(FILE* fp, char* filename) {
                 // directive!
                 switch (directiveNum) {
                     case 3:     // BYTE
-                        objCode = getObjCode(&(token[1]), 5, 1);
+                        objCode = getObjCode(&(token[1]), 5, 1, pCurrent);
+                        if (objCode == -1) return 0;
                         fprintf(LF, "\t  %d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
                         for (i = 0; i < tokenNum; i++)
                             fprintf(LF, "\t%s", token[i]);
@@ -382,7 +406,8 @@ int pass2(FILE* fp, char* filename) {
 
                         break;
                     case 4:     // WORD
-                        objCode = getObjCode(&(token[1]), 5, 2);
+                        objCode = getObjCode(&(token[1]), 5, 2, pCurrent);
+                        if (objCode == -1) return 0;
                         fprintf(LF, "\t  %d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
                         for (i = 0; i < tokenNum; i++)
                             fprintf(LF, "\t%s", token[i]);
@@ -474,7 +499,7 @@ int getInstructionSize(char** token, int lineNum, int isLabel) {
     return size;
 }
 
-int getObjCode(char** token, int format, int type) {
+int getObjCode(char** token, int format, int type, numNode* pCurrent) {
     // format: operation code format / or size
     // type:    if 0, operation
     //          if 1, BYTE Const
@@ -560,8 +585,8 @@ int getObjCode(char** token, int format, int type) {
                         // find symbol
                         target = findSym(sym);
                         if (target == -1) {
-                            printf("no Matching Symbol!!\n");
-                            return 0;
+                            printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", pCurrent->LOC, sym);
+                            return -1;
                         }
 
                         disp = target - PC;
@@ -575,7 +600,8 @@ int getObjCode(char** token, int format, int type) {
                             }
                             else {
                                 format = 4;
-                                return 0;
+                                printf("format 4 with no + sign\n");
+                                return -1;
                             }
                         }
                     }
@@ -643,16 +669,17 @@ int getObjCode(char** token, int format, int type) {
                         // find symbol
                         target = findSym(sym);
                         if (target == -1) {
-                            printf("no Symbol Found!\n");
-                            return 0;
+                            printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", pCurrent->LOC, sym);
+                            return -1;
                         }
                         addr = target;
-                        if (target < 0 || target > 0xFFFFFF) return 0;
+                        if (target < 0 || target > 0xFFFFFF) {
+                            printf("incorrect addr value\n");
+                            return -1;
+                        }
                     }
-                    else {
+                    else
                         addr = operand;
-                        printf("%X\n", addr);
-                    }
 
                     b1 = opCode + n * 2 + i;
                     b2 = (x << 7) + (b << 6) + (p << 5) + (e << 4) + (addr >> 16);

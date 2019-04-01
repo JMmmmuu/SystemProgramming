@@ -127,7 +127,7 @@ int assemble(char* filename);               // 0x30
 int pass1(FILE* fp);
 int pass2(FILE* fp, char* filename);
 int tokenizeAsmFile(char*** token, char* input);
-int getObjCode(char** token, int format, int type);
+int getObjCode(char** token, int format, int type, numNode* pCurrent);
 void printObjCode(int format, int objCode, FILE* fp);
 int getRegNum(char* reg);
 
