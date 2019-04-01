@@ -23,7 +23,7 @@ int symbol() {
 
     for (char ch = 'Z'; ch >= 'A'; ch--) {
         ptIdx = -1;
-        cnt = 0;
+        cnt = 0;        // num of head which has no corresponding char out of 4
         sign = 0;
         for (int i = 0; i < 4; i++) {
             idx[i] = (ch - 'A') % 7 + i * 7;
@@ -31,9 +31,14 @@ int symbol() {
                 cnt++; 
                 sign += 1 << i;
             }
+            else if ( (ptPtr[idx[i]]->symbol)[0] != ch ) {
+                cnt++;
+                sign += 1 << i;
+            }
         }
 
         if (cnt == 0) {
+            // all four heads have chars
             while (ptPtr[idx[0]] && ptPtr[idx[1]] && ptPtr[idx[2]] && ptPtr[idx[3]]) {
                 if ( (ptIdx = getMaxofFour(ptPtr[idx[0]]->symbol, ptPtr[idx[1]]->symbol, ptPtr[idx[2]]->symbol, ptPtr[idx[3]]->symbol)) == -1) return 0;
                 printf("\t%s\t%06X\n", ptPtr[idx[ptIdx]]->symbol, ptPtr[idx[ptIdx]]->Loc);
@@ -279,6 +284,7 @@ void printSymbol() {
                 printf("[%s, %X] -> ", pMove->symbol, pMove->Loc);
             printf("[%s, %X]", pMove->symbol, pMove->Loc);
         }
+        if (i % 7 == 6) printf("\n");
         printf("\n");
     }
 }

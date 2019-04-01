@@ -235,10 +235,6 @@ int main() {
                     params = removeSpace(params);
                     if (assemble(params))
                             addHistory(input);
-                    else
-                        //printf("error\n");
-
-                    
                     break;
                 case 0x31:          // symbol
                     if ( (params = strtok(NULL, "\0")) ) {
