@@ -74,6 +74,10 @@ void quit() {
     }
     free(MEMORY);
 
+    freeSymTab();
+    freeNums();
+    freeQueue();
+
     printf("exit shell\n");
 }
 

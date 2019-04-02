@@ -252,7 +252,7 @@ int pass2(FILE* fp, char* filename) {
         if (pCurrent->e_flag) {
             // END directive
             if (tRHead) dequeue(OF);
-            fprintf(OF, "E%06X\n", numHead->LOC);
+            fprintf(OF, "E%06X\n", startingAddr);
             fprintf(LF, "\t  %d\t\t\t\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
             break;
         }
@@ -297,7 +297,7 @@ int pass2(FILE* fp, char* filename) {
                         if ( (tmp = strToHex(token[1]+1, 0)) != -1)
                             B = tmp;
                         else {
-                            printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", pCurrent->LOC, token[1]+1);
+                            printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", pCurrent->lineNum, token[1]+1);
                             return 0;
                         }
                     }
@@ -362,7 +362,7 @@ int pass2(FILE* fp, char* filename) {
                         if ( (tmp = strToHex(token[2]+1, 0)) != -1)
                             B = tmp;
                         else {
-                            printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", pCurrent->LOC, token[2]+1);
+                            printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", pCurrent->lineNum, token[2]+1);
                             return 0;
                         }
 
@@ -412,7 +412,7 @@ int pass2(FILE* fp, char* filename) {
                         fprintf(LF,  "\t\t");
                         printObjCode(3, objCode, LF);
                         fprintf(LF, "\n");
-                        enqueue(objCode, size, pCurrent->LOC, OF);
+                        enqueue(objCode, 3, pCurrent->LOC, OF);
 
                         break;
                     case 5:     // RESB
@@ -583,7 +583,7 @@ int getObjCode(char** token, int format, int type, numNode* pCurrent) {
                         // find symbol
                         target = findSym(sym);
                         if (target == -1) {
-                            printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", pCurrent->LOC, sym);
+                            printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", pCurrent->lineNum, sym);
                             return -1;
                         }
 
@@ -667,7 +667,7 @@ int getObjCode(char** token, int format, int type, numNode* pCurrent) {
                         // find symbol
                         target = findSym(sym);
                         if (target == -1) {
-                            printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", pCurrent->LOC, sym);
+                            printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", pCurrent->lineNum, sym);
                             return -1;
                         }
                         addr = target;

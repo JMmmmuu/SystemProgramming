@@ -114,11 +114,6 @@ int symbol() {
     return 1;
 }
 
-int isStr(char* Str) {
-    // if str contains no character, return 0. else 1
-    return Str ? 1 : 0;
-}
-
 int addSym(char* label, int LOC) {
     // add symbol to the SYMTAB
     // if label already exist, return 0
@@ -225,6 +220,11 @@ int findSym(char* label) {
     }
 
     return -1;
+}
+
+int isStr(char* Str) {
+    // if str contains no character, return 0. else 1
+    return Str ? 1 : 0;
 }
 
 int getBiggerStr(char* str1, char* str2){

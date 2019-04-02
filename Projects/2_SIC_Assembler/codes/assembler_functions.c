@@ -50,6 +50,15 @@ int isDirective(char* token){
     return 0;
 }
 
+
+int isComma(char* input) {
+    if (!input) return 0;
+    for (int i = 0; i < (int)strlen(input); i++)
+        if (input[i] == ',') return 1;
+
+    return 0;
+}
+
 char* nameToListing(char* filename) {
     char* lstName = (char*)malloc(50 * sizeof(char));
 
@@ -205,25 +214,28 @@ void dequeue(FILE* OF) {
     // pop node from the queue
     // and print obj codes in the .obj file
     if (!tRHead) return ;
-        // print T, starting LOC, and Length of the record
-        fprintf(OF, "T%06X%02X", tRHead->LOC, tRTail->LOC - tRHead->LOC);
+    // print T, starting LOC, and Length of the record
+    fprintf(OF, "T%06X%02X", tRHead->LOC, tRTail->LOC - tRHead->LOC);
 
+    while (tRHead) {
+        printObjCode(tRHead->size, tRHead->objCode, OF);
+        fprintf(OF, " ");
+        tRecord* pFree = tRHead;
+        tRHead = tRHead->link;
+        free(pFree);
+    }
+    fprintf(OF, "\n");
+    tRHead = NULL;
+    tRTail = NULL;
+}
+
+void freeQueue() {
+    if (tRHead) {
+        tRecord* pFree = tRHead;
         while (tRHead) {
-            printObjCode(tRHead->size, tRHead->objCode, OF);
-            fprintf(OF, " ");
-            tRecord* pFree = tRHead;
+            pFree = tRHead;
             tRHead = tRHead->link;
             free(pFree);
         }
-        fprintf(OF, "\n");
-        tRHead = NULL;
-        tRTail = NULL;
-}
-
-int isComma(char* input) {
-    if (!input) return 0;
-    for (int i = 0; i < (int)strlen(input); i++)
-        if (input[i] == ',') return 1;
-
-    return 0;
+    }
 }

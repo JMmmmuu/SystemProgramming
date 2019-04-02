@@ -126,22 +126,27 @@ int assemble(char* filename);               // 0x30
 
 int pass1(FILE* fp);
 int pass2(FILE* fp, char* filename);
-int tokenizeAsmFile(char*** token, char* input);
+
+int getInstructionSize(char** token, int lineNum, int isLabel);
 int getObjCode(char** token, int format, int type, numNode* pCurrent);
 void printObjCode(int format, int objCode, FILE* fp);
+
+int tokenizeAsmFile(char*** token, char* input);
+int removeSpaceAroundComma(char* input);
+
+// ASSEMBLER FUNCTIONS
 int getRegNum(char* reg);
 
-int removeSpaceAroundComma(char* input);
 int isWhiteSpace(char ch);
 int isBlankLine(char* input);
 int isDirective(char* token);
+int isComma(char* input);
 
 char* nameToListing(char* filename);
 char* nameToObj(char* filename);
 
 char toUpper(char ch);
 char* toUpperCase(char* input);
-int getInstructionSize(char** token, int lineNum, int isLabel);
 
 int byteSize(char* input);
 int wordSize(char* input);
@@ -154,8 +159,8 @@ void printNums();
 
 void enqueue(int objCode, int size, int LOC, FILE* OF);
 void dequeue(FILE* OF);
+void freeQueue();
 
-int isComma(char* input);
 
 /**************************************************
  ********************** SYMBOL ********************
