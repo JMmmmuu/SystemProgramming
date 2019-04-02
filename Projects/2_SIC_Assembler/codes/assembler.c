@@ -251,6 +251,7 @@ int pass2(FILE* fp, char* filename) {
         }
         if (pCurrent->e_flag) {
             // END directive
+            if (tRHead) dequeue(OF);
             fprintf(OF, "E%06X\n", numHead->LOC);
             fprintf(LF, "\t  %d\t\t\t\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
             break;
@@ -399,7 +400,7 @@ int pass2(FILE* fp, char* filename) {
                         fprintf(LF,  "\t\t");
                         printObjCode(size, objCode, LF);
                         fprintf(LF, "\n");
-                        enqueue(objCode, 3, pCurrent->LOC, OF);
+                        enqueue(objCode, size, pCurrent->LOC, OF);
 
                         break;
                     case 4:     // WORD
@@ -411,7 +412,7 @@ int pass2(FILE* fp, char* filename) {
                         fprintf(LF,  "\t\t");
                         printObjCode(3, objCode, LF);
                         fprintf(LF, "\n");
-                        enqueue(objCode, 3, pCurrent->LOC, OF);
+                        enqueue(objCode, size, pCurrent->LOC, OF);
 
                         break;
                     case 5:     // RESB

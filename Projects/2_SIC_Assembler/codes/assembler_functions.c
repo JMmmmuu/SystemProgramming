@@ -210,6 +210,7 @@ void dequeue(FILE* OF) {
 
         while (tRHead) {
             printObjCode(tRHead->size, tRHead->objCode, OF);
+            fprintf(OF, " ");
             tRecord* pFree = tRHead;
             tRHead = tRHead->link;
             free(pFree);
