@@ -24,8 +24,8 @@ int assemble(char* filename) {
     
     if (pass1(asmFP)) {
         printf("output file : [%s], [%s]\n", nameToListing(filename), nameToObj(filename));
-        printSymbol();
-        //printNums();
+        /** printSymbol(); */
+        /** printNums(); */
 
         if (!pass2(asmFP, filename)) {
             printf("Program halted in Pass 2\n");
@@ -68,9 +68,6 @@ int pass1(FILE* fp) {
     if (SYMTAB) freeSymTab();
     numNode* pLast = numHead;
 
-    /** if (line[0] == '.' || isBlankLine(line)) */
-        /** pLast = addNum(lineNum, -1, pLast, 3); */
-
     while (line[0] == '.' || isBlankLine(line)) {
         // skip comment lines & blank lines
         memset(line, '\0', (int)sizeof(line));
@@ -91,13 +88,12 @@ int pass1(FILE* fp) {
     for (i = 0; i < tokenNum; i++) {
         if (isDirective(token[i]) == 1) {
             // if token[i] == "START"
-            if (i+1 >= tokenNum || tokenNum == 1) {
+            if (i+1 >= tokenNum || tokenNum == 2) {
                 printf("Error occured at [%d] line: No name or starting address\n", lineNum);
                 return 0;
             }
             if ( (startingAddr = strToHex(token[i+1], 0)) == -1 ) {
                 printf("Error occured at [%d] line: Wrong Starting Address\n", lineNum);
-                startingAddr = 0;
                 return 0;
             }
             flag = 1;
@@ -149,7 +145,7 @@ int pass1(FILE* fp) {
                 if (instructionSize == -1) return 0;
 
                 if( !addSym(token[0], LOCCTR) ) { 
-                    printf("Wrong\n");
+                    printf("Error occured at [%d] line: use label already declared - %s\n", lineNum, token[0]);
                     return 0;
                 }
             }
@@ -167,6 +163,9 @@ int pass1(FILE* fp) {
         lineNum++;
 
     }
+
+    free(line);
+    free(token);
 
     if (!flag) {
         printf("No END Directive\n");
@@ -441,6 +440,8 @@ int pass2(FILE* fp, char* filename) {
     }
 
     fclose(LF); fclose(OF);
+    free(line);
+    free(token);
     return 1;
 }
 

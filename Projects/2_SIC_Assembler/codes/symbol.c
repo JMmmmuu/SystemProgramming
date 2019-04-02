@@ -121,7 +121,6 @@ int addSym(char* label, int LOC) {
 
     if (findSym(label) != -1) {
         // label exist
-        printf("Label already exist\n");
         return 0;
     }
 
