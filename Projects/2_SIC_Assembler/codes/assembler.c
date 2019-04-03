@@ -29,6 +29,8 @@ int assemble(char* filename) {
 
         if (!pass2(asmFP, filename)) {
             printf("Program halted in Pass 2\n");
+            remove(nameToListing(filename));
+            remove(nameToObj(filename));
             return 0;
         }
     }
