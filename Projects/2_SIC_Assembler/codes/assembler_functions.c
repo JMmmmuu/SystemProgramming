@@ -198,8 +198,13 @@ void enqueue(int objCode, int size, int LOC, FILE* OF) {
         tRTail = pNew;
         return ;
     }
+    
+    int len = 0;
+    tRecord* pMove;
+    for (pMove = tRHead; pMove; pMove = pMove->link)
+        len += pMove->size;
 
-    if (LOC - tRHead->LOC > MAX_OBJ_TRECORD) {
+    if (len + size > MAX_OBJ_TRECORD) {
         dequeue(OF);
         tRHead = pNew;
         tRTail= pNew;
@@ -214,8 +219,15 @@ void dequeue(FILE* OF) {
     // pop node from the queue
     // and print obj codes in the .obj file
     if (!tRHead) return ;
+
     // print T, starting LOC, and Length of the record
-    fprintf(OF, "T%06X%02X", tRHead->LOC, tRTail->LOC - tRHead->LOC);
+    int len = 0;
+    tRecord* pMove;
+
+    for (pMove = tRHead; pMove; pMove = pMove->link)
+        len += pMove->size;
+
+    fprintf(OF, "T%06X %02X ", tRHead->LOC, len);
 
     while (tRHead) {
         printObjCode(tRHead->size, tRHead->objCode, OF);

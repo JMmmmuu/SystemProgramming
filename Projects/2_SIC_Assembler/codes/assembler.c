@@ -161,7 +161,6 @@ int pass1(FILE* fp) {
         for (i = 0; i < MAX_TOKEN_NUM; i++) token[i] = NULL;
         fgets(line, MAX_ASM_LINE, fp);
         lineNum++;
-
     }
 
     free(line);
@@ -219,6 +218,8 @@ int pass2(FILE* fp, char* filename) {
         fprintf(LF, "\n");
 
         startingAddr = strToHex(token[2], 1);
+        if (startingAddr == -1) return 0;
+
         numNode* pMove;
         for (pMove = numHead; pMove->link; pMove = pMove->link) ;
         endAddr = pMove->LOC;
