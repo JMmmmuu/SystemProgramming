@@ -1,3 +1,6 @@
+.
+.       No START directive
+.       VAR with no label
 FIRST   STL     RETADR
         LDB     #LENGTH
         BASE   LENGTH
@@ -17,6 +20,7 @@ EOF     BYTE   C'EOF'
 RETADR  RESW   1
 LENGTH  RESW   1
 BUFFER  RESB   4096
+        RESW    3
 .
 .       SUBROUTINE TO READ RECORD INTO BUFFER
 .
