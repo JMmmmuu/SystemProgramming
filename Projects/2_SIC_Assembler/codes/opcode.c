@@ -15,6 +15,7 @@ int opcode(char* mnemonic, int type) {
     int idx = hashFunction(mnemonic);
     opNode* pMove;
 
+    if (!mnemonic) return 0;
     for (pMove = opTable[idx]; pMove; pMove = pMove->link) {
         if (strcmp(pMove->operation, mnemonic) == 0) {
             if (type == 1) printf("opcode is %X\n", pMove->opcode);

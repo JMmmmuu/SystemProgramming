@@ -23,16 +23,15 @@ int assemble(char* filename) {
     tRTail = NULL;
     
     if (pass1(asmFP)) {
-        printf("output file : [%s], [%s]\n", nameToListing(filename), nameToObj(filename));
         /** printSymbol(); */
         /** printNums(); */
-
         if (!pass2(asmFP, filename)) {
             printf("Program halted in Pass 2\n");
             remove(nameToListing(filename));
             remove(nameToObj(filename));
             return 0;
         }
+        printf("output file : [%s], [%s]\n", nameToListing(filename), nameToObj(filename));
     }
     else {
         printf("program halted in Pass 1\n");
@@ -153,7 +152,7 @@ int pass1(FILE* fp) {
             }
             if (instructionSize == 0)
                 pLast = addNum(lineNum, -1, pLast, 3);
-            else 
+            else
                 pLast = addNum(lineNum, LOCCTR, pLast, 0);
         }
 
@@ -169,7 +168,7 @@ int pass1(FILE* fp) {
     free(token);
 
     if (!flag) {
-        printf("No END Directive\n");
+        printf("Error occured at [%d] line: No END Directive\n", lineNum);
         return 0;
     }
     addNum(lineNum, LOCCTR, pLast, 2);
@@ -205,7 +204,7 @@ int pass2(FILE* fp, char* filename) {
         fprintf(LF, "\t  %s\n", line);
         pCurrent = pCurrent->link;
         if (!pCurrent) {
-            printf("Warning! - no content except comment / blank lines\n");
+            printf("Warning! - no content except comment/ blank lines\n");
             return 1;
         }
     }
@@ -219,8 +218,11 @@ int pass2(FILE* fp, char* filename) {
             fprintf(LF, "\t%s", token[i]);
         fprintf(LF, "\n");
 
-        startingAddr = strToHex(token[2], 1);
-        if (startingAddr == -1) return 0;
+        startingAddr = strToHex(token[2], 0);
+        if (startingAddr == -1) {
+            printf("Error occured at [%d] line: Wrong starting address - %s\n", pCurrent->lineNum, token[2]);
+            return 0;
+        }
 
         numNode* pMove;
         for (pMove = numHead; pMove->link; pMove = pMove->link) ;
@@ -325,12 +327,41 @@ int pass2(FILE* fp, char* filename) {
                 directiveNum = isDirective(token[0]);
                 if ( !directiveNum ) {
                     // wrong input
-                    printf("Wrong!!\n");
+                    printf("Error occured at [%d] line: Wrong operation/ directive\n", pCurrent->lineNum);
                     return 0;
                 }
                 switch (directiveNum) {
+                    case 3:     // BYTE
+                        objCode = getObjCode(&(token[0]), 5, 1, pCurrent);
+                        if (objCode == -1) return 0;
+                        fprintf(LF, "\t  %d\t%04X\t\t\t", pCurrent->lineNum * 5, pCurrent->LOC);
+                        for (i = 0; i < tokenNum; i++)
+                            fprintf(LF, "\t%s", token[i]);
+                        size = (int)strlen(token[1]) - 3;
+                        size = (token[1][0] == 'X') ? size / 2 : size;
+                        fprintf(LF,  "\t\t");
+                        printObjCode(size, objCode, LF);
+                        fprintf(LF, "\n");
+                        enqueue(objCode, size, pCurrent->LOC, OF);
+
+                        printf("Warning! - No label to point BYTE constant at [%d] line\n", pCurrent->lineNum);
+                        break;
+                    case 4:     // WORD
+                        objCode = getObjCode(&(token[0]), 5, 2, pCurrent);
+                        if (objCode == -1) return 0;
+                        fprintf(LF, "\t  %d\t%04X\t\t\t", pCurrent->lineNum * 5, pCurrent->LOC);
+                        for (i = 0; i < tokenNum; i++)
+                            fprintf(LF, "\t%s", token[i]);
+                        fprintf(LF,  "\t\t");
+                        printObjCode(3, objCode, LF);
+                        fprintf(LF, "\n");
+                        enqueue(objCode, 3, pCurrent->LOC, OF);
+
+                        printf("Warning! - No label to point WORD constant at [%d] line\n", pCurrent->lineNum);
+                        break;
                     case 5:     // RESB
                     case 6:     // RESW
+                        printf("Warning! - No label to point variable at [%d] line\n", pCurrent->lineNum);
                         dequeue(OF);
                     case 7:
                         // No need to create opcode
@@ -338,12 +369,17 @@ int pass2(FILE* fp, char* filename) {
                         for (i = 0; i < tokenNum; i++)
                             fprintf(LF, "\t%s", token[i]);
                         fprintf(LF, "\n");
+                        pCurrent = pCurrent->link;
                         continue;
                 }
             }
         }
         else {
             // label!!
+            if (tokenNum == 1) {
+                printf("Error occured at [%d] line: no operation/ directive\n", pCurrent->lineNum);
+                return 0;
+            }
             format = opcode(token[1], 3);
             if ( (token[1])[0] == '+' ) {
                 format = 4;
@@ -490,7 +526,7 @@ int getInstructionSize(char** token, int lineNum, int isLabel) {
         if (size == -1) {
             // wrong syntax. 
             // ex) no input || no hexa, ...
-            printf("Error occured at [%d] line: Wrong Syntax\n", lineNum);
+            printf("Error occured at [%d] line: Wrong operand used\n", lineNum);
             return -1;
         }
     }
@@ -676,7 +712,7 @@ int getObjCode(char** token, int format, int type, numNode* pCurrent) {
                         }
                         addr = target;
                         if (target < 0 || target > 0xFFFFFF) {
-                            printf("incorrect addr value\n");
+                            printf("Error occured at [%d] line: incorrect addr value\n", pCurrent->lineNum);
                             return -1;
                         }
                     }

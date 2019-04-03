@@ -143,6 +143,10 @@ int reswSize(char* input) {
 }
 
 numNode* addNum(int lineNum, int LOC, numNode* pLast, int flag_type) {
+    // flag_type:   0 - normal text record
+    //              1 - START directive
+    //              2 - END directive
+    //              3 - comment/ blank line
     numNode* pNew = (numNode*)malloc(sizeof(numNode));
     pNew->lineNum = lineNum; pNew->LOC = LOC;
     switch (flag_type) {
