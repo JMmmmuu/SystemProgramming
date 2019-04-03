@@ -213,10 +213,7 @@ int pass2(FILE* fp, char* filename) {
         fgets(line, MAX_ASM_LINE, fp);
         tokenNum = tokenizeAsmFile(&token, line);
 
-        fprintf(LF, "\t  %d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
-        for (i = 0; i < tokenNum; i++)
-            fprintf(LF, "\t%s", token[i]);
-        fprintf(LF, "\n");
+        printLineinLST(pCurrent, token, 0, tokenNum, 0, LF, 1);
 
         startingAddr = strToHex(token[2], 0);
         if (startingAddr == -1) {
@@ -249,7 +246,8 @@ int pass2(FILE* fp, char* filename) {
 
         if (pCurrent->skip_flag) {
             // if the  line is comment or blank
-            fprintf(LF, "\t  %d\t\t\t\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
+            if (line[0] == '.') fprintf(LF, "\t  %d\t\t\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
+            else fprintf(LF, "\t  %d\t\t\t\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
             pCurrent = pCurrent->link;
             continue;
         }
@@ -257,7 +255,7 @@ int pass2(FILE* fp, char* filename) {
             // END directive
             if (tRHead) dequeue(OF);
             fprintf(OF, "E%06X\n", startingAddr);
-            fprintf(LF, "\t  %d\t\t\t\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
+            fprintf(LF, "\t  %d\t\t\t\t\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
             break;
         }
 
@@ -295,17 +293,8 @@ int pass2(FILE* fp, char* filename) {
                     if ( !LDB(token, pCurrent->lineNum, &B) ) return 0;
                 }
 
-                fprintf(LF, "\t  %d\t%04X\t\t",  pCurrent->lineNum * 5, pCurrent->LOC);
                 if (format == 4) token[0] -= 1;
-                for (i = 0; i < tokenNum; i++)
-                    fprintf(LF, "\t%s", token[i]);
-                if (tokenNum == 1) fprintf(LF, "\t\t\t");
-                else {
-                    if ((int)strlen(token[1]) >= 8) fprintf(LF, "\t");
-                    else fprintf(LF, "\t\t");
-                }
-                printObjCode(format, objCode, LF);
-                fprintf(LF, "\n");
+                printLineinLST(pCurrent, token, format, tokenNum, objCode, LF, 0);
                 enqueue(objCode, format, pCurrent->LOC, OF);
             }
             else {
@@ -322,14 +311,10 @@ int pass2(FILE* fp, char* filename) {
                     case 3:     // BYTE
                         objCode = getObjCode(&(token[0]), 5, 1, pCurrent);
                         if (objCode == -1) return 0;
-                        fprintf(LF, "\t  %d\t%04X\t\t", pCurrent->lineNum * 5, pCurrent->LOC);
-                        for (i = 0; i < tokenNum; i++)
-                            fprintf(LF, "\t%s", token[i]);
+
                         size = (int)strlen(token[1]) - 3;
                         size = (token[1][0] == 'X') ? size / 2 : size;
-                        fprintf(LF,  "\t\t");
-                        printObjCode(size, objCode, LF);
-                        fprintf(LF, "\n");
+                        printLineinLST(pCurrent, token, size, tokenNum, objCode, LF, 0);
                         enqueue(objCode, size, pCurrent->LOC, OF);
 
                         printf("Warning! - No label to point BYTE constant at [%d] line\n", pCurrent->lineNum);
@@ -337,12 +322,8 @@ int pass2(FILE* fp, char* filename) {
                     case 4:     // WORD
                         objCode = getObjCode(&(token[0]), 5, 2, pCurrent);
                         if (objCode == -1) return 0;
-                        fprintf(LF, "\t  %d\t%04X\t\t", pCurrent->lineNum * 5, pCurrent->LOC);
-                        for (i = 0; i < tokenNum; i++)
-                            fprintf(LF, "\t%s", token[i]);
-                        fprintf(LF,  "\t\t");
-                        printObjCode(3, objCode, LF);
-                        fprintf(LF, "\n");
+
+                        printLineinLST(pCurrent, token, 3, tokenNum, objCode, LF, 0);
                         enqueue(objCode, 3, pCurrent->LOC, OF);
 
                         printf("Warning! - No label to point WORD constant at [%d] line\n", pCurrent->lineNum);
@@ -353,10 +334,7 @@ int pass2(FILE* fp, char* filename) {
                         dequeue(OF);
                     case 7:
                         // No need to create opcode
-                        fprintf(LF, "\t  %d\t%04X\t\t", pCurrent->lineNum * 5, pCurrent->LOC);
-                        for (i = 0; i < tokenNum; i++)
-                            fprintf(LF, "\t%s", token[i]);
-                        fprintf(LF, "\n");
+                        printLineinLST(pCurrent, token, 0, tokenNum, 0, LF, 0);
                         pCurrent = pCurrent->link;
                         continue;
                 }
@@ -383,13 +361,8 @@ int pass2(FILE* fp, char* filename) {
                     if ( !LDB(token+1, pCurrent->lineNum, &B) ) return 0;
                 }
 
-                fprintf(LF, "\t  %d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
                 if (format == 4) token[1] -= 1;
-                for (i = 0; i < tokenNum; i++)
-                    fprintf(LF, "\t%s", token[i]);
-                fprintf(LF, "\t\t");
-                printObjCode(format, objCode, LF);
-                fprintf(LF, "\n");
+                printLineinLST(pCurrent, token, format, tokenNum, objCode, LF, 1);
                 enqueue(objCode, format, pCurrent->LOC, OF);
             }
             else {
@@ -406,26 +379,18 @@ int pass2(FILE* fp, char* filename) {
                     case 3:     // BYTE
                         objCode = getObjCode(&(token[1]), 5, 1, pCurrent);
                         if (objCode == -1) return 0;
-                        fprintf(LF, "\t  %d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
-                        for (i = 0; i < tokenNum; i++)
-                            fprintf(LF, "\t%s", token[i]);
+                        
                         size = (int)strlen(token[2]) - 3;
                         size = (token[2][0] == 'X') ? size / 2 : size;
-                        fprintf(LF,  "\t\t");
-                        printObjCode(size, objCode, LF);
-                        fprintf(LF, "\n");
+                        printLineinLST(pCurrent, token, size, tokenNum, objCode, LF, 1);
                         enqueue(objCode, size, pCurrent->LOC, OF);
 
                         break;
                     case 4:     // WORD
                         objCode = getObjCode(&(token[1]), 5, 2, pCurrent);
                         if (objCode == -1) return 0;
-                        fprintf(LF, "\t  %d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
-                        for (i = 0; i < tokenNum; i++)
-                            fprintf(LF, "\t%s", token[i]);
-                        fprintf(LF,  "\t\t");
-                        printObjCode(3, objCode, LF);
-                        fprintf(LF, "\n");
+
+                        printLineinLST(pCurrent, token, 3, tokenNum, objCode, LF, 1);
                         enqueue(objCode, 3, pCurrent->LOC, OF);
 
                         break;
@@ -744,6 +709,7 @@ int getObjCode(char** token, int format, int type, numNode* pCurrent) {
 }
 
 void printObjCode(int size, int objCode, FILE* fp) {
+    if (size == 0) return ;
     int hex;
     for (int i = size-1; i >= 1; i--) {
         hex = (objCode >> (8 * i)) - ((objCode >> (8 * i)) << (8 * i));

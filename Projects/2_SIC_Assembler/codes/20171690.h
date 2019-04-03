@@ -138,6 +138,7 @@ int removeSpaceAroundComma(char* input);
 int getRegNum(char* reg);
 
 int LDB(char** token, int lineNum, int* B);
+void printLineinLST(numNode* pCurrent, char** token, int size, int tokenNum, int objCode, FILE* LF, int isLabel);
 
 int isWhiteSpace(char ch);
 int isBlankLine(char* input);
