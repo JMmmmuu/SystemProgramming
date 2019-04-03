@@ -84,7 +84,7 @@ void quit() {
 int type(char* filename) {
     FILE* fp = fopen(filename, "r");
     if (!fp) {
-        printf("No file in current directory. Please check again\n");
+        printf("type: print [%s]: No such file in current directory\n", filename);
         return 0;
     }
 
