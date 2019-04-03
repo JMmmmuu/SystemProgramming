@@ -21,6 +21,45 @@ int getRegNum(char* reg) {
     return 0xFF;
 }
 
+int LDB(char** token, int lineNum, int* B) {
+    // Load address to B register
+    // if success, return 1. else return 0
+    int tmp;
+
+    if ( !token[1] ) {
+        printf("Error occured at [%d] line: Can't load value to B register\n", lineNum);
+        return 0;
+    }
+    if (token[1][0] == '#')     // immediate Addressing
+        *B = findSym(token[1]+1);
+    else if (token[1][0] == '@') {
+        // indirect Addressing
+        tmp = findSym(token[1]+1);
+
+        numNode* pMove = numHead;
+        while (pMove) {
+            if (pMove->LOC == tmp) break;
+            pMove = pMove->link;
+            if (!pMove) {
+                printf("Error occured at [%d] line: Can't access value at %s Address\n", lineNum, token[1]);
+                return 0;
+            }
+        }
+    }
+    else if ( (tmp = strToHex(token[1], 0)) != -1)
+        *B = tmp;
+
+    if (*B == -1) {
+        if ( (tmp = strToHex(token[1]+1, 0)) != -1)
+            *B = tmp;
+        else {
+            printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", lineNum, token[1]+1);
+        }
+    }
+
+    return 1;
+}
+
 int isWhiteSpace(char ch) {
     return (ch == ' ' || ch == '\n' || ch == '\t') ? 1 : 0;
 }

@@ -183,7 +183,7 @@ int pass2(FILE* fp, char* filename) {
     // Write obj program and assembly listing.
 
     fseek(fp, 0, SEEK_SET);     // move to the start
-    int i, tokenNum, startingAddr, endAddr, size, tmp;
+    int i, tokenNum, startingAddr, endAddr, size;
     numNode* pCurrent = numHead;
     char* line = (char*)malloc(MAX_ASM_LINE * sizeof(char));
     char** token = (char**)malloc(MAX_TOKEN_NUM * sizeof(char*));
@@ -292,23 +292,7 @@ int pass2(FILE* fp, char* filename) {
                 if (objCode == -1) return 0;
                 if (opcode(token[0], 4) == 0x68) {
                     // Load operand value in the B register
-                    if (!token[1]) {
-                        printf("Error occured at [%d] line: Can't load value to B register\n", pCurrent->lineNum);
-                        return 0;
-                    }
-                    if (token[1][0] == '#' || token[1][0] == '@')
-                        B = findSym(token[1]+1);
-                    else if ( (tmp = strToHex(token[1], 0)) != -1)
-                        B = tmp;
-
-                    if (B == -1) {
-                        if ( (tmp = strToHex(token[1]+1, 0)) != -1)
-                            B = tmp;
-                        else {
-                            printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", pCurrent->lineNum, token[1]+1);
-                            return 0;
-                        }
-                    }
+                    if ( !LDB(token, pCurrent->lineNum, &B) ) return 0;
                 }
 
                 fprintf(LF, "\t  %d\t%04X\t\t",  pCurrent->lineNum * 5, pCurrent->LOC);
@@ -393,22 +377,10 @@ int pass2(FILE* fp, char* filename) {
                 // exist matching operation
                 objCode = getObjCode(&(token[1]), format, 0, pCurrent);
                 if (objCode == -1) return 0;
+
                 if (opcode(token[1], 4) == 0x68) {
                     // LOAD operand value to B register
-                    if (token[2][0] == '#' || token[2][0] == '@')
-                        B = findSym(token[2]+1);
-                    else if ( (tmp = strToHex(token[2], 0)) != -1)
-                        B = tmp;
-
-                    if (B == -1) {
-                        if ( (tmp = strToHex(token[2]+1, 0)) != -1)
-                            B = tmp;
-                        else {
-                            printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", pCurrent->lineNum, token[2]+1);
-                            return 0;
-                        }
-
-                    }
+                    if ( !LDB(token+1, pCurrent->lineNum, &B) ) return 0;
                 }
 
                 fprintf(LF, "\t  %d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);

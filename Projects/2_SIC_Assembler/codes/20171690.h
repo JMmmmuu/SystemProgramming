@@ -137,6 +137,8 @@ int removeSpaceAroundComma(char* input);
 // ASSEMBLER FUNCTIONS
 int getRegNum(char* reg);
 
+int LDB(char** token, int lineNum, int* B);
+
 int isWhiteSpace(char ch);
 int isBlankLine(char* input);
 int isDirective(char* token);
