@@ -237,7 +237,7 @@ int pass2(FILE* fp, char* filename) {
         for (pMove = numHead; pMove->link; pMove = pMove->link) ;
         startingAddr = 0;
         endAddr = pMove->LOC;
-        fprintf(OF, "H      000000%06X", endAddr);
+        fprintf(OF, "H      000000%06X\n", endAddr);
     }
     PC = startingAddr;
 
@@ -292,6 +292,10 @@ int pass2(FILE* fp, char* filename) {
                 if (objCode == -1) return 0;
                 if (opcode(token[0], 4) == 0x68) {
                     // Load operand value in the B register
+                    if (!token[1]) {
+                        printf("Error occured at [%d] line: Can't load value to B register\n", pCurrent->lineNum);
+                        return 0;
+                    }
                     if (token[1][0] == '#' || token[1][0] == '@')
                         B = findSym(token[1]+1);
                     else if ( (tmp = strToHex(token[1], 0)) != -1)
@@ -334,7 +338,7 @@ int pass2(FILE* fp, char* filename) {
                     case 3:     // BYTE
                         objCode = getObjCode(&(token[0]), 5, 1, pCurrent);
                         if (objCode == -1) return 0;
-                        fprintf(LF, "\t  %d\t%04X\t\t\t", pCurrent->lineNum * 5, pCurrent->LOC);
+                        fprintf(LF, "\t  %d\t%04X\t\t", pCurrent->lineNum * 5, pCurrent->LOC);
                         for (i = 0; i < tokenNum; i++)
                             fprintf(LF, "\t%s", token[i]);
                         size = (int)strlen(token[1]) - 3;
@@ -349,7 +353,7 @@ int pass2(FILE* fp, char* filename) {
                     case 4:     // WORD
                         objCode = getObjCode(&(token[0]), 5, 2, pCurrent);
                         if (objCode == -1) return 0;
-                        fprintf(LF, "\t  %d\t%04X\t\t\t", pCurrent->lineNum * 5, pCurrent->LOC);
+                        fprintf(LF, "\t  %d\t%04X\t\t", pCurrent->lineNum * 5, pCurrent->LOC);
                         for (i = 0; i < tokenNum; i++)
                             fprintf(LF, "\t%s", token[i]);
                         fprintf(LF,  "\t\t");
