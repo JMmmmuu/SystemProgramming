@@ -18,7 +18,7 @@ int assemble(char* filename) {
 
     // initialize Registers
     A = 0; X = 0; L = 0; PC = 0;
-    SW = 0; B = 0; S = 0; T = 0; F = 0;
+    SW = 0; B = -1; S = 0; T = 0; F = 0;
     tRHead = NULL;
     tRTail = NULL;
     
@@ -286,7 +286,7 @@ int pass2(FILE* fp, char* filename) {
             }
             if ( format ) {
                 // There exist matching operation
-                objCode = getObjCode(token, format, 0, pCurrent);
+                objCode = getObjCode(token, &format, 0, pCurrent);
                 if (objCode == -1) return 0;
                 if (opcode(token[0], 4) == 0x68) {
                     // Load operand value in the B register
@@ -309,7 +309,7 @@ int pass2(FILE* fp, char* filename) {
                 }
                 switch (directiveNum) {
                     case 3:     // BYTE
-                        objCode = getObjCode(&(token[0]), 5, 1, pCurrent);
+                        objCode = getObjCode(&(token[0]), 0, 1, pCurrent);
                         if (objCode == -1) return 0;
 
                         size = (int)strlen(token[1]) - 3;
@@ -320,7 +320,7 @@ int pass2(FILE* fp, char* filename) {
                         printf("Warning! - No label to point BYTE constant at [%d] line\n", pCurrent->lineNum);
                         break;
                     case 4:     // WORD
-                        objCode = getObjCode(&(token[0]), 5, 2, pCurrent);
+                        objCode = getObjCode(&(token[0]), 0, 2, pCurrent);
                         if (objCode == -1) return 0;
 
                         printLineinLST(pCurrent, token, 3, tokenNum, objCode, LF, 0);
@@ -353,7 +353,7 @@ int pass2(FILE* fp, char* filename) {
             }
             if ( format ) {
                 // exist matching operation
-                objCode = getObjCode(&(token[1]), format, 0, pCurrent);
+                objCode = getObjCode(&(token[1]), &format, 0, pCurrent);
                 if (objCode == -1) return 0;
 
                 if (opcode(token[1], 4) == 0x68) {
@@ -377,7 +377,7 @@ int pass2(FILE* fp, char* filename) {
                 // directive!
                 switch (directiveNum) {
                     case 3:     // BYTE
-                        objCode = getObjCode(&(token[1]), 5, 1, pCurrent);
+                        objCode = getObjCode(&(token[1]), 0, 1, pCurrent);
                         if (objCode == -1) return 0;
                         
                         size = (int)strlen(token[2]) - 3;
@@ -387,7 +387,7 @@ int pass2(FILE* fp, char* filename) {
 
                         break;
                     case 4:     // WORD
-                        objCode = getObjCode(&(token[1]), 5, 2, pCurrent);
+                        objCode = getObjCode(&(token[1]), 0, 2, pCurrent);
                         if (objCode == -1) return 0;
 
                         printLineinLST(pCurrent, token, 3, tokenNum, objCode, LF, 1);
@@ -475,7 +475,7 @@ int getInstructionSize(char** token, int lineNum, int isLabel) {
     return size;
 }
 
-int getObjCode(char** token, int format, int type, numNode* pCurrent) {
+int getObjCode(char** token, int* format, int type, numNode* pCurrent) {
     // format: operation code format / or size
     // type:    if 0, operation
     //          if 1, BYTE Const
@@ -487,20 +487,21 @@ int getObjCode(char** token, int format, int type, numNode* pCurrent) {
     int disp, addr;
     int opCode, operand;
     int objCode = 0;
-    int lc;
-    int tokenNum, target;
-    for (tokenNum = 0; token[tokenNum]; tokenNum++) ;
+    int lc, target;
     char* operandStr[5];
     char* tmp;
     char* sym;
+
+    // initialize
     for (lc = 0; lc < 5; lc++) operandStr[lc] = NULL;
 
     if (type == 0) {
+        // find obj code for operation + operand
         opCode = opcode(token[0], 4);
 
-        int commaFlag = isComma(token[1]);
+        int commaFlag = isComma(token[1]);      // if on, there exist comma in operand
         if (commaFlag) {
-            tmp = (char*)malloc(50 * sizeof(char));
+            tmp = (char*)malloc(MAX_ASM_LINE * sizeof(char));
             strcpy(tmp, token[1]);
             lc = 0;
             operandStr[lc] = strtok(tmp, ",");
@@ -508,7 +509,7 @@ int getObjCode(char** token, int format, int type, numNode* pCurrent) {
                 operandStr[lc] = strtok(NULL, ",");
         }
 
-        switch (format) {
+        switch (*format) {
             case 1:
                 return objCode;
             case 2:
@@ -516,12 +517,14 @@ int getObjCode(char** token, int format, int type, numNode* pCurrent) {
                 if (commaFlag) {
                     r1 = getRegNum(operandStr[0]);
                     r2 = getRegNum(operandStr[1]);
+                    // if operand is not a register, then it's decimal n
+                    // only for the case of SHIFTL/ SHIFTR
                     if (r1 == 0xFF) r1 = strToDecimal(operandStr[0]) - 1;
                     if (r2 == 0xFF) r2 = strToDecimal(operandStr[1]) - 1;
                 }
                 else {
                     r1 = getRegNum(token[1]);
-                    if (r1 == 0xFF) r1 = strToDecimal(token[1]);
+                    if (r1 == 0xFF) r1 = strToDecimal(token[1]);    // SVC operation
                     r2 = 0x00;
                 }
                 reg = (r1 << 4) + r2;
@@ -530,16 +533,21 @@ int getObjCode(char** token, int format, int type, numNode* pCurrent) {
                 return objCode;
             case 3:
                 // operand
-                // get nixbpe
                 
+                // get nixbpe
                 if (token[1]) {
                     sym = token[1];
                     // x bit
                     x = 0;
                     if (commaFlag) {
                         sym = operandStr[0];
-                        if (strcmp(operandStr[1], "X") == 0)
-                            x = 1;
+                        lc = 1;
+                        while (operandStr[lc]) {
+                            if (strcmp(operandStr[lc], "X") == 0) {
+                                x = 1;
+                                break;
+                            }
+                        }
                     }
 
                     // n & i bits
@@ -561,7 +569,9 @@ int getObjCode(char** token, int format, int type, numNode* pCurrent) {
                     // b & p bits
                     operand = strToHex(sym, 0);
                     if (operand == -1) {
-                        // find symbol
+                        // operand point specific addr
+
+                        // find symbol - LOC
                         target = findSym(sym);
                         if (target == -1) {
                             printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", pCurrent->lineNum, sym);
@@ -573,18 +583,27 @@ int getObjCode(char** token, int format, int type, numNode* pCurrent) {
                             b = 0; p = 1;
                         }
                         else {
+                            if (B == -1) printf("Warning! - B register used without initializing at [%d] line\n", pCurrent->lineNum);
                             disp = target - B;
                             if (disp >= 0 && disp < 0x1000) {
                                 b = 1; p = 0;
                             }
                             else {
-                                format = 4;
-                                printf("Error at [%d] line: format 4 with no + sign\n", pCurrent->lineNum);
-                                return -1;
+                                *format = 4;
+                                printf("Warning! - format 4 used without '+' sign at [%d] line\n", pCurrent->lineNum);
+                                b = 0; p = 0; e = 1;
+                                
+                                b1 = opCode + n * 2 + i;
+                                b2 = (x << 7) + (b << 6) + (p << 5) + (e << 4) + (disp >> 16);
+                                b3 = (disp >> 8) - ((disp / (1 << 16)) << 8);
+                                b4 = disp % (1 << 8);
+                                objCode = (b1 << 24) + (b2 << 16) + (b3 << 8) + b4;
+                                return objCode;
                             }
                         }
                     }
                     else {
+                        // operand is just value of addr
                         b = 0; p = 0;
                         disp = operand;
                     }
@@ -593,13 +612,13 @@ int getObjCode(char** token, int format, int type, numNode* pCurrent) {
                 }
                 else {
                     // no operand
-                    n = 1; i = 1;
-                    x = 0; b = 0; p = 0; e = 0;
+                    n = 1; i = 1; x = 0;
+                    b = 0; p = 0; e = 0;
                     disp = 0;
                 }
 
                 if (disp < 0)
-                    disp = disp & 0x0FFF;
+                    disp = disp & 0x7FFF;
                 b1 = opCode + n * 2 + i;
                 b2 = (x << 7) + (b << 6) + (p << 5) + (e << 4) + (disp >> 8);
                 b3 = disp % (1 << 8);
@@ -645,6 +664,8 @@ int getObjCode(char** token, int format, int type, numNode* pCurrent) {
                     
                     operand = strToDecimal(sym);
                     if (operand == -1) {
+                        // operand point specific addr
+
                         // find symbol
                         target = findSym(sym);
                         if (target == -1) {
@@ -657,7 +678,7 @@ int getObjCode(char** token, int format, int type, numNode* pCurrent) {
                             return -1;
                         }
                     }
-                    else
+                    else    // operand is just value of addr
                         addr = operand;
 
                     b1 = opCode + n * 2 + i;

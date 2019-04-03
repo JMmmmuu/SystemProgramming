@@ -128,7 +128,7 @@ int pass1(FILE* fp);
 int pass2(FILE* fp, char* filename);
 
 int getInstructionSize(char** token, int lineNum, int isLabel);
-int getObjCode(char** token, int format, int type, numNode* pCurrent);
+int getObjCode(char** token, int* format, int type, numNode* pCurrent);
 void printObjCode(int format, int objCode, FILE* fp);
 
 int tokenizeAsmFile(char*** token, char* input);
