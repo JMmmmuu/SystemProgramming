@@ -552,6 +552,7 @@ int getObjCode(char** token, int* format, int type, numNode* pCurrent) {
                                 x = 1;
                                 break;
                             }
+                            if (++lc == 5) break;
                         }
                     }
 
@@ -631,7 +632,7 @@ int getObjCode(char** token, int* format, int type, numNode* pCurrent) {
                 }
 
                 if (disp < 0)
-                    disp = disp & 0x7FFF;
+                    disp = disp & 0x0FFF;
                 b1 = opCode + n * 2 + i;
                 b2 = (x << 7) + (b << 6) + (p << 5) + (e << 4) + (disp >> 8);
                 b3 = disp % (1 << 8);
