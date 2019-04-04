@@ -1,16 +1,19 @@
+.
+.       SIC MACHINE CODE
+.
 COPY    START   1000
 FIRST   STL     RETADR
-CLOOP   +JSUB    RDREC
+CLOOP   JSUB    RDREC
         LDA     LENGTH
         COMP    ZERO
         JEQ     ENDFIL
-        +JSUB    WRREC
+        JSUB    WRREC
         J       CLOOP
 ENDFIL  LDA     EOF
         STA     BUFFER
         LDA     THREE
         STA     LENGTH
-        +JSUB    WRREC
+        JSUB    WRREC
         LDL     RETADR
         RSUB
 EOF     BYTE    C'EOF'
@@ -22,29 +25,29 @@ BUFFER  RESB    4096
 .
 .       SUBROUTINE TO READ RECORD INTO BUFFER
 .
-RDREC   +LDX     ZERO
-        +LDA     ZERO
+RDREC   LDX     ZERO
+        LDA     ZERO
 RLOOP   TD      INPUT
         JEQ     RLOOP
         RD      INPUT
-        +COMP    ZERO
+        COMP    ZERO
         JEQ     EXIT
-        +STCH    BUFFER, X
+        STCH    BUFFER, X
         TIX     MAXLEN
         JLT     RLOOP
-EXIT    +STX     LENGTH
+EXIT    STX     LENGTH
         RSUB
 INPUT   BYTE    X'F1'
 MAXLEN  WORD    4096
 .
 .       SUBROUTINE TO WRITE RECORD FROM BUFFER
 .
-WRREC   +LDX     ZERO
+WRREC   LDX     ZERO
 WLOOP   TD      OUTPUT
         JEQ     WLOOP
-        +LDCH    BUFFER, X
+        LDCH    BUFFER, X
         WD      OUTPUT
-        +TIX     LENGTH
+        TIX     LENGTH
         JLT     WLOOP
         RSUB
 OUTPUT  BYTE    X'05'
