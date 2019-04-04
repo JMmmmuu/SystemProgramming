@@ -77,8 +77,8 @@ int pass1(FILE* fp) {
             // do not create any symbol table
             return 1;
         }
-        lineNum++;
         pLast = addNum(lineNum, -1, pLast, 3);
+        lineNum++;
     }
 
     // First line except comments & blank line
@@ -201,7 +201,7 @@ int pass2(FILE* fp, char* filename) {
     while (pCurrent->skip_flag) {
         // while comment line or blank line
         fgets(line, MAX_ASM_LINE, fp);
-        fprintf(LF, "\t  %s\n", line);
+        fprintf(LF, "\t  %d\t\t%s", pCurrent->lineNum * 5, line);
         pCurrent = pCurrent->link;
         if (!pCurrent) {
             printf("Warning! - no content except comment/ blank lines\n");
@@ -507,6 +507,11 @@ int getObjCode(char** token, int* format, int type, numNode* pCurrent) {
             operandStr[lc] = strtok(tmp, ",");
             while (operandStr[lc++] && lc <= 5)
                 operandStr[lc] = strtok(NULL, ",");
+
+            if ( !operandStr[1] ) {
+                printf("Error occured at [%d] line: Wrong Syntax\n", pCurrent->lineNum);
+                return 0;
+            }
         }
 
         switch (*format) {
@@ -578,25 +583,33 @@ int getObjCode(char** token, int* format, int type, numNode* pCurrent) {
                             return -1;
                         }
 
-                        disp = target - PC;
-                        if (disp >= -0xFFF && disp < 0x1000) {
+                        if (target - PC >= -0xFFF && target - PC < 0x1000) {
+                            // PC relative
+                            disp = target - PC;
                             b = 0; p = 1;
                         }
                         else {
-                            if (B == -1) printf("Warning! - B register used without initializing at [%d] line\n", pCurrent->lineNum);
-                            disp = target - B;
-                            if (disp >= 0 && disp < 0x1000) {
+                            if (B == -1) printf("Warning! - incorrect access to B register at [%d] line: B register uninitialized\n", pCurrent->lineNum);
+                            else if (target - B >= 0 && target- B < 0x1000) {
+                                // B relative
+                                disp = target - B;
                                 b = 1; p = 0;
+                                if (B == -1) {
+                                    // Base register uninitialized
+                                    printf("Warning! - B register used at [%d] line without ininitializing.\n",  pCurrent->lineNum);
+                                }
                             }
-                            else {
+                            if (B == -1 || !(target - B >= 0 && target - B < 0x1000)) {
+                                // format 4
                                 *format = 4;
                                 printf("Warning! - format 4 used without '+' sign at [%d] line\n", pCurrent->lineNum);
                                 b = 0; p = 0; e = 1;
+                                addr = target;
                                 
                                 b1 = opCode + n * 2 + i;
-                                b2 = (x << 7) + (b << 6) + (p << 5) + (e << 4) + (disp >> 16);
-                                b3 = (disp >> 8) - ((disp / (1 << 16)) << 8);
-                                b4 = disp % (1 << 8);
+                                b2 = (x << 7) + (b << 6) + (p << 5) + (e << 4) + (addr >> 16);
+                                b3 = (addr >> 8) - ((addr / (1 << 16)) << 8);
+                                b4 = addr % (1 << 8);
                                 objCode = (b1 << 24) + (b2 << 16) + (b3 << 8) + b4;
                                 return objCode;
                             }
@@ -624,6 +637,7 @@ int getObjCode(char** token, int* format, int type, numNode* pCurrent) {
                 b3 = disp % (1 << 8);
                 objCode = (b1 << 16) + (b2 << 8) + b3;
 
+                if (commaFlag) free(tmp);
                 return objCode;
             case 4:
                 // get nixbpe
@@ -672,11 +686,11 @@ int getObjCode(char** token, int* format, int type, numNode* pCurrent) {
                             printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", pCurrent->lineNum, sym);
                             return -1;
                         }
-                        addr = target;
                         if (target < 0 || target > 0xFFFFFF) {
                             printf("Error occured at [%d] line: incorrect addr value\n", pCurrent->lineNum);
                             return -1;
                         }
+                        addr = target;
                     }
                     else    // operand is just value of addr
                         addr = operand;
@@ -687,6 +701,8 @@ int getObjCode(char** token, int* format, int type, numNode* pCurrent) {
                     b4 = addr % (1 << 8);
                     objCode = (b1 << 24) + (b2 << 16) + (b3 << 8) + b4;
                 }
+
+                if (commaFlag) free(tmp);
                 break;
         }
     }
@@ -756,11 +772,6 @@ int tokenizeAsmFile(char*** token, char* input) {
         (*token)[++cnt] = strtok(removeSpace(tmp), " \t");
     }
     cnt++;
-
-/**     printf("\t  "); */
-    /** for (int i = 0; i < cnt; i++) */
-    /**     printf("\t%s", (*token)[i]); */
-    /** printf("\n"); */
 
     return cnt;
 }
