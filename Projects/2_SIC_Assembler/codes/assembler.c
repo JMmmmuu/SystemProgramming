@@ -510,7 +510,7 @@ int getObjCode(char** token, int* format, int type, numNode* pCurrent) {
 
             if ( !operandStr[1] ) {
                 printf("Error occured at [%d] line: Wrong Syntax\n", pCurrent->lineNum);
-                return 0;
+                return -1;
             }
         }
 
@@ -721,14 +721,18 @@ int getObjCode(char** token, int* format, int type, numNode* pCurrent) {
             size = ((int)strlen(token[1]) - 3) / 2;
             
             for (lc = 0; lc < size; lc++) {
-                strHex[0] = token[1][lc+2];
-                strHex[1] = token[1][lc+3];
+                strHex[0] = token[1][lc*2 + 2];
+                strHex[1] = token[1][lc*2 + 3];
                 strHex[2] = '\0';
                 hex = strToHex(strHex, 1);
 
                 objCode += (hex << (8 * (size - lc - 1)));
 
             }
+        }
+        else {
+            printf("Error occured at [%d] line: Wrong Syntax for BYTE Const\n", pCurrent->lineNum);
+            return -1;
         }
     }
     else if (type == 2) {
