@@ -516,7 +516,7 @@ int getObjCode(char** token, int* format, int type, numNode* pCurrent) {
 
         switch (*format) {
             case 1:
-                return objCode;
+                return opCode;
             case 2:
                 // get register code
                 if (commaFlag) {
