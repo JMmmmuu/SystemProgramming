@@ -201,13 +201,14 @@ int symHashFunc(char* label) {
 
 int findSym(char* label) {
     // if found, return Loc of the label. else -1
+    if (label[0] < 'A' || label[0] > 'Z') return -1;
     if (!SYMTAB) {
         // no Symbol Table
         printf("No Symbol Table. Please assemble file first\n");
         return -1;
     }
     if (!isStr(label)) {
-        printf("Wrong Lable\n");
+        printf("Wrong Label\n");
         return -1;
     }
     int idx = symHashFunc(label);

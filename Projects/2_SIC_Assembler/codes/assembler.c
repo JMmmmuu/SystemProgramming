@@ -573,17 +573,9 @@ int getObjCode(char** token, int* format, int type, numNode* pCurrent) {
                     }
 
                     // b & p bits
-                    operand = strToHex(sym, 0);
-                    if (operand == -1) {
+                    target = findSym(sym);
+                    if (target != -1) {
                         // operand point specific addr
-
-                        // find symbol - LOC
-                        target = findSym(sym);
-                        if (target == -1) {
-                            printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", pCurrent->lineNum, sym);
-                            return -1;
-                        }
-
                         if (target - PC >= -0xFFF && target - PC < 0x1000) {
                             // PC relative
                             disp = target - PC;
@@ -618,6 +610,11 @@ int getObjCode(char** token, int* format, int type, numNode* pCurrent) {
                     }
                     else {
                         // operand is just value of addr
+                        operand = strToHex(sym, 0);
+                        if (operand == -1) {
+                            printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", pCurrent->lineNum, sym);
+                            return -1;
+                        }
                         b = 0; p = 0;
                         disp = operand;
                     }
