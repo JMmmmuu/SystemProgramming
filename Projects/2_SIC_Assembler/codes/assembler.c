@@ -201,7 +201,7 @@ int pass2(FILE* fp, char* filename) {
     while (pCurrent->skip_flag) {
         // while comment line or blank line
         fgets(line, MAX_ASM_LINE, fp);
-        fprintf(LF, "\t  %d\t\t%s", pCurrent->lineNum * 5, line);
+        fprintf(LF, "\t  %d\t\t\t%s", pCurrent->lineNum * 5, line);
         pCurrent = pCurrent->link;
         if (!pCurrent) {
             printf("Warning! - no content except comment/ blank lines\n");
@@ -255,7 +255,7 @@ int pass2(FILE* fp, char* filename) {
             // END directive
             if (tRHead) dequeue(OF);
             fprintf(OF, "E%06X\n", startingAddr);
-            fprintf(LF, "\t  %d\t\t\t\t\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
+            fprintf(LF, "\t  %d\t\t\t\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
             break;
         }
 

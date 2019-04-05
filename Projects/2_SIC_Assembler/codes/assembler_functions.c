@@ -62,22 +62,24 @@ int LDB(char** token, int lineNum, int* B) {
 
 void printLineinLST(numNode* pCurrent, char** token, int size, int tokenNum, int objCode, FILE* LF, int isLabel) {
     fprintf(LF, "\t  %d", pCurrent->lineNum * 5);
-    if (pCurrent->lineNum <= 1) fprintf(LF, "\t");
+    //if (pCurrent->lineNum <= 1) fprintf(LF, "\t");
     fprintf(LF, "\t");
 
     if (pCurrent->LOC == -1) fprintf(LF, "\t\t");
     else fprintf(LF, "%04X\t", pCurrent->LOC);
     
     if (!isLabel)
-        fprintf(LF, "\t\t");
+        fprintf(LF, "\t");
 
     int i;
     for (i = 0; i < tokenNum; i++) {
         fprintf(LF, "\t%s", token[i]);
-        if ( (int)strlen(token[i]) < 4 ) fprintf(LF, "\t");
+        //if ( (int)strlen(token[i]) < 4 ) fprintf(LF, "\t");
     }
     if (tokenNum > 0)
         if ( (int)strlen(token[--i]) < 8 ) fprintf(LF, "\t");
+    if (tokenNum == 1)
+        fprintf(LF, "\t");
     fprintf(LF, "\t\t");
     printObjCode(size, objCode, LF);
     fprintf(LF, "\n");
