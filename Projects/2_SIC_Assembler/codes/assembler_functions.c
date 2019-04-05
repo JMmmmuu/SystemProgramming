@@ -63,7 +63,7 @@ int LDB(char** token, int lineNum, int* B) {
 void printLineinLST(numNode* pCurrent, char** token, int size, int tokenNum, int objCode, FILE* LF, int isLabel) {
     fprintf(LF, "\t  %d", pCurrent->lineNum * 5);
     //if (pCurrent->lineNum <= 1) fprintf(LF, "\t");
-    fprintf(LF, "\t");
+    fprintf(LF, "\t   ");
 
     if (pCurrent->LOC == -1) fprintf(LF, "\t\t");
     else fprintf(LF, "%04X\t", pCurrent->LOC);
@@ -295,11 +295,10 @@ void dequeue(FILE* OF) {
     for (pMove = tRHead; pMove; pMove = pMove->link)
         len += pMove->size;
 
-    fprintf(OF, "T%06X %02X ", tRHead->LOC, len);
+    fprintf(OF, "T%06X%02X", tRHead->LOC, len);
 
     while (tRHead) {
         printObjCode(tRHead->size, tRHead->objCode, OF);
-        fprintf(OF, " ");
         tRecord* pFree = tRHead;
         tRHead = tRHead->link;
         free(pFree);

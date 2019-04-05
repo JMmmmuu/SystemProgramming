@@ -255,7 +255,7 @@ int pass2(FILE* fp, char* filename) {
             // END directive
             if (tRHead) dequeue(OF);
             fprintf(OF, "E%06X\n", startingAddr);
-            fprintf(LF, "\t  %d\t\t\t\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
+            fprintf(LF, "\t  %d\t\t\t\t\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
             break;
         }
 
@@ -396,7 +396,7 @@ int pass2(FILE* fp, char* filename) {
                         break;
                     case 5:     // RESB
                     case 6:     // RESW
-                        fprintf(LF, "\t  %d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
+                        fprintf(LF, "\t  %d\t   %04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
                         for (i = 0; i < tokenNum; i++)
                             fprintf(LF, "\t%s", token[i]);
                         fprintf(LF, "\n");
@@ -406,7 +406,7 @@ int pass2(FILE* fp, char* filename) {
 
                     case 7:
                         // No need to create opcode
-                        fprintf(LF, "\t  %d\t%04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
+                        fprintf(LF, "\t  %d\t   %04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
                         for (i = 0; i < tokenNum; i++)
                             fprintf(LF, "\t%s", token[i]);
                         fprintf(LF, "\n");

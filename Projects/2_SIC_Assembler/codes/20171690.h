@@ -20,7 +20,7 @@
 #define SYMTAB_SIZE 28
 #define WORD_SIZE 3
 #define MAX_ASM_LINE 100
-#define MAX_OBJ_TRECORD 0x1E
+#define MAX_OBJ_TRECORD 0xFF
 
 // STRUCTUREs
 typedef struct hist {
