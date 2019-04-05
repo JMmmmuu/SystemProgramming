@@ -82,4 +82,4 @@ sicsim> type filename
 ```bash
 sicsim> symbol
 ```
-> **가장 최근에 assemble한 파일의 symbol table을 Z-A 순서로 출력한다.
+> **가장 최근에 assemble한 파일의 symbol table을 Z-A 순서로 출력한다.**
