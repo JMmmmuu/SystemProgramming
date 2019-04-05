@@ -290,7 +290,7 @@ int pass2(FILE* fp, char* filename) {
                 if (objCode == -1) return 0;
                 if (opcode(token[0], 4) == 0x68) {
                     // Load operand value in the B register
-                    if ( !LDB(token, pCurrent->lineNum, &B) ) return 0;
+                    if ( !LDB(token, pCurrent->lineNum) ) return 0;
                 }
 
                 if (format == 4) token[0] -= 1;
@@ -358,7 +358,7 @@ int pass2(FILE* fp, char* filename) {
 
                 if (opcode(token[1], 4) == 0x68) {
                     // LOAD operand value to B register
-                    if ( !LDB(token+1, pCurrent->lineNum, &B) ) return 0;
+                    if ( !LDB(token+1, pCurrent->lineNum) ) return 0;
                 }
 
                 if (format == 4) token[1] -= 1;

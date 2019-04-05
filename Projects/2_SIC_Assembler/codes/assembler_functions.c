@@ -21,7 +21,7 @@ int getRegNum(char* reg) {
     return 0xFF;
 }
 
-int LDB(char** token, int lineNum, int* B) {
+int LDB(char** token, int lineNum) {
     // Load address to B register
     // if success, return 1. else return 0
     int tmp;
@@ -31,7 +31,7 @@ int LDB(char** token, int lineNum, int* B) {
         return 0;
     }
     if (token[1][0] == '#')     // immediate Addressing
-        *B = findSym(token[1]+1);
+        B = findSym(token[1]+1);
     else if (token[1][0] == '@') {
         // indirect Addressing
         tmp = findSym(token[1]+1);
@@ -47,11 +47,11 @@ int LDB(char** token, int lineNum, int* B) {
         }
     }
     else if ( (tmp = strToHex(token[1], 0)) != -1)
-        *B = tmp;
+        B = tmp;
 
-    if (*B == -1) {
+    if (B == -1) {
         if ( (tmp = strToHex(token[1]+1, 0)) != -1)
-            *B = tmp;
+            B = tmp;
         else {
             printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", lineNum, token[1]+1);
         }

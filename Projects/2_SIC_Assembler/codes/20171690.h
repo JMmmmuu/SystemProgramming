@@ -50,7 +50,7 @@ typedef struct _inter {
     int LOC;
     unsigned char s_flag;       // 1
     unsigned char e_flag;       // 2
-    unsigned char skip_flag;    // 2
+    unsigned char skip_flag;    // 3
     struct _inter* link;
 } numNode;
 
@@ -61,7 +61,6 @@ typedef struct _tRecord {
     struct _tRecord* link;
 } tRecord;
 
-//enum _regCode {A, X, L, B, S, T, F, tmp, PC, SW} regCode;
 
 // GLOBAL VARIANTs
 HISTORY* hisHead;
@@ -137,7 +136,7 @@ int removeSpaceAroundComma(char* input);
 // ASSEMBLER FUNCTIONS
 int getRegNum(char* reg);
 
-int LDB(char** token, int lineNum, int* B);
+int LDB(char** token, int lineNum);
 void printLineinLST(numNode* pCurrent, char** token, int size, int tokenNum, int objCode, FILE* LF, int isLabel);
 
 int isWhiteSpace(char ch);
