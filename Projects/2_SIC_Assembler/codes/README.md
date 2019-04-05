@@ -25,6 +25,7 @@ sicsim> dir
 sicsim> d
 ```
 > 현재 디렉터리에 있는 파일들 출력한다.
+> **명령어 추가**
 
 ```bash
 sicsim> quit
@@ -71,3 +72,14 @@ sicsim> opcode mnemonic
 sicsim> opcodelist
 ```
 > opcode Hash Table의 내용을 출력한다.
+
+#### 추가된 명령어
+```bash
+sicsim> type filename
+```
+> **finename에 해당하는 파일을 읽어 화면에 출력한다.**
+
+```bash
+sicsim> symbol
+```
+> **가장 최근에 assemble한 파일의 symbol table을 Z-A 순서로 출력한다.
