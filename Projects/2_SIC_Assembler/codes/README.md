@@ -1,6 +1,6 @@
-SIC SHELL PROJECT
+SIC ASSEMBLER PROJECT
 =================
-1st SP Project
+2st SP Project
 --------------
 
 > ###### SP course in Sogang Univ.
