@@ -276,9 +276,16 @@ void printSymbol() {
     symNode* pMove;
     char ch[4];
     for (int i = 0; i < SYMTAB_SIZE; i++) {
-        for (int j = 0; j < 4; j++)
-            ch[j] = 'A' + i % 7 + j * 7;
-        printf("%d [%c %c %c %c]: ", i, ch[0], ch[1], ch[2], ch[3]);
+        if (i % 7 == 5 || i % 7 == 6) {
+            for (int j = 0; j < 3; j++)
+                ch[j] = 'A' + i % 7 + j * 7;
+            printf("%d [%c %c %c  ]: ", i, ch[0], ch[1], ch[2]);
+        }
+        else {
+            for (int j = 0; j < 4; j++)
+                ch[j] = 'A' + i % 7 + j * 7;
+            printf("%d [%c %c %c %c]: ", i, ch[0], ch[1], ch[2], ch[3]);
+        }
         pMove = SYMTAB[i];
         if (pMove) {
             for ( ; pMove->link; pMove = pMove->link)

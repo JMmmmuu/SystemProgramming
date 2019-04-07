@@ -246,6 +246,10 @@ int main() {
                     
                     break;
 
+                case 0x40:
+                    printSymbol();
+                    break;
+
                 case 0xA0:
                     printf("command not found: %s\n", cmd);
                     break;
@@ -294,6 +298,8 @@ int findCmd(char* cmd) {
 
     if (strcmp(cmd, "assemble") == 0) return 0x30;
     if (strcmp(cmd, "symbol") == 0) return 0x31;
+
+    if (strcmp(cmd, "printSym") == 0) return 0x40;
 
     return 0xA0;
 }
