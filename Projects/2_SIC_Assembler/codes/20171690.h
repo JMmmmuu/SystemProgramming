@@ -69,6 +69,7 @@ symNode** SYMTAB;
 numNode* numHead;
 tRecord* tRHead;
 tRecord* tRTail;
+int A, X, L, PC, SW, B, S, T, F;
 
 unsigned char* MEMORY;
 int END_ADDR;

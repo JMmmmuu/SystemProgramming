@@ -45,6 +45,7 @@ int LDB(char** token, int lineNum) {
                 return 0;
             }
         }
+        printf("Cannot load BASE register: memory not initialized at %s Address\n", token[1]);
     }
     else if ( (tmp = strToHex(token[1], 0)) != -1)
         B = tmp;

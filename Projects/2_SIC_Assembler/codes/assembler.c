@@ -6,8 +6,6 @@
  *************************************************/
 #include "20171690.h"
 
-int A, X, L, PC, SW, B, S, T, F;
-
 int assemble(char* filename) {
     FILE* asmFP = fopen(filename, "r");
     if (!asmFP) {
