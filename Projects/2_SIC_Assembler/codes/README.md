@@ -80,6 +80,11 @@ sicsim> type filename
 > **finename에 해당하는 파일을 읽어 화면에 출력한다.**
 
 ```bash
+sicsim> assemble filename
+```
+> **filename에 해당하는 assembly file을 assemble한다.**
+
+```bash
 sicsim> symbol
 ```
 > **가장 최근에 assemble한 파일의 symbol table을 Z-A 순서로 출력한다.**
