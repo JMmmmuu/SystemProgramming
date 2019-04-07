@@ -123,6 +123,7 @@ int addSym(char* label, int LOC) {
         // label exist
         return 0;
     }
+    if (label[0] < 'A' || label[0] > 'Z') return 0;
 
     // create new node
     symNode* pNew = (symNode*)malloc(sizeof(symNode));
