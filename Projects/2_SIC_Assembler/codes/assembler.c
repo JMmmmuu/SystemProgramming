@@ -144,6 +144,10 @@ int pass1(FILE* fp) {
             else {
                 // contains label, instruction, notes, ...
                 // add to symbol table
+                if (isDirective(token[1]) == 1) {
+                    printf("Error occured at [%d] line: improper use of START directive in the middle of the program\n", lineNum);
+                    return 0;
+                }
                 instructionSize = getInstructionSize(token, lineNum, 1);
                 if (instructionSize == -1) return 0;
 
