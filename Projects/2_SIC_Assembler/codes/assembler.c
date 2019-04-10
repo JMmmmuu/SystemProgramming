@@ -133,6 +133,7 @@ int pass1(FILE* fp) {
                 break;
             }
             if (isDirective(token[0]) == 1) {
+                // START directive in the middle
                 printf("Error occured at [%d] line: improper use of START directive in the middle of the program\n", lineNum);
                 return 0;
             }
@@ -207,7 +208,7 @@ int pass2(FILE* fp, char* filename) {
     while (pCurrent->skip_flag) {
         // while comment line or blank line
         fgets(line, MAX_ASM_LINE, fp);
-        fprintf(LF, "\t  %d\t\t\t%s", pCurrent->lineNum * 5, line);
+        fprintf(LF, "\t  %d\t\t\t %s", pCurrent->lineNum * 5, line);
         pCurrent = pCurrent->link;
         if (!pCurrent) {
             printf("Warning! - no content except comment/ blank lines\n");
@@ -252,8 +253,17 @@ int pass2(FILE* fp, char* filename) {
 
         if (pCurrent->skip_flag) {
             // if the  line is comment or blank
-            if (line[0] == '.') fprintf(LF, "\t  %d\t\t\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
-            else fprintf(LF, "\t  %d\t\t\t\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
+            if (line[0] == '.') fprintf(LF, "\t  %d\t\t\t %s\n", pCurrent->lineNum * 5, removeSpace(line));
+            else if (isBlankLine(line)) fprintf(LF, "\t  %d\t\t\t\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
+            else {
+                // directives with no obj code or any special action
+                line = toUpperCase(line);
+                tokenNum = tokenizeAsmFile(&token, line);
+                fprintf(LF, "\t  %d\t\t\t", pCurrent->lineNum * 5);
+                for (i = 0; i < tokenNum; i++)
+                    fprintf(LF, "\t %s", token[i]);
+                fprintf(LF, "\n");
+            }
             pCurrent = pCurrent->link;
             continue;
         }
@@ -261,7 +271,7 @@ int pass2(FILE* fp, char* filename) {
             // END directive
             if (tRHead) dequeue(OF);
             fprintf(OF, "E%06X\n", startingAddr);
-            fprintf(LF, "\t  %d\t\t\t\t\t%s\n", pCurrent->lineNum * 5, removeSpace(line));
+            fprintf(LF, "\t  %d\t\t\t\t %s\n", pCurrent->lineNum * 5, removeSpace(line));
             break;
         }
 
@@ -404,7 +414,7 @@ int pass2(FILE* fp, char* filename) {
                     case 6:     // RESW
                         fprintf(LF, "\t  %d\t   %04X\t", pCurrent->lineNum * 5, pCurrent->LOC);
                         for (i = 0; i < tokenNum; i++)
-                            fprintf(LF, "\t%s", token[i]);
+                            fprintf(LF, "\t %s", token[i]);
                         fprintf(LF, "\n");
 
                         dequeue(OF);
