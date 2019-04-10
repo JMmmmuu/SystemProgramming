@@ -777,6 +777,7 @@ void printObjCode(int size, int objCode, FILE* fp) {
         fprintf(fp, "%02X", hex);
     }
     hex = objCode % (1 << 8);
+    hex &= ONE_BYTE;
     fprintf(fp, "%02X", hex);
 }
 
