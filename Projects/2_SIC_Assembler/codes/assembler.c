@@ -242,6 +242,7 @@ int pass2(FILE* fp, char* filename) {
         startingAddr = 0;
         endAddr = pMove->LOC;
         fprintf(OF, "H      000000%06X\n", endAddr);
+        printf("Warning! - No START directive! start program at address 0x00000\n");
     }
     PC = startingAddr;
 
