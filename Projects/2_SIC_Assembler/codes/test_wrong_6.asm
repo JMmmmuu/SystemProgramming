@@ -1,3 +1,5 @@
+.       NO END DIRECTIVE
+.
 COPY    START   0
 FIRST   STL     RETADR
         LDB     #LENGTH

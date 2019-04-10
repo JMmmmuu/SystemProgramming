@@ -174,7 +174,7 @@ int pass1(FILE* fp) {
     free(token);
 
     if (!flag) {
-        printf("Error occured at [%d] line: No END Directive\n", lineNum);
+        printf("Error occured at [%d] line: Program Ended without END Directive\n", --lineNum);
         return 0;
     }
     addNum(lineNum, LOCCTR, pLast, 2);
