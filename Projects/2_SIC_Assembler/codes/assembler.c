@@ -132,6 +132,10 @@ int pass1(FILE* fp) {
                 flag = 1;
                 break;
             }
+            if (isDirective(token[0]) == 1) {
+                printf("Error occured at [%d] line: improper use of START directive in the middle of the program\n", lineNum);
+                return 0;
+            }
             if (line[0] == ' ' || line[0] == '\t') {
                 // no label
                 instructionSize = getInstructionSize(token, lineNum, 0);
