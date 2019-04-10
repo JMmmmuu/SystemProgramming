@@ -20,7 +20,7 @@
 #define SYMTAB_SIZE 28
 #define WORD_SIZE 3
 #define MAX_ASM_LINE 100
-#define MAX_OBJ_TRECORD 0xFF
+#define MAX_OBJ_TRECORD 0x1F
 
 // STRUCTUREs
 typedef struct hist {
@@ -61,6 +61,12 @@ typedef struct _tRecord {
     struct _tRecord* link;
 } tRecord;
 
+typedef struct _mRecord{
+    int pos;
+    int len;
+    struct _mRecord* link;
+} mRecord;
+
 
 // GLOBAL VARIANTs
 HISTORY* hisHead;
@@ -69,6 +75,8 @@ symNode** SYMTAB;
 numNode* numHead;
 tRecord* tRHead;
 tRecord* tRTail;
+mRecord* mRHead;
+mRecord* mRTail;
 int A, X, L, PC, SW, B, S, T, F;
 
 unsigned char* MEMORY;
@@ -163,6 +171,9 @@ void printNums();
 void enqueue(int objCode, int size, int LOC, FILE* OF);
 void dequeue(FILE* OF);
 void freeQueue();
+void addMREC(int pos, int len);
+void freeMREC();
+void printMREC(FILE* OF);
 
 
 /**************************************************

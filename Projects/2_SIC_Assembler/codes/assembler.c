@@ -271,6 +271,7 @@ int pass2(FILE* fp, char* filename) {
         if (pCurrent->e_flag) {
             // END directive
             if (tRHead) dequeue(OF);
+            printMREC(OF);
             fprintf(OF, "E%06X\n", startingAddr);
             fprintf(LF, "\t  %d\t\t\t\t %s\n", pCurrent->lineNum * 5, removeSpace(line));
             break;
@@ -710,6 +711,7 @@ int getObjCode(char** token, int* format, int type, numNode* pCurrent) {
                             return -1;
                         }
                         addr = target;
+                        addMREC(pCurrent->LOC + 1, 5);
                     }
                     else    // operand is just value of addr
                         addr = operand;

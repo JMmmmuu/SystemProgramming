@@ -323,4 +323,39 @@ void freeQueue() {
             free(pFree);
         }
     }
+    tRHead = NULL; tRTail = NULL;
+}
+
+void addMREC(int pos, int len) {
+    mRecord* pNew = (mRecord*)malloc(sizeof(mRecord));
+    pNew->pos = pos; pNew->len = len;
+    pNew->link = NULL;
+
+    if (!mRHead) {
+        mRHead = pNew;
+        mRTail = pNew;
+        return ;
+    }
+    mRTail->link = pNew;
+    mRTail = pNew;
+}
+
+void freeMREC() {
+    if (mRHead) {
+        mRecord* pFree = mRHead;
+        while (mRHead) {
+            pFree = mRHead;
+            mRHead = mRHead->link;
+            free(pFree);
+        }
+    }
+    mRHead = NULL; mRHead = NULL;
+}
+
+void printMREC(FILE* OF) {
+    if (!mRHead) return ;
+    mRecord* pMove = mRHead;
+    for ( ; pMove; pMove = pMove->link)
+        fprintf(OF, "M%06X%02X\n", pMove->pos, pMove->len);
+    freeMREC();
 }
