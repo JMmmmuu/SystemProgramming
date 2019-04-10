@@ -88,11 +88,11 @@ int pass1(FILE* fp) {
         if (isDirective(token[i]) == 1) {
             // if token[i] == "START"
             if (i+1 >= tokenNum || tokenNum == 2) {
-                printf("Error occured at [%d] line: No name or starting address\n", lineNum);
+                printf("Error occured at [%d] line: No name or starting address\n", lineNum * 5);
                 return 0;
             }
             if ( (startingAddr = strToHex(token[i+1], 0)) == -1 ) {
-                printf("Error occured at [%d] line: Wrong Starting Address\n", lineNum);
+                printf("Error occured at [%d] line: Wrong Starting Address\n", lineNum * 5);
                 return 0;
             }
             flag = 1;
@@ -134,7 +134,7 @@ int pass1(FILE* fp) {
             }
             if (isDirective(token[0]) == 1) {
                 // START directive in the middle
-                printf("Error occured at [%d] line: improper use of START directive in the middle of the program\n", lineNum);
+                printf("Error occured at [%d] line: improper use of START directive in the middle of the program\n", lineNum * 5);
                 return 0;
             }
             if (line[0] == ' ' || line[0] == '\t') {
@@ -146,14 +146,14 @@ int pass1(FILE* fp) {
                 // contains label, instruction, notes, ...
                 // add to symbol table
                 if (isDirective(token[1]) == 1) {
-                    printf("Error occured at [%d] line: improper use of START directive in the middle of the program\n", lineNum);
+                    printf("Error occured at [%d] line: improper use of START directive in the middle of the program\n", lineNum * 5);
                     return 0;
                 }
                 instructionSize = getInstructionSize(token, lineNum, 1);
                 if (instructionSize == -1) return 0;
 
                 if( !addSym(token[0], LOCCTR) ) { 
-                    printf("Error occured at [%d] line: use label already declared - %s\n", lineNum, token[0]);
+                    printf("Error occured at [%d] line: use label already declared - %s\n", lineNum * 5, token[0]);
                     return 0;
                 }
             }
@@ -175,7 +175,7 @@ int pass1(FILE* fp) {
     free(token);
 
     if (!flag) {
-        printf("Error occured at [%d] line: Program Ended without END Directive\n", --lineNum);
+        printf("Error occured at [%d] line: Program Ended without END Directive\n", (--lineNum) * 5);
         return 0;
     }
     addNum(lineNum, LOCCTR, pLast, 2);
@@ -224,7 +224,7 @@ int pass2(FILE* fp, char* filename) {
 
         startingAddr = strToHex(token[2], 0);
         if (startingAddr == -1) {
-            printf("Error occured at [%d] line: Wrong starting address - %s\n", pCurrent->lineNum, token[2]);
+            printf("Error occured at [%d] line: Wrong starting address - %s\n", (pCurrent->lineNum) * 5, token[2]);
             return 0;
         }
 
@@ -297,9 +297,11 @@ int pass2(FILE* fp, char* filename) {
         if (line[0] == ' ' || line[0] == '\t') {
             // no label
             format = opcode(token[0], 3);
+            i = 0;
             if ( (token[0])[0] == '+') {
                 format = 4;
                 token[0] += 1;
+                i = 1;
             }
             if ( format ) {
                 // There exist matching operation
@@ -307,10 +309,10 @@ int pass2(FILE* fp, char* filename) {
                 if (objCode == -1) return 0;
                 if (opcode(token[0], 4) == 0x68) {
                     // Load operand value in the B register
-                    if ( !LDB(token, pCurrent->lineNum) ) return 0;
+                    if ( !LDB(token, pCurrent->lineNum * 5) ) return 0;
                 }
 
-                if (format == 4) token[0] -= 1;
+                if (format == 4 && i == 1) token[0] -= 1;
                 printLineinLST(pCurrent, token, format, tokenNum, objCode, LF, 0);
                 enqueue(objCode, format, pCurrent->LOC, OF);
             }
@@ -321,7 +323,7 @@ int pass2(FILE* fp, char* filename) {
                 directiveNum = isDirective(token[0]);
                 if ( !directiveNum ) {
                     // wrong input
-                    printf("Error occured at [%d] line: Wrong operation/ directive\n", pCurrent->lineNum);
+                    printf("Error occured at [%d] line: Wrong operation/ directive\n", pCurrent->lineNum * 5);
                     return 0;
                 }
                 switch (directiveNum) {
@@ -334,7 +336,7 @@ int pass2(FILE* fp, char* filename) {
                         printLineinLST(pCurrent, token, size, tokenNum, objCode, LF, 0);
                         enqueue(objCode, size, pCurrent->LOC, OF);
 
-                        printf("Warning! - No label to point BYTE constant at [%d] line\n", pCurrent->lineNum);
+                        printf("Warning! - No label to point BYTE constant at [%d] line\n", pCurrent->lineNum * 5);
                         break;
                     case 4:     // WORD
                         objCode = getObjCode(&(token[0]), 0, 2, pCurrent);
@@ -343,11 +345,11 @@ int pass2(FILE* fp, char* filename) {
                         printLineinLST(pCurrent, token, 3, tokenNum, objCode, LF, 0);
                         enqueue(objCode, 3, pCurrent->LOC, OF);
 
-                        printf("Warning! - No label to point WORD constant at [%d] line\n", pCurrent->lineNum);
+                        printf("Warning! - No label to point WORD constant at [%d] line\n", pCurrent->lineNum * 5);
                         break;
                     case 5:     // RESB
                     case 6:     // RESW
-                        printf("Warning! - No label to point variable at [%d] line\n", pCurrent->lineNum);
+                        printf("Warning! - No label to point variable at [%d] line\n", pCurrent->lineNum * 5);
                         dequeue(OF);
                     case 7:
                         // No need to create opcode
@@ -360,13 +362,15 @@ int pass2(FILE* fp, char* filename) {
         else {
             // label!!
             if (tokenNum == 1) {
-                printf("Error occured at [%d] line: no operation/ directive\n", pCurrent->lineNum);
+                printf("Error occured at [%d] line: no operation/ directive\n", pCurrent->lineNum * 5);
                 return 0;
             }
             format = opcode(token[1], 3);
+            i = 0;
             if ( (token[1])[0] == '+' ) {
                 format = 4;
                 token[1] += 1;
+                i = 1;
             }
             if ( format ) {
                 // exist matching operation
@@ -375,10 +379,10 @@ int pass2(FILE* fp, char* filename) {
 
                 if (opcode(token[1], 4) == 0x68) {
                     // LOAD operand value to B register
-                    if ( !LDB(token+1, pCurrent->lineNum) ) return 0;
+                    if ( !LDB(token+1, pCurrent->lineNum * 5) ) return 0;
                 }
 
-                if (format == 4) token[1] -= 1;
+                if (format == 4 && i == 1) token[1] -= 1;
                 printLineinLST(pCurrent, token, format, tokenNum, objCode, LF, 1);
                 enqueue(objCode, format, pCurrent->LOC, OF);
             }
@@ -478,13 +482,13 @@ int getInstructionSize(char** token, int lineNum, int isLabel) {
 
             default:
                 // wrong input
-                printf("Error occured at [%d] line: No matching operation code - %s\n", lineNum, token[opIdx]);
+                printf("Error occured at [%d] line: No matching operation code - %s\n", lineNum * 5, token[opIdx]);
                 return -1;
         }
         if (size == -1) {
             // wrong syntax. 
             // ex) no input || no hexa, ...
-            printf("Error occured at [%d] line: Wrong operand used\n", lineNum);
+            printf("Error occured at [%d] line: Wrong operand used\n", lineNum * 5);
             return -1;
         }
     }
@@ -526,7 +530,7 @@ int getObjCode(char** token, int* format, int type, numNode* pCurrent) {
                 operandStr[lc] = strtok(NULL, ",");
 
             if ( !operandStr[1] ) {
-                printf("Error occured at [%d] line: Wrong Syntax\n", pCurrent->lineNum);
+                printf("Error occured at [%d] line: Wrong Syntax\n", pCurrent->lineNum * 5);
                 return -1;
             }
         }
@@ -599,20 +603,20 @@ int getObjCode(char** token, int* format, int type, numNode* pCurrent) {
                             b = 0; p = 1;
                         }
                         else {
-                            if (B == -1) printf("Warning! - incorrect access to B register at [%d] line: B register uninitialized\n", pCurrent->lineNum);
+                            if (B == -1) printf("Warning! - incorrect access to B register at [%d] line: B register uninitialized\n", pCurrent->lineNum * 5);
                             else if (target - B >= 0 && target- B < 0x1000) {
                                 // B relative
                                 disp = target - B;
                                 b = 1; p = 0;
                                 if (B == -1) {
                                     // Base register uninitialized
-                                    printf("Warning! - B register used at [%d] line without ininitializing.\n",  pCurrent->lineNum);
+                                    printf("Warning! - B register used at [%d] line without ininitializing.\n",  pCurrent->lineNum * 5);
                                 }
                             }
                             if (B == -1 || !(target - B >= 0 && target - B < 0x1000)) {
                                 // format 4
                                 *format = 4;
-                                printf("Warning! - format 4 used without '+' sign at [%d] line\n", pCurrent->lineNum);
+                                printf("Warning! - format 4 used without '+' sign at [%d] line\n", pCurrent->lineNum * 5);
                                 b = 0; p = 0; e = 1;
                                 addr = target;
                                 
@@ -629,7 +633,7 @@ int getObjCode(char** token, int* format, int type, numNode* pCurrent) {
                         // operand is just value of addr
                         operand = strToHex(sym, 0);
                         if (operand == -1) {
-                            printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", pCurrent->lineNum, sym);
+                            printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", pCurrent->lineNum * 5, sym);
                             return -1;
                         }
                         b = 0; p = 0;
@@ -698,11 +702,11 @@ int getObjCode(char** token, int* format, int type, numNode* pCurrent) {
                         // find symbol
                         target = findSym(sym);
                         if (target == -1) {
-                            printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", pCurrent->lineNum, sym);
+                            printf("Error occured at [%d] line: incorrect use of undeclared label - %s\n", pCurrent->lineNum * 5, sym);
                             return -1;
                         }
                         if (target < 0 || target > 0xFFFFFF) {
-                            printf("Error occured at [%d] line: incorrect addr value\n", pCurrent->lineNum);
+                            printf("Error occured at [%d] line: incorrect addr value\n", pCurrent->lineNum * 5);
                             return -1;
                         }
                         addr = target;
@@ -746,7 +750,7 @@ int getObjCode(char** token, int* format, int type, numNode* pCurrent) {
             }
         }
         else {
-            printf("Error occured at [%d] line: Wrong Syntax for BYTE Const\n", pCurrent->lineNum);
+            printf("Error occured at [%d] line: Wrong Syntax for BYTE Const\n", pCurrent->lineNum * 5);
             return -1;
         }
     }
