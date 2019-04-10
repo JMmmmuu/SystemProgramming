@@ -711,7 +711,7 @@ int getObjCode(char** token, int* format, int type, numNode* pCurrent) {
                             return -1;
                         }
                         addr = target;
-                        addMREC(pCurrent->LOC + 1, 5);
+                        addMREC(pCurrent->LOC + 1 - numHead->LOC, 5);
                     }
                     else    // operand is just value of addr
                         addr = operand;
