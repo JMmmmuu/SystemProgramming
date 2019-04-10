@@ -73,13 +73,17 @@ void printLineinLST(numNode* pCurrent, char** token, int size, int tokenNum, int
 
     int i;
     for (i = 0; i < tokenNum; i++) {
-        if (token[i][0] == '+' || token[i][0] == '#' || token[i][0] == '@')
+        if (token[i][0] == '+' || token[i][0] == '#' || token[i][0] == '@') {
             fprintf(LF, "\t%s", token[i]);
-        else fprintf(LF, "\t %s", token[i]);
-        //if ( (int)strlen(token[i]) < 8 ) fprintf(LF, "\t");
+            token[i] += 1;
+        }
+        else {
+            if (i > 0 && (int)strlen(token[i-1]) >= 7) fprintf(LF, " %s", token[i]);
+            else fprintf(LF, "\t %s", token[i]);
+        }
     }
     if (tokenNum > 0)
-        if ( (int)strlen(token[--i]) < 8 ) fprintf(LF, "\t");
+        if ( (int)strlen(token[--i]) < 7 ) fprintf(LF, "\t");
     if (tokenNum == 1 || ( isLabel && tokenNum == 2))
         fprintf(LF, "\t");
     fprintf(LF, "\t\t");
