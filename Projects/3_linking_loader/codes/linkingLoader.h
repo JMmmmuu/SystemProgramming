@@ -19,9 +19,15 @@ typedef struct _EShead {
     ESnode* link;
 } EShead;
 
+typedef struct _referNode {
+    int ref;
+    int addr;
+    struct _referNode* link;
+} referNode;
 
 int PROGADDR;
 EShead* ESTAB;
+referNode* referHead;
 
 int progaddr(char* addr);
 int loader(char* param);
@@ -29,9 +35,13 @@ int loader(char* param);
 void loadMap(int objCnt);
 
 void addES(EShead* ES, char* name, char* loc);
-void haltLinkingLoader(char** objFile, FILE** objFP, EShead* ESTAB, char* tmp);
+void addRN(char* ref, int addr);
+int searchESTAB(char* name, int objCnt);
+
+void haltLinkingLoader(char** objFile, FILE** objFP, EShead* ESTAB);
 
 
 
 int isObjFile(char* file);
 void printES(int objCnt);
+void freeRN();

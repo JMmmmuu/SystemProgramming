@@ -47,14 +47,6 @@ int loader(char* param) {
     FILE** objFP = (FILE**)malloc(objCnt * sizeof(FILE*));
     
     for (i = 0; i < objCnt; i++) {
-        // wrong file name
-        /** if ( !isObjFile(objFile[i]) ) { */
-        /**     printf("invaild file name - %s\n", objFile[i]); */
-        /**     free(objFile); */
-        /**     free(objFP); */
-        /**     return 0; */
-        /** } */
-
         objFP[i] = fopen(objFile[i], "r");
         if ( !objFP[i] ) {
             printf("FILE NOT FOUND - %s\n", objFile[i]);
@@ -70,26 +62,28 @@ int loader(char* param) {
     /**************************************************
      ***************** LINKING & LOADING **************
      **************************************************/
+
+    // PASS 1
     ESTAB = (EShead*)malloc(objCnt * sizeof(EShead));
-    char* tmp = (char*)malloc(10 * sizeof(char));
     char line[MAX_LINE_LEN];
-    char name[7], loc[7];
+    char tmp1[7], tmp2[7];
     int charNum;
+    int refAddr;
     for (int CS = 0; CS < objCnt; CS++) {
         fgets(line, MAX_LINE_LEN, objFP[CS]);
         if (line[0] != 'H') {
             // wrong obj file
             printf("Error occured in [%s] - NO H RECORD\n", objFile[CS]);
-            haltLinkingLoader(objFile, objFP, ESTAB, tmp);
+            haltLinkingLoader(objFile, objFP, ESTAB);
             return 0;
         }
         strncpy(ESTAB[CS].CSname, line + 1, 6);
-        strncpy(loc, line + 7, 6);
-        ESTAB[CS].CSaddr = strToHex(loc, 0) + PROGADDR;
+        strncpy(tmp2, line + 7, 6);
+        ESTAB[CS].CSaddr = strToHex(tmp2, 0) + PROGADDR;
         for (i = 0; i < CS; i++)
             ESTAB[CS].CSaddr += ESTAB[i].CSlength;
-        strncpy(loc, line + 13, 6);
-        ESTAB[CS].CSlength = strToHex(loc, 0);
+        strncpy(tmp2, line + 13, 6);
+        ESTAB[CS].CSlength = strToHex(tmp2, 0);
         ESTAB[CS].link = NULL;
 
         if ( !validAddr(ESTAB[CS].CSaddr) ) {
@@ -97,67 +91,78 @@ int loader(char* param) {
             return 0;
         }
 
-
-        
-        /**  */
-        /** if (fgetc(objFP[CS]) != 'H') { */
-        /**     // wrong obj file */
-        /**     printf("Error occured in [%s] - NO H RECORD\n", objFile[CS]); */
-        /**     haltLinkingLoader(objFile, objFP, ESTAB, tmp); */
-        /**     return 0; */
-        /** } */
-        /** // Get information from H Record */
-        /** fgets(ESTAB[CS].CSname, 6, objFP[CS]); */
-        /** fgets(tmp, 6, objFP[CS]);  */
-        /** printf("%s\n", tmp); */
-        /** ESTAB[CS].CSaddr = strToHex(tmp, 0) + PROGADDR; */
-        /** for (i = 0; i < CS; i++) */
-        /**     ESTAB[CS].CSaddr += ESTAB[i].CSlength; */
-        /** fgets(tmp, 6, objFP[CS]); */
-        /** ESTAB[CS].CSlength = strToHex(tmp, 0); */
-        /** ESTAB[CS].link = NULL; */
-        /**  */
-        /** printf("%s %d %d\n", ESTAB[CS].CSname, ESTAB[CS].CSaddr, ESTAB[CS].CSlength); */
-        /** if ( !validAddr(ESTAB[CS].CSaddr) ) { */
-        /**     // invalid start address */
-        /**     printf("Invalid Address. Please set PROGADDR.\n"); */
-        /**     haltLinkingLoader(objFile, objFP, ESTAB, tmp); */
-        /**     return 0; */
-        /** } */
-        /**  */
-
         memset(line, '\0', sizeof(line));
         fgets(line, MAX_LINE_LEN, objFP[CS]);
         while (line[0] == 'D') {
             charNum = 1;
 
             while (charNum < (int)strlen(line) - 1) {
-                strncpy(name, line + charNum, 6);
+                strncpy(tmp1, line + charNum, 6);
                 charNum += 6;
-                strncpy(loc, line + charNum, 6);
-                name[6] = loc[6] = '\0';
+                strncpy(tmp2, line + charNum, 6);
+                tmp1[6] = tmp2[6] = '\0';
                 charNum += 6;
 
-                addES(&(ESTAB[CS]), name, loc);
+                addES(&(ESTAB[CS]), tmp1, tmp2);
             }
 
             memset(line, '\0', sizeof(line));
             fgets(line, MAX_LINE_LEN, objFP[CS]);
         }
-        
-
-
-
-
-
     }
 
 
-    //printES(objCnt);
+    // PASS 2
+    int currentAddr = 0;
+    for (int CS = 0; CS < objCnt; CS++) {
+        fseek(objFP[CS], 0, SEEK_SET);
+        // skip for H record & D record
+        do {
+            fgets(line, MAX_LINE_LEN, objFP[CS]);
+        } while (line[0] == 'D' || line[0] == 'H');
+
+        if (line[0] == 'R') {
+            charNum = 1;
+            while (charNum < (int)strlen(line) - 1) {
+                strncpy(tmp1, line + charNum, 2);
+                charNum += 2;
+                strncpy(tmp2, line + charNum, 6);
+                charNum += 6;
+                tmp1[2] = tmp2[6] = '\0';
+
+                refAddr = (searchESTAB(tmp2, objCnt));
+                if (refAddr == -1) {
+                    printf("No External Refernece defined\n");
+                    return 0;
+                }
+
+                addRN(tmp1, refAddr);
+
+
+
+
+
+            }
+            
+        }
+
+
+        
+
+
+        freeRN();
+    }
+    
+
+
+
+
+
+
     loadMap(objCnt);
 
 
-    haltLinkingLoader(objFile, objFP, ESTAB, tmp);
+    haltLinkingLoader(objFile, objFP, ESTAB);
     return 1;
 }
 
@@ -197,6 +202,32 @@ void addES(EShead* ES, char* name, char* loc) {
     ptmp->link = pNew;
 }
 
+void addRN(char* ref, int addr) {
+    int refNum = strToDecimal(ref);
+    referNode* pNew = (referNode*)malloc(sizeof(referNode));
+    pNew->ref = refNum; pNew->addr = addr;
+    pNew->link = NULL;
+
+    pNew->link = referHead;
+    referHead = pNew;
+}
+
+int searchESTAB(char* name, int objCnt) {
+    // search ESTAB
+    // parameter: External Symbol name
+    // return LOC
+    ESnode* ptmp;
+    for (int i = 0; i < objCnt; i++) {
+        ptmp = ESTAB[i].link;
+        while (ptmp) {
+            if (strcmp(ptmp->name, name) == 0) return ptmp->LOC;
+            ptmp = ptmp->link;
+        }
+    }
+    
+    return -1;
+}
+
 void printES(int objCnt) {
     for (int i = 0; i < objCnt; i++) {
         printf("[%s %06X %06X] ", ESTAB[i].CSname, ESTAB[i].CSaddr, ESTAB[i].CSlength);
@@ -222,7 +253,16 @@ int isObjFile(char* file) {
     return 1;
 }
 
-void haltLinkingLoader(char** objFile, FILE** objFP, EShead* ESTAB, char* tmp) {
+void haltLinkingLoader(char** objFile, FILE** objFP, EShead* ESTAB) {
     free(objFile); free(objFP);
-    free(ESTAB); free(tmp);
+    free(ESTAB);
+}
+
+void freeRN() {
+    referNode* pFree;
+    while (referHead) {
+        pFree = referHead;
+        referHead = referHead->link;
+        free(pFree);
+    }
 }
