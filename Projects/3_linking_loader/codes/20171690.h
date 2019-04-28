@@ -68,7 +68,7 @@ typedef struct _mRecord{
 } mRecord;
 
 
-// GLOBAL VARIANTs
+// GLOBAL VARIABLEs
 HISTORY* hisHead;
 opNode** opTable;
 symNode** SYMTAB;

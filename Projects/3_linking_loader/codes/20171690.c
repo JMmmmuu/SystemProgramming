@@ -5,6 +5,7 @@
  ******************* ~ 190506 ********************
  *************************************************/
 #include "20171690.h"
+#include "linkingLoader.h"
 
 int main() {
     init();
@@ -250,6 +251,20 @@ int main() {
                     printSymbol();
                     break;
 
+                case 0x50:          // progaddr address
+                    params = strtok(NULL, "\0");
+                    if (!params) {
+                        PROGADDR = 0;
+                        printf("PROGADDR RESET\n");
+                        break;
+                    }
+
+                    params = removeSpace(params);
+                    PROGADDR = strToDecimal(params);
+                    printf("PROGADDR SET\n");
+                    
+                    break;
+
                 case 0xA0:
                     printf("command not found: %s\n", cmd);
                     break;
@@ -276,6 +291,8 @@ void init() {
     MEMORY = (unsigned char*)calloc(MEMORY_SIZE, sizeof(unsigned char));
     END_ADDR = 0;
 
+    PROGADDR = 0;
+
     readOpTable();
 }
 
@@ -300,6 +317,9 @@ int findCmd(char* cmd) {
     if (strcmp(cmd, "symbol") == 0) return 0x31;
 
     if (strcmp(cmd, "printSym") == 0) return 0x40;
+
+
+    if (strcmp(cmd, "progaddr") == 0) return 0x50;
 
     return 0xA0;
 }
