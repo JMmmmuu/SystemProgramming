@@ -260,8 +260,7 @@ int main() {
                     }
 
                     params = removeSpace(params);
-                    PROGADDR = strToDecimal(params);
-                    printf("PROGADDR SET\n");
+                    progaddr(params);
                     
                     break;
 

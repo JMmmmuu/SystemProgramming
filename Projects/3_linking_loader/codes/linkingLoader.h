@@ -20,3 +20,5 @@ typedef struct _EShead {
 
 int PROGADDR;
 EShead ESTAB[3];
+
+int progaddr(char* addr);
