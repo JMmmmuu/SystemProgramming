@@ -114,6 +114,8 @@ int loader(char* param) {
 
     // PASS 2
     int currentAddr = 0;
+    int tLen;
+    int memVal;
     for (int CS = 0; CS < objCnt; CS++) {
         fseek(objFP[CS], 0, SEEK_SET);
         // skip for H record & D record
@@ -137,13 +139,33 @@ int loader(char* param) {
                 }
 
                 addRN(tmp1, refAddr);
-
-
-
-
-
             }
             
+        }
+
+        fgets(line, MAX_LINE_LEN, objFP[CS]);
+        memset(tmp1, '\0', sizeof(tmp1));
+        memset(tmp2, '\0', sizeof(tmp2));
+        while (line[0] == 'T') {
+            currentAddr = ESTAB[CS].CSaddr;
+            charNum = 1;
+            strncpy(tmp1, line + charNum, 6);       // start addr of T record
+            charNum += 6;
+            currentAddr += strToHex(tmp1, 0);
+
+            strncpy(tmp1, line + charNum, 2);       // length of T record
+            tLen = strToHex(tmp1, 0);
+            charNum += 2;
+
+            while (charNum < tLen) {
+                memset(tmp2, '\0', sizeof(tmp2));
+                strncpy(tmp2, line + charNum, 2);       // get one byte
+                charNum +=2;
+
+                memVal = strToHex(tmp2, 0);
+                if ( !setMem(currentAddr + charNum - 9, memVal) )
+                    return 0;
+            }
         }
 
 
@@ -183,6 +205,29 @@ void loadMap(int objCnt) {
 
     printf("\t\t ---------------------------------------------------\n");
     printf("\t\t \t\t\t\ttotal length\t%04X\n", len);
+}
+
+int setMem(int addr, int val) {
+    // set Memory to value
+    // simailar with EDIT func in MEMORY.c
+    // parameter as int
+    // if success, return 1
+    // else, return 0
+    if (val == -1) {
+        // in case OBJ FILE has error
+        printf("Error occured in obj file\n");
+        return 0;
+    }
+
+    if ( !validAddr(addr) ) {
+        printf("Segmentation falut!\n");
+        return 0;
+    }
+
+    unsigned char value = val & ONE_BYTE;
+    memcpy(MEMORY + addr, &value, 1);
+
+    return 1;
 }
 
 void addES(EShead* ES, char* name, char* loc) {

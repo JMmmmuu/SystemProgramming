@@ -34,6 +34,8 @@ int loader(char* param);
 
 void loadMap(int objCnt);
 
+int setMem(int addr, int val);
+
 void addES(EShead* ES, char* name, char* loc);
 void addRN(char* ref, int addr);
 int searchESTAB(char* name, int objCnt);
