@@ -218,7 +218,7 @@ int main() {
                         break;
                     }
 
-                    if (!opcodeList())
+                    if ( !opcodeList() )
                         printf("There's no opcode.txt in the directory\n");
                     else
                         addHistory(input);
@@ -242,7 +242,7 @@ int main() {
                         printf("symbol: '%s' is an invalid option. See 'h[elp]'\n", removeSpace(params));
                         break;
                     }
-                    if (symbol())
+                    if ( symbol() )
                         addHistory(input);
                     
                     break;
@@ -260,9 +260,25 @@ int main() {
                     }
 
                     params = removeSpace(params);
-                    progaddr(params);
+                    if ( progaddr(params) )
+                        addHistory(input);
                     
                     break;
+
+                case 0x51:          // loader obj obj obj
+                    params = strtok(NULL, "\0");
+                    if (!params) {
+                        // No parameters at all
+                        printf("Syntax Error. See 'h[elp]'\n");
+                        break;
+                    }
+
+                    params = removeSpace(params);
+                    if ( loader(params) )
+                        addHistory(input);
+                    break;
+
+
 
                 case 0xA0:
                     printf("command not found: %s\n", cmd);
@@ -319,6 +335,7 @@ int findCmd(char* cmd) {
 
 
     if (strcmp(cmd, "progaddr") == 0) return 0x50;
+    if (strcmp(cmd, "loader") == 0) return 0x51;
 
     return 0xA0;
 }

@@ -22,3 +22,6 @@ int PROGADDR;
 EShead ESTAB[3];
 
 int progaddr(char* addr);
+int loader(char* param);
+
+int isObjFile(char* file);
