@@ -19,9 +19,13 @@ typedef struct _EShead {
 
 
 int PROGADDR;
-EShead ESTAB[3];
+EShead* ESTAB;
 
 int progaddr(char* addr);
 int loader(char* param);
+
+void haltLinkingLoader(char** objFile, FILE** objFP, EShead* ESTAB, char* tmp);
+
+
 
 int isObjFile(char* file);

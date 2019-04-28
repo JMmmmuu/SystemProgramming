@@ -62,18 +62,59 @@ int loader(char* param) {
         }
     }
     if (flag) {
-        free(objFile);
-        free(objFP);
+        free(objFile); free(objFP);
         return 0;
+    }
+
+
+    /**************************************************
+     ***************** LINKING & LOADING **************
+     **************************************************/
+    ESTAB = (EShead*)malloc(objNum * sizeof(EShead));
+    char* tmp = (char*)malloc(10 * sizeof(char));
+    for (int CS = 0; CS < objNum; CS++) {
+        if (fgetc(objFP[CS]) != 'H') {
+            // wrong obj file
+            printf("Error occured in [%s] - NO H RECORD\n", objFile[CS]);
+            haltLinkingLoader(objFile, objFP, ESTAB, tmp);
+            return 0;
+        }
+        // Get information from H Record
+        fgets(removeSpace(ESTAB[CS].CSname), 6, objFP[CS]);
+        fgets(tmp, 6, objFP[CS]); 
+        ESTAB[CS].CSaddr = strToHex(tmp, 0) + PROGADDR;
+        for (i = 0; i < CS; i++)
+            ESTAB[CS].CSaddr += ESTAB[i].CSlength;
+        fgets(tmp, 6, objFP[CS]);
+        ESTAB[CS].CSlength = strToHex(tmp, 0);
+
+        if ( !validAddr(ESTAB[CS].CSaddr) ) {
+            // invalid start address
+            printf("Invalid Address. Please set PROGADDR.\n");
+            haltLinkingLoader(objFile, objFP, ESTAB, tmp);
+            return 0;
+        }
+
+
+
+
+
+
+
+
+
+
     }
 
 
 
 
-
-
+    haltLinkingLoader(objFile, objFP, ESTAB, tmp);
     return 1;
 }
+
+
+
 
 
 int isObjFile(char* file) {
@@ -87,4 +128,9 @@ int isObjFile(char* file) {
     if ( strcmp(file + ptr, ".obj") != 0 ) return 0;
 
     return 1;
+}
+
+void haltLinkingLoader(char** objFile, FILE** objFP, EShead* ESTAB, char* tmp) {
+    free(objFile); free(objFP);
+    free(ESTAB); free(tmp);
 }
