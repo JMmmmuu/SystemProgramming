@@ -86,6 +86,10 @@ int edit(char* address, char* value) {
         printf("Incorrect input. Please text again\n");
         return 0;
     }
+    if ( !validAddr(addr) ) {
+        printf("Invalid Address range.\n");
+        return 0;
+    }
 
     if (val > 0xFF) {
         printf("Invalid value. Too big!\n");
