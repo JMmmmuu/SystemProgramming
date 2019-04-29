@@ -133,8 +133,8 @@ int loader(char* param) {
                         return 0;
                     break;
                 case 'M':       // MODIFICATION Record
-                    /** if ( !MRecord(line, ESTAB[CS], objFile[CS]) ) */
-                    /**     return 0; */
+                    if ( !MRecord(line, ESTAB[CS], objFile[CS]) )
+                        return 0;
                     break;
                 case 'E':       // END Record
                     flag = 1;
@@ -169,7 +169,7 @@ void loadMap(int objCnt) {
     int len = 0;
     printf("\t\t control\tsymbol\t\taddress\t\tlength\n");
     printf("\t\t section\tname\n");
-    printf("\t\t ---------------------------------------------------\n");
+    printf("\t\t --------------------------------------------------------\n");
 
     for (int i = 0; i < objCnt; i++) {
         printf("\t\t %s\t\t\t\t%04X\t\t%04X\n", ESTAB[i].CSname, ESTAB[i].CSaddr, ESTAB[i].CSlength);
@@ -180,7 +180,7 @@ void loadMap(int objCnt) {
         }
     }
 
-    printf("\t\t ---------------------------------------------------\n");
+    printf("\t\t --------------------------------------------------------\n");
     printf("\t\t \t\t\t\ttotal length\t%04X\n", len);
 }
 
@@ -309,8 +309,6 @@ int TRecord(char* line, EShead CShead, char* file) {
         return 0;
     }
 
-    printf("%06X %02X\t\t", currentAddr, tLen);
-
     int setPtr = 0;
     while (setPtr < tLen) {
         if (charPtr >= (int)strlen(line)) {
@@ -322,11 +320,9 @@ int TRecord(char* line, EShead CShead, char* file) {
         charPtr +=2;
 
         memVal = strToHex(tmp, 0);
-        printf("%02X ", memVal);
-        if ( !setMem(currentAddr + setPtr++, memVal) )
+        if ( !setMem(currentAddr + setPtr++, memVal, file) )
             return 0;
     }
-    printf("\n");
 
     return 1;
 }
@@ -347,10 +343,17 @@ int MRecord(char* line, EShead CShead, char* file) {
     strncpy(_mAddr, line + charPtr, 6);       // addr to modify
     charPtr += 6;
     mAddr = strToHex(_mAddr, 0);
+    if (mAddr == -1) {
+        printf("Error occred in file [%s] - Wrong address in M Record: %s\n", file, _mAddr);
+        return 0;
+    }
 
     strncpy(tmp, line + charPtr, 2);       // length to modify
     charPtr += 2;
     mLen = strToHex(tmp, 0);
+    if (mLen == -1) {
+        printf("Error occured in file [%s] - Wrong format for length to be modified in M Record: %s\n", file, tmp);
+    }
 
     memset(tmp, '\0', sizeof(tmp));
     strncpy(tmp, line + charPtr + 1, 2);       // Reference number
@@ -362,33 +365,29 @@ int MRecord(char* line, EShead CShead, char* file) {
     }
 
     int prevVal = 0;
+    mAddr += CShead.CSaddr;
+
     prevVal += (*(MEMORY + mAddr) << 16);
     prevVal += (*(MEMORY + mAddr + 1) << 8);
     prevVal += (*(MEMORY + mAddr + 2));
 
     mVal = (line[charPtr] == '+') ? prevVal + mVal : prevVal - mVal;
 
-    setMem(CShead.CSaddr + mAddr, mVal >> 16);
-    setMem(CShead.CSaddr + mAddr + 1, (mVal >> 8) % (2 << 8));
-    setMem(CShead.CSaddr + mAddr + 2, mVal % (2 << 8));
+    setMem(mAddr, mVal >> 16, file);
+    setMem(mAddr + 1, (mVal % (2 << 16)) >> 8, file);
+    setMem(mAddr + 2, mVal % (2 << 8), file);
 
     return 1;
 }
 
-int setMem(int addr, int val) {
+int setMem(int addr, int val, char* file) {
     // set Memory to value
     // simailar with EDIT func in MEMORY.c
     // parameter as int
     // if success, return 1
     // else, return 0
-    if (val == -1) {
-        // in case OBJ FILE has error
-        printf("Error occured in obj file\n");
-        return 0;
-    }
-
     if ( !validAddr(addr) ) {
-        printf("Segmentation falut!\n");
+        printf("Error occured in file [%s] - Segmentation falut!\n", file);
         return 0;
     }
 

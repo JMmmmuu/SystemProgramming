@@ -39,7 +39,7 @@ int RRecord(char* line, int objCnt, char* file);
 int TRecord(char* line, EShead CShead, char* file);
 int MRecord(char* line, EShead CShead, char* file);
 
-int setMem(int addr, int val);
+int setMem(int addr, int val, char* file);
 
 void addES(EShead* ES, char* name, char* loc);
 void addRN(char* ref, int addr);
