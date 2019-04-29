@@ -173,6 +173,7 @@ int addSym(char* label, int LOC) {
 }
 
 void freeSymTab() {
+    if (!SYMTAB) return;
     symNode* pFree, *ptmp;
     for (int i = 0; i < SYMTAB_SIZE; i++) {
         ptmp = SYMTAB[i];
