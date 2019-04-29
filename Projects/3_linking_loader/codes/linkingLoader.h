@@ -33,7 +33,7 @@ int progaddr(char* addr);
 int loader(char* param);
 
 void loadMap(int objCnt);
-int HRecord();
+int HRecord(char* line, int currentCS, char* file);
 int DRecord();
 int RRecord(char* line, int objCnt);
 int TRecord(char* line, EShead CShead);

@@ -70,27 +70,19 @@ int loader(char* param) {
     int charNum;
     int refAddr;
     for (int CS = 0; CS < objCnt; CS++) {
-        fgets(line, MAX_LINE_LEN, objFP[CS]);
+        fgets(line, MAX_LINE_LEN, objFP[CS]);       // get first line
 
         if (line[0] != 'H') {
             // wrong obj file
-            printf("Error occured in [%s] - NO H RECORD\n", objFile[CS]);
+            printf("Error occured in file [%s] - NO H RECORD\n", objFile[CS]);
             haltLinkingLoader(objFile, objFP, ESTAB);
             return 0;
         }
-        strncpy(ESTAB[CS].CSname, line + 1, 6);
-        strncpy(tmp2, line + 7, 6);
-        ESTAB[CS].CSaddr = strToHex(tmp2, 0) + PROGADDR;
-        for (i = 0; i < CS; i++)
-            ESTAB[CS].CSaddr += ESTAB[i].CSlength;
-        strncpy(tmp2, line + 13, 6);
-        ESTAB[CS].CSlength = strToHex(tmp2, 0);
-        ESTAB[CS].link = NULL;
-
-        if ( !validAddr(ESTAB[CS].CSaddr) ) {
-            printf("Invalid Address. Please set PROGADDR\n");
+        if ( !HRecord(line, CS, objFile[CS]) ) {
+            haltLinkingLoader(objFile, objFP, ESTAB);
             return 0;
         }
+
 
         memset(line, '\0', sizeof(line));
         fgets(line, MAX_LINE_LEN, objFP[CS]);
@@ -114,34 +106,29 @@ int loader(char* param) {
 
 
     // PASS 2
-    int currentAddr = 0;
-    int tLen, mLen;
-    int memVal, mVal, prevVal;
-    int mAddr;
     for (int CS = 0; CS < objCnt; CS++) {
         fseek(objFP[CS], 0, SEEK_SET);
         addRN("01", ESTAB[CS].CSaddr);
 
-        // skip for H record & D record
-        do {
+        while (1) {
             fgets(line, MAX_LINE_LEN, objFP[CS]);
-        } while (line[0] == 'H' || line[0] == 'D');
-
-        do {
             switch (line[0]) {
-                case 'R':
+                case 'H': case 'D':
+                    // skip for H record & D records
+                    break;
+                case 'R':        // REFER Record
                     if ( !RRecord(line, objCnt) )
                         return 0;
                     break;
-                case 'T':
+                case 'T':       // TEXT Record
                     if ( !TRecord(line, ESTAB[CS]) )
                         return 0;
                     break;
-                case 'M':
+                case 'M':       // MODIFICATION Record
                     if ( !MRecord(line, ESTAB[CS]) )
                         return 0;
                     break;
-                case 'E':
+                case 'E':       // END Record
 
                 default:
                     printf("Error occured in OBJ file\n");
@@ -150,42 +137,8 @@ int loader(char* param) {
             }
 
             memset(line, '\0', sizeof(line));
-            fgets(line, MAX_LINE_LEN, objFP[CS]);
-        } while (1);
-        
-
-        if (line[0] == 'M') {
-            charNum = 1;
-            strncpy(tmp1, line + charNum, 6);       // addr to modify
-            charNum += 6;
-            mAddr = strToHex(tmp1, 0);
-            memset(tmp1, '\0', sizeof(tmp1));
-
-            strncpy(tmp1, line + charNum, 2);       // length to modify
-            charNum += 2;
-            mLen = strToHex(tmp1, 0);
-
-            strncpy(tmp2, line + charNum + 1, 2);       // Reference number
-
-            mVal = searchRN(tmp2);
-            if (mVal == -1) {
-                printf("Cannot find reference number at %06X - %s\n", mAddr, tmp2);
-                return 0;
-            }
-
-            prevVal = 0;
-            prevVal += (*(MEMORY + mAddr) << 16);
-            prevVal += (*(MEMORY + mAddr + 1) << 8);
-            prevVal += (*(MEMORY + mAddr + 2));
-
-            mVal = (line[charNum] == '+') ? prevVal + mVal : prevVal - mVal;
-
-            setMem(ESTAB[CS].CSaddr + mAddr, mVal >> 16);
-            setMem(ESTAB[CS].CSaddr + mAddr + 1, (mVal >> 8) % (2 << 8));
-            setMem(ESTAB[CS].CSaddr + mAddr + 2, mVal % (2 << 8));
         }
-
-
+        
         
 
 
@@ -224,21 +177,61 @@ void loadMap(int objCnt) {
     printf("\t\t \t\t\t\ttotal length\t%04X\n", len);
 }
 
+int HRecord(char* line, int currentCS, char* file) {
+    // ACTION for H Record
+    // save informations about Control Section
+    // if success, return 1
+    // else, return 0;
+    if ( (int)strlen(line) < 19 ) {
+        printf("Error occured in file [%s] - wrong formate in H Record\n", file);
+        return 0;
+    }
+
+    int charPtr = 1;
+    strncpy(ESTAB[currentCS].CSname, line + charPtr, 6);        // get Control Section Name
+    charPtr += 6;
+
+    char tmp[7];
+
+    strncpy(tmp, line + charPtr, 6);            // get starting address of current Control Section
+    charPtr += 6;
+    int csAddr = strToHex(tmp, 0);
+    if (csAddr == -1) {
+        printf("Error occured in file [%s] - wrong Starting Address in H Record\n", file);
+        return 0;
+    }
+    ESTAB[currentCS].CSaddr = csAddr + PROGADDR;
+    for (int i = 0; i < currentCS; i++)
+        ESTAB[currentCS].CSaddr += ESTAB[i].CSlength;
+
+    memset(tmp, '\0', sizeof(tmp));
+    strncpy(tmp, line + charPtr, 6);            // get length of obj file
+    ESTAB[currentCS].CSlength = strToHex(tmp, 0);
+    ESTAB[currentCS].link = NULL;
+
+    if ( !validAddr(ESTAB[currentCS].CSaddr) ) {
+        printf("Error occured in file [%s] - Invalid Address in H Record. Please set PROGADDR\n", file);
+        return 0;
+    }
+
+    return 1;
+}
+
 int RRecord(char* line, int objCnt) {
     // ACTION for R Record
     // build Reference Number list
     // if error occured, return 0
     // else, return 1
-    int charNum = 1;
+    int charPtr = 1;
     int refAddr;
     char referenceNum[3], referenceName[7];
-    while (charNum < (int)strlen(line) - 1) {
+    while (charPtr < (int)strlen(line) - 1) {
         memset(referenceNum, '\0', sizeof(referenceNum));
         memset(referenceName, '\0', sizeof(referenceName));
-        strncpy(referenceNum, line + charNum, 2);
-        charNum += 2;
-        strncpy(referenceName, line + charNum, 6);
-        charNum += 6;
+        strncpy(referenceNum, line + charPtr, 2);
+        charPtr += 2;
+        strncpy(referenceName, line + charPtr, 6);
+        charPtr += 6;
 
         refAddr = (searchESTAB(referenceName, objCnt));
         if (refAddr == -1) {
@@ -254,27 +247,29 @@ int RRecord(char* line, int objCnt) {
 
 int TRecord(char* line, EShead CShead) {
     // ACTION for T Record
-
-    int currentAddr, charNum = 1;
+    // Set Memory Value
+    // if error occured, return 0
+    // else, return 1
+    int currentAddr, charPtr = 1;
     char strAddr[7], tmp[3];
     int tLen, memVal;
 
     currentAddr = CShead.CSaddr;
-    strncpy(strAddr, line + charNum, 6);       // start addr of T record
-    charNum += 6;
+    strncpy(strAddr, line + charPtr, 6);       // start addr of T record
+    charPtr += 6;
     currentAddr += strToHex(strAddr, 0);
 
-    strncpy(tmp, line + charNum, 2);       // length of T record
+    strncpy(tmp, line + charPtr, 2);       // length of T record
     tLen = strToHex(tmp, 0);
-    charNum += 2;
+    charPtr += 2;
 
-    while (charNum < tLen) {
+    while (charPtr < tLen) {
         memset(tmp, '\0', sizeof(tmp));
-        strncpy(tmp, line + charNum, 2);       // get one byte
-        charNum +=2;
+        strncpy(tmp, line + charPtr, 2);       // get one byte
+        charPtr +=2;
 
         memVal = strToHex(tmp, 0);
-        if ( !setMem(currentAddr + charNum - 9, memVal) )
+        if ( !setMem(currentAddr + charPtr - 9, memVal) )
             return 0;
     }
 
@@ -282,21 +277,24 @@ int TRecord(char* line, EShead CShead) {
 }
 
 int MRecord(char* line, EShead CShead) {
-    int charNum = 1;
+    // ACTION for M Record
+    // Modify Memory value
+    // if error occured, return 0
+    // else, return 1
+    int charPtr = 1;
     char _mAddr[7], tmp[3];
     int mAddr, mLen, mVal;
 
-
-    strncpy(_mAddr, line + charNum, 6);       // addr to modify
-    charNum += 6;
+    strncpy(_mAddr, line + charPtr, 6);       // addr to modify
+    charPtr += 6;
     mAddr = strToHex(_mAddr, 0);
 
-    strncpy(tmp, line + charNum, 2);       // length to modify
-    charNum += 2;
+    strncpy(tmp, line + charPtr, 2);       // length to modify
+    charPtr += 2;
     mLen = strToHex(tmp, 0);
 
     memset(tmp, '\0', sizeof(tmp));
-    strncpy(tmp, line + charNum + 1, 2);       // Reference number
+    strncpy(tmp, line + charPtr + 1, 2);       // Reference number
     mVal = searchRN(tmp);       // value to be either added or subtracted
 
     if (mVal == -1) {
@@ -309,7 +307,7 @@ int MRecord(char* line, EShead CShead) {
     prevVal += (*(MEMORY + mAddr + 1) << 8);
     prevVal += (*(MEMORY + mAddr + 2));
 
-    mVal = (line[charNum] == '+') ? prevVal + mVal : prevVal - mVal;
+    mVal = (line[charPtr] == '+') ? prevVal + mVal : prevVal - mVal;
 
     setMem(CShead.CSaddr + mAddr, mVal >> 16);
     setMem(CShead.CSaddr + mAddr + 1, (mVal >> 8) % (2 << 8));
