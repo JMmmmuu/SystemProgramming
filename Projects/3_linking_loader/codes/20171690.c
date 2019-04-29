@@ -6,6 +6,7 @@
  *************************************************/
 #include "20171690.h"
 #include "linkingLoader.h"
+#include "execution.h"
 
 int main() {
     init();
@@ -278,7 +279,31 @@ int main() {
                         addHistory(input);
                     break;
 
+                case 0x52:          // run
 
+                    break;
+
+                case 0x53:
+                    params = strtok(NULL, "\0");
+                    if (!params) {
+                        // printf BP
+                        printBP();
+                        addHistory(input);
+                        break;
+                    }
+                    
+                    params = removeSpace(params);
+                    if (strcmp(params, "clear") == 0) {
+                        // clear all BPs
+                        clearBP();
+                        addHistory(input);
+                        break;
+                    }
+                    if ( setBP(params) )
+                        addHistory(input);
+                    else 
+                        printf("Syntax Error. See 'h[elp]'\n");
+                    break;
 
                 case 0xA0:
                     printf("command not found: %s\n", cmd);
@@ -298,6 +323,8 @@ void init() {
     hisHead = NULL;
     SYMTAB = NULL;
     numHead = NULL;
+    BPHead = NULL;
+    BPTail = NULL;
 
     opTable = (opNode**)malloc(20 * sizeof(opNode*));
     for (int i = 0; i < 20; i++)
@@ -307,6 +334,7 @@ void init() {
     END_ADDR = 0;
 
     PROGADDR = 0;
+    
 
     readOpTable();
 }
@@ -336,6 +364,9 @@ int findCmd(char* cmd) {
 
     if (strcmp(cmd, "progaddr") == 0) return 0x50;
     if (strcmp(cmd, "loader") == 0) return 0x51;
+
+    if (strcmp(cmd, "run") == 0) return 0x52;
+    if (strcmp(cmd, "bp") == 0) return 0x53;
 
     return 0xA0;
 }
