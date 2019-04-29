@@ -133,9 +133,10 @@ int loader(char* param) {
                     if ( !RRecord(line, objCnt) )
                         return 0;
                     break;
-
                 case 'T':
-
+                    if ( !TRecord(line, ESTAB[CS]) )
+                        return 0;
+                    break;
                 case 'M':
 
                 case 'E':
@@ -150,55 +151,6 @@ int loader(char* param) {
             fgets(line, MAX_LINE_LEN, objFP[CS]);
         } while (1);
         
-
-
-
-
-        if (line[0] == 'R') {
-            charNum = 1;
-            while (charNum < (int)strlen(line) - 1) {
-                strncpy(tmp1, line + charNum, 2);
-                charNum += 2;
-                strncpy(tmp2, line + charNum, 6);
-                charNum += 6;
-                tmp1[2] = tmp2[6] = '\0';
-
-                refAddr = (searchESTAB(tmp2, objCnt));
-                if (refAddr == -1) {
-                    printf("No External Refernece defined\n");
-                    return 0;
-                }
-
-                addRN(tmp1, refAddr);
-            }
-            
-        }
-
-        fgets(line, MAX_LINE_LEN, objFP[CS]);
-        memset(tmp1, '\0', sizeof(tmp1));
-        memset(tmp2, '\0', sizeof(tmp2));
-        while (line[0] == 'T') {
-            currentAddr = ESTAB[CS].CSaddr;
-            charNum = 1;
-            strncpy(tmp1, line + charNum, 6);       // start addr of T record
-            charNum += 6;
-            currentAddr += strToHex(tmp1, 0);
-            memset(tmp1, '\0', sizeof(tmp1));
-
-            strncpy(tmp1, line + charNum, 2);       // length of T record
-            tLen = strToHex(tmp1, 0);
-            charNum += 2;
-
-            while (charNum < tLen) {
-                memset(tmp2, '\0', sizeof(tmp2));
-                strncpy(tmp2, line + charNum, 2);       // get one byte
-                charNum +=2;
-
-                memVal = strToHex(tmp2, 0);
-                if ( !setMem(currentAddr + charNum - 9, memVal) )
-                    return 0;
-            }
-        }
 
         if (line[0] == 'M') {
             charNum = 1;
@@ -271,6 +223,10 @@ void loadMap(int objCnt) {
 }
 
 int RRecord(char* line, int objCnt) {
+    // ACTION for R Record
+    // build Reference Number list
+    // if error occured, return 0
+    // else, return 1
     int charNum = 1;
     int refAddr;
     char referenceNum[3], referenceName[7];
@@ -290,6 +246,40 @@ int RRecord(char* line, int objCnt) {
 
         addRN(referenceNum, refAddr);
     }
+
+    return 1;
+}
+
+int TRecord(char* line, EShead CShead) {
+    // ACTION for T Record
+
+    int currentAddr, charNum;
+    char strAddr[7], tmp[3];
+    int tLen, memVal;
+
+    memset(strAddr, '\0', sizeof(strAddr));
+    memset(tmp, '\0', sizeof(tmp));
+
+    currentAddr = CShead.CSaddr;
+    charNum = 1;
+    strncpy(strAddr, line + charNum, 6);       // start addr of T record
+    charNum += 6;
+    currentAddr += strToHex(strAddr, 0);
+
+    strncpy(tmp, line + charNum, 2);       // length of T record
+    tLen = strToHex(tmp, 0);
+    charNum += 2;
+
+    while (charNum < tLen) {
+        memset(tmp, '\0', sizeof(tmp));
+        strncpy(tmp, line + charNum, 2);       // get one byte
+        charNum +=2;
+
+        memVal = strToHex(tmp, 0);
+        if ( !setMem(currentAddr + charNum - 9, memVal) )
+            return 0;
+    }
+
     return 1;
 }
 
