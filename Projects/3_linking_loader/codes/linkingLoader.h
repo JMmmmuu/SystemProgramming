@@ -46,7 +46,7 @@ void addRN(char* ref, int addr);
 int searchESTAB(char* name, int objCnt);
 int searchRN(char* ref);
 
-void haltLinkingLoader(char** objFile, FILE** objFP, EShead* ESTAB);
+void haltLinkingLoader(char** objFile, FILE** objFP, int objCnt);
 
 
 

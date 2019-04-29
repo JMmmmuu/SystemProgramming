@@ -58,7 +58,6 @@ int loader(char* param) {
         return 0;
     }
 
-
     /**************************************************
      ***************** LINKING & LOADING **************
      **************************************************/
@@ -72,11 +71,11 @@ int loader(char* param) {
         if (line[0] != 'H') {
             // wrong obj file
             printf("Error occured in file [%s] - NO H RECORD\n", objFile[CS]);
-            haltLinkingLoader(objFile, objFP, ESTAB);
+            haltLinkingLoader(objFile, objFP, objCnt);
             return 0;
         }
         if ( !HRecord(line, CS, objFile[CS]) ) {
-            haltLinkingLoader(objFile, objFP, ESTAB);
+            haltLinkingLoader(objFile, objFP, objCnt);
             return 0;
         }
 
@@ -87,7 +86,7 @@ int loader(char* param) {
             switch (line[0]) {
                 case 'H':
                     printf("Error occured in file [%s] - Multiple H Records\n", objFile[CS]);
-                    haltLinkingLoader(objFile, objFP, ESTAB);
+                    haltLinkingLoader(objFile, objFP, objCnt);
                     return 0;
                 case 'R': case 'T': case 'M': case '.':
                     break;
@@ -97,14 +96,14 @@ int loader(char* param) {
 
                 case 'D':
                     if ( !DRecord(line, CS, objFile[CS]) ) {
-                        haltLinkingLoader(objFile, objFP, ESTAB);
+                        haltLinkingLoader(objFile, objFP, objCnt);
                         return 0;
                     }
                     break;
                 default:
                     if ( isBlankLine(line) ) break;
                     printf("Error occured in file [%s] - Wrong format\n", objFile[CS]);
-                    haltLinkingLoader(objFile, objFP, ESTAB);
+                    haltLinkingLoader(objFile, objFP, objCnt);
                     return 0;
             }
             if (flag) break;
@@ -143,7 +142,7 @@ int loader(char* param) {
                 default:
                     if ( isBlankLine(line) ) break;
                     printf("Error occured in file [%s] - Wrong format\n", objFile[CS]);
-                    haltLinkingLoader(objFile, objFP, ESTAB);
+                    haltLinkingLoader(objFile, objFP, objCnt);
                     return 0;
             }
             if (flag) break;
@@ -153,15 +152,8 @@ int loader(char* param) {
         freeRN();
     }
 
-
-
-
-
-
     loadMap(objCnt);
-
-
-    haltLinkingLoader(objFile, objFP, ESTAB);
+    haltLinkingLoader(objFile, objFP, objCnt);
     return 1;
 }
 
@@ -480,9 +472,21 @@ int isObjFile(char* file) {
     return 1;
 }
 
-void haltLinkingLoader(char** objFile, FILE** objFP, EShead* ESTAB) {
+void haltLinkingLoader(char** objFile, FILE** objFP, int objCnt) {
     free(objFile); free(objFP);
-    free(ESTAB);
+    
+    if ( ESTAB ) {
+        ESnode* pFree;
+        for (int i = 0; i < objCnt; i++) {
+            pFree = ESTAB[i].link;
+            while (ESTAB[i].link) {
+                pFree = ESTAB[i].link;
+                ESTAB[i].link = pFree->link;
+                free(pFree);
+            }
+        }
+        free(ESTAB);
+    }
 }
 
 void freeRN() {
