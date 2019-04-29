@@ -6,6 +6,7 @@
  *************************************************/
 #include "20171690.h"
 #include "linkingLoader.h"
+#include "execution.h"
 
 int progaddr(char* addr) {
     PROGADDR = strToHex(addr, 1);
@@ -137,6 +138,17 @@ int loader(char* param) {
                     break;
                 case 'E':       // END Record
                     flag = 1;
+                    if ( (int)strlen(line) >= 7 ) {
+                        // get the first executable address
+                        char __addr[7];
+                        strncpy(__addr, line + 1, 6);
+                        EXEC_ADDR= strToHex(__addr, 0);
+                        if (EXEC_ADDR == -1) {
+                            printf("Error occured in file [%s] - Wrong format in E Record\n", objFile[CS]);
+                            haltLinkingLoader(objFile, objFP, objCnt);
+                            return 0;
+                        }
+                    }
                     break;
 
                 default:
@@ -154,6 +166,9 @@ int loader(char* param) {
 
     loadMap(objCnt);
     haltLinkingLoader(objFile, objFP, objCnt);
+    if (EXEC_ADDR == -1) EXEC_ADDR = ESTAB[0].CSaddr;
+    EXEC_LEN = ESTAB[objCnt-1].CSaddr + ESTAB[objCnt-1].CSlength - EXEC_ADDR;
+
     return 1;
 }
 
