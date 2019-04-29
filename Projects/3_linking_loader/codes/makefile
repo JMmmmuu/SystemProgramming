@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -W -g
-OBJECTS = 20171690.o shell.o memory.o opcode.o assembler.o symbol.o assembler_functions.o linkingLoader.o
+OBJECTS = 20171690.o shell.o memory.o opcode.o assembler.o symbol.o assembler_functions.o linkingLoader.o execution.o
 TARGET = 20171690.out
 
 all: $(TARGET)
