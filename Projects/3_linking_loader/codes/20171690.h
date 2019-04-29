@@ -126,6 +126,7 @@ int opcodeList();              // 0x21
 
 int readOpTable();
 int hashFunction(char* op);
+int searchWithOpcode(int opcode);
 
 /**************************************************
  ******************** ASSEMBLER *******************
