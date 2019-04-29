@@ -27,4 +27,4 @@ int executeProg();
 int setBP(char* addr);
 void clearBP();
 void printBP();
-
+int* getRegPtr(unsigned char reg);

@@ -21,7 +21,7 @@ int executeProg() {
     A = 0; X = 0; L = 0; PC = 0; SW = 0; B = 0; S = 0; T = 0; F = 0;
     PC = EXEC_ADDR;
     int opcode;
-    unsigned char flags, reg, ni, x, b, p, e;
+    unsigned char flags, reg, ni;//, x, b, p, e;
     int format;
     int target;
 
