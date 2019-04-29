@@ -37,7 +37,7 @@ int HRecord();
 int DRecord();
 int RRecord(char* line, int objCnt);
 int TRecord(char* line, EShead CShead);
-int MRecord();
+int MRecord(char* line, EShead CShead);
 
 int setMem(int addr, int val);
 

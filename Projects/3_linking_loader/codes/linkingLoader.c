@@ -138,7 +138,9 @@ int loader(char* param) {
                         return 0;
                     break;
                 case 'M':
-
+                    if ( !MRecord(line, ESTAB[CS]) )
+                        return 0;
+                    break;
                 case 'E':
 
                 default:
@@ -253,15 +255,11 @@ int RRecord(char* line, int objCnt) {
 int TRecord(char* line, EShead CShead) {
     // ACTION for T Record
 
-    int currentAddr, charNum;
+    int currentAddr, charNum = 1;
     char strAddr[7], tmp[3];
     int tLen, memVal;
 
-    memset(strAddr, '\0', sizeof(strAddr));
-    memset(tmp, '\0', sizeof(tmp));
-
     currentAddr = CShead.CSaddr;
-    charNum = 1;
     strncpy(strAddr, line + charNum, 6);       // start addr of T record
     charNum += 6;
     currentAddr += strToHex(strAddr, 0);
@@ -283,6 +281,42 @@ int TRecord(char* line, EShead CShead) {
     return 1;
 }
 
+int MRecord(char* line, EShead CShead) {
+    int charNum = 1;
+    char _mAddr[7], tmp[3];
+    int mAddr, mLen, mVal;
+
+
+    strncpy(_mAddr, line + charNum, 6);       // addr to modify
+    charNum += 6;
+    mAddr = strToHex(_mAddr, 0);
+
+    strncpy(tmp, line + charNum, 2);       // length to modify
+    charNum += 2;
+    mLen = strToHex(tmp, 0);
+
+    memset(tmp, '\0', sizeof(tmp));
+    strncpy(tmp, line + charNum + 1, 2);       // Reference number
+    mVal = searchRN(tmp);       // value to be either added or subtracted
+
+    if (mVal == -1) {
+        printf("Cannot find reference number at %06X - %s\n", mAddr, tmp);
+        return 0;
+    }
+
+    int prevVal = 0;
+    prevVal += (*(MEMORY + mAddr) << 16);
+    prevVal += (*(MEMORY + mAddr + 1) << 8);
+    prevVal += (*(MEMORY + mAddr + 2));
+
+    mVal = (line[charNum] == '+') ? prevVal + mVal : prevVal - mVal;
+
+    setMem(CShead.CSaddr + mAddr, mVal >> 16);
+    setMem(CShead.CSaddr + mAddr + 1, (mVal >> 8) % (2 << 8));
+    setMem(CShead.CSaddr + mAddr + 2, mVal % (2 << 8));
+
+    return 1;
+}
 
 
 
