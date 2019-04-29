@@ -166,7 +166,7 @@ int loader(char* param) {
 
     loadMap(objCnt);
     haltLinkingLoader(objFile, objFP, objCnt);
-    if (EXEC_ADDR == -1) EXEC_ADDR = ESTAB[0].CSaddr;
+    if (EXEC_ADDR == -1) EXEC_ADDR = ESTAB[0].CSaddr;       // no executable addr specified in E Record
     EXEC_LEN = ESTAB[objCnt-1].CSaddr + ESTAB[objCnt-1].CSlength - EXEC_ADDR;
 
     return 1;
