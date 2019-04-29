@@ -83,9 +83,35 @@ int loader(char* param) {
             return 0;
         }
 
+        flag = 0;
+        while (1) {
+            memset(line, '\0', sizeof(line));
+            fgets(line, MAX_LINE_LEN, objFP[CS]);
+            switch (line[0]) {
+                case 'H':
+                    printf("Error occured in file [%s] - Multiple H Records\n", objFile[CS]);
+                    haltLinkingLoader(objFile, objFP, ESTAB);
+                    return 0;
+                case 'R': case 'T': case 'M':
+                    break;
+                case 'E':
+                    flag = 1;
+                    break;
 
-        memset(line, '\0', sizeof(line));
-        fgets(line, MAX_LINE_LEN, objFP[CS]);
+                case 'D':
+                    if ( !DRecord(line, CS, objFile[CS]) ) {
+                        haltLinkingLoader(objFile, objFP, ESTAB);
+                        return 0;
+                    }
+                    break;
+                default:
+                    printf("Error occured in file [%s] - Wrong format\n", objFile[CS]);
+                    haltLinkingLoader(objFile, objFP, ESTAB);
+                    return 0;
+            }
+            if (flag) break;
+        }
+
         while (line[0] == 'D') {
             charNum = 1;
 
@@ -111,6 +137,7 @@ int loader(char* param) {
         addRN("01", ESTAB[CS].CSaddr);
 
         while (1) {
+            memset(line, '\0', sizeof(line));
             fgets(line, MAX_LINE_LEN, objFP[CS]);
             switch (line[0]) {
                 case 'H': case 'D':
@@ -135,8 +162,6 @@ int loader(char* param) {
                     haltLinkingLoader(objFile, objFP, ESTAB);
                     return 0;
             }
-
-            memset(line, '\0', sizeof(line));
         }
         
         
@@ -183,7 +208,7 @@ int HRecord(char* line, int currentCS, char* file) {
     // if success, return 1
     // else, return 0;
     if ( (int)strlen(line) < 19 ) {
-        printf("Error occured in file [%s] - wrong formate in H Record\n", file);
+        printf("Error occured in file [%s] - Wrong format in H Record\n", file);
         return 0;
     }
 
@@ -214,6 +239,28 @@ int HRecord(char* line, int currentCS, char* file) {
         return 0;
     }
 
+    return 1;
+}
+
+int DRecord(char* line, int currentCS, char* file) {
+    if ( (int)strlen(line) < 19 ) {
+        printf("Error occured in file [%s] - Wrong format in D Record\n", file);
+        return 0;
+    }
+    int charPtr = 1;
+    char name[7], addr[7];
+
+    while (charPtr <= (int)strlen(line) - 6 - 1) {
+        memset(name, '\0', sizeof(name));
+        memset(addr, '\0', sizeof(addr));
+
+        strncpy(name, line + charPtr, 6);
+        charPtr += 6;
+        strncpy(addr, line + charPtr, 6);
+        charPtr += 6;
+
+        addES(&(ESTAB[currentCS]), name, addr);
+    }
     return 1;
 }
 
