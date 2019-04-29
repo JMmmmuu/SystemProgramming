@@ -19,6 +19,63 @@ int executeProg() {
     }
 
     int currentLOC = EXEC_ADDR;
+    int opcode;
+    unsigned char flags, reg, n, i, x, b, p, e;
+    int format;
+    int target;
+
+    if (EXEC_LEN + EXEC_ADDR >= 0x100000) {
+        printf("Segmentation Fault!\n");
+        return 0;
+    }
+    while (currentLOC < EXEC_ADDR + EXEC_LEN) {
+        if ( !validAddr(currentLOC + 3) ) {
+            printf("Segmentation Fault!\n - %06X\n", currentLOC);
+            return 0;
+        }
+        opcode = *(MEMORY + currentLOC) << 4;
+        opcode += *(MEMORY + ++currentLOC);
+        opcode &= (unsigned char)0xFC;
+
+        if ( (format = searchWithOpcode(opcode)) ) {
+            // if opcode exists
+            switch (format) {
+                case 1:
+                    currentLOC++;
+                    break;
+                case 2:
+                    reg = *(MEMORY + ++currentLOC);
+                    break;
+                case 3:
+                    flags = *(MEMORY + ++currentLOC);
+                    if (flags / 2 == 1) format = 4;
+                    if (format == 3) {
+                        for (int i = 2; i >= 0; i--) {
+                            if ( !validAddr(currentLOC) ) {
+                                printf("Segmentation Fault! - %06X\n", currentLOC);
+                                return 0;
+                            }
+                            target = *(MEMORY + ++currentLOC) << (i * 4);
+                        }
+                    }
+                    else {
+                        for (int i = 4; i >= 0; i--) {
+                            if ( !validAddr(currentLOC) ) {
+                                printf("Segmentation Fault! - %06X\n", currentLOC);
+                                return 0;
+                            }
+                            target = *(MEMORY + ++currentLOC) << (i * 4);
+                        }
+                    }
+                    break;
+            }
+        }
+        else {
+            // WORD CONST
+            // no change in REG or MEM
+            currentLOC++;
+        }
+    }
 
 
 
