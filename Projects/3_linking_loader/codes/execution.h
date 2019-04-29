@@ -18,7 +18,7 @@ int EXEC_LEN;
 
 
 
-
+int opAct(int opcode, int format, int target, int flags);
 
 
 void printReg();

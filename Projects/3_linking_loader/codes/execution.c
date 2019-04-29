@@ -18,9 +18,10 @@ int executeProg() {
         return 1;
     }
 
-    int currentLOC = EXEC_ADDR;
+    A = 0; X = 0; L = 0; PC = 0; SW = 0; B = 0; S = 0; T = 0; F = 0;
+    PC = EXEC_ADDR;
     int opcode;
-    unsigned char flags, reg, n, i, x, b, p, e;
+    unsigned char flags, reg, ni, x, b, p, e;
     int format;
     int target;
 
@@ -28,61 +29,62 @@ int executeProg() {
         printf("Segmentation Fault!\n");
         return 0;
     }
-    while (currentLOC < EXEC_ADDR + EXEC_LEN) {
-        if ( !validAddr(currentLOC + 3) ) {
-            printf("Segmentation Fault!\n - %06X\n", currentLOC);
+    while (PC < EXEC_ADDR + EXEC_LEN) {
+        if ( !validAddr(PC + 3) ) {
+            printf("Segmentation Fault!\n - %06X\n", PC);
             return 0;
         }
-        opcode = *(MEMORY + currentLOC) << 4;
-        opcode += *(MEMORY + ++currentLOC);
+        opcode = *(MEMORY + PC) << 4;
+        opcode += *(MEMORY + ++PC);
+        ni = opcode & (unsigned char)0x03;
         opcode &= (unsigned char)0xFC;
 
         if ( (format = searchWithOpcode(opcode)) ) {
             // if opcode exists
             switch (format) {
                 case 1:
-                    currentLOC++;
+                    PC++;
+                    opAct(opcode, format, 0, 0);
                     break;
                 case 2:
-                    reg = *(MEMORY + ++currentLOC);
+                    reg = *(MEMORY + ++PC);
+                    opAct(opcode, format, reg, 0);
                     break;
                 case 3:
-                    flags = *(MEMORY + ++currentLOC);
+                    flags = *(MEMORY + ++PC);
                     if (flags / 2 == 1) format = 4;
                     if (format == 3) {
                         for (int i = 2; i >= 0; i--) {
-                            if ( !validAddr(currentLOC) ) {
-                                printf("Segmentation Fault! - %06X\n", currentLOC);
+                            if ( !validAddr(PC) ) {
+                                printf("Segmentation Fault! - %06X\n", PC);
                                 return 0;
                             }
-                            target = *(MEMORY + ++currentLOC) << (i * 4);
+                            target = *(MEMORY + ++PC) << (i * 4);
                         }
                     }
                     else {
                         for (int i = 4; i >= 0; i--) {
-                            if ( !validAddr(currentLOC) ) {
-                                printf("Segmentation Fault! - %06X\n", currentLOC);
+                            if ( !validAddr(PC) ) {
+                                printf("Segmentation Fault! - %06X\n", PC);
                                 return 0;
                             }
-                            target = *(MEMORY + ++currentLOC) << (i * 4);
+                            target = *(MEMORY + ++PC) << (i * 4);
                         }
                     }
+
+                    flags += (ni << 4);
+                    if ( !opAct(opcode, format, target, flags) )
+                        return 0;
+
                     break;
             }
         }
         else {
             // WORD CONST
             // no change in REG or MEM
-            currentLOC++;
+            PC++;
         }
     }
-
-
-
-
-
-
-
 
     return 1;
 }
