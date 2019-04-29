@@ -66,9 +66,6 @@ int loader(char* param) {
     // PASS 1
     ESTAB = (EShead*)malloc(objCnt * sizeof(EShead));
     char line[MAX_LINE_LEN];
-    char tmp1[7], tmp2[7];
-    int charNum;
-    int refAddr;
     for (int CS = 0; CS < objCnt; CS++) {
         fgets(line, MAX_LINE_LEN, objFP[CS]);       // get first line
 
@@ -92,7 +89,7 @@ int loader(char* param) {
                     printf("Error occured in file [%s] - Multiple H Records\n", objFile[CS]);
                     haltLinkingLoader(objFile, objFP, ESTAB);
                     return 0;
-                case 'R': case 'T': case 'M':
+                case 'R': case 'T': case 'M': case '.':
                     break;
                 case 'E':
                     flag = 1;
@@ -111,26 +108,9 @@ int loader(char* param) {
             }
             if (flag) break;
         }
-
-        while (line[0] == 'D') {
-            charNum = 1;
-
-            while (charNum < (int)strlen(line) - 1) {
-                strncpy(tmp1, line + charNum, 6);
-                charNum += 6;
-                strncpy(tmp2, line + charNum, 6);
-                tmp1[6] = tmp2[6] = '\0';
-                charNum += 6;
-
-                addES(&(ESTAB[CS]), tmp1, tmp2);
-            }
-
-            memset(line, '\0', sizeof(line));
-            fgets(line, MAX_LINE_LEN, objFP[CS]);
-        }
     }
 
-
+/*
     // PASS 2
     for (int CS = 0; CS < objCnt; CS++) {
         fseek(objFP[CS], 0, SEEK_SET);
@@ -144,15 +124,15 @@ int loader(char* param) {
                     // skip for H record & D records
                     break;
                 case 'R':        // REFER Record
-                    if ( !RRecord(line, objCnt) )
+                    if ( !RRecord(line, objCnt, objFile[CS]) )
                         return 0;
                     break;
                 case 'T':       // TEXT Record
-                    if ( !TRecord(line, ESTAB[CS]) )
+                    if ( !TRecord(line, ESTAB[CS], objFile[CS]) )
                         return 0;
                     break;
                 case 'M':       // MODIFICATION Record
-                    if ( !MRecord(line, ESTAB[CS]) )
+                    if ( !MRecord(line, ESTAB[CS], objFile[CS]) )
                         return 0;
                     break;
                 case 'E':       // END Record
@@ -169,7 +149,7 @@ int loader(char* param) {
 
         freeRN();
     }
-    
+    */
 
 
 
@@ -264,11 +244,15 @@ int DRecord(char* line, int currentCS, char* file) {
     return 1;
 }
 
-int RRecord(char* line, int objCnt) {
+int RRecord(char* line, int objCnt, char* file) {
     // ACTION for R Record
     // build Reference Number list
     // if error occured, return 0
     // else, return 1
+    if ( (int)strlen(line) < 4 ) {
+        printf("Error occured in file [%s] - Wrong format in R Record\n", file);
+        return 0;
+    }
     int charPtr = 1;
     int refAddr;
     char referenceNum[3], referenceName[7];
@@ -282,7 +266,7 @@ int RRecord(char* line, int objCnt) {
 
         refAddr = (searchESTAB(referenceName, objCnt));
         if (refAddr == -1) {
-            printf("No External Refernece defined\n");
+            printf("Error occured in file [%s] - No External Refernece defined\n", file);
             return 0;
         }
 
@@ -292,11 +276,15 @@ int RRecord(char* line, int objCnt) {
     return 1;
 }
 
-int TRecord(char* line, EShead CShead) {
+int TRecord(char* line, EShead CShead, char* file) {
     // ACTION for T Record
     // Set Memory Value
     // if error occured, return 0
     // else, return 1
+    if ( (int)strlen(line) < 11 ) {
+        printf("Error occured in file [%s] - Wrong format in T Record\n", file);
+        return 0;
+    }
     int currentAddr, charPtr = 1;
     char strAddr[7], tmp[3];
     int tLen, memVal;
@@ -323,11 +311,15 @@ int TRecord(char* line, EShead CShead) {
     return 1;
 }
 
-int MRecord(char* line, EShead CShead) {
+int MRecord(char* line, EShead CShead, char* file) {
     // ACTION for M Record
     // Modify Memory value
     // if error occured, return 0
     // else, return 1
+    if ( (int)strlen(line) < 12 ) {
+        printf("Error occured in file [%s] - Wrong format in M Record\n", file);
+        return 0;
+    }
     int charPtr = 1;
     char _mAddr[7], tmp[3];
     int mAddr, mLen, mVal;
@@ -345,7 +337,7 @@ int MRecord(char* line, EShead CShead) {
     mVal = searchRN(tmp);       // value to be either added or subtracted
 
     if (mVal == -1) {
-        printf("Cannot find reference number at %06X - %s\n", mAddr, tmp);
+        printf("Error occured in file [%s] - Cannot find reference number at %06X:  %s\n", file, mAddr, tmp);
         return 0;
     }
 
@@ -362,8 +354,6 @@ int MRecord(char* line, EShead CShead) {
 
     return 1;
 }
-
-
 
 int setMem(int addr, int val) {
     // set Memory to value

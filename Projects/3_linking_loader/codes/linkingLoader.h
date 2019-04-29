@@ -35,9 +35,9 @@ int loader(char* param);
 void loadMap(int objCnt);
 int HRecord(char* line, int currentCS, char* file);
 int DRecord(char* line, int currentCS, char* file);
-int RRecord(char* line, int objCnt);
-int TRecord(char* line, EShead CShead);
-int MRecord(char* line, EShead CShead);
+int RRecord(char* line, int objCnt, char* file);
+int TRecord(char* line, EShead CShead, char* file);
+int MRecord(char* line, EShead CShead, char* file);
 
 int setMem(int addr, int val);
 
