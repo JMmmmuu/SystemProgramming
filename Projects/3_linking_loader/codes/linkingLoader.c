@@ -71,6 +71,7 @@ int loader(char* param) {
     int refAddr;
     for (int CS = 0; CS < objCnt; CS++) {
         fgets(line, MAX_LINE_LEN, objFP[CS]);
+
         if (line[0] != 'H') {
             // wrong obj file
             printf("Error occured in [%s] - NO H RECORD\n", objFile[CS]);
@@ -115,16 +116,43 @@ int loader(char* param) {
     // PASS 2
     int currentAddr = 0;
     int tLen, mLen;
-    int memVal;
+    int memVal, mVal, prevVal;
     int mAddr;
-    int mVal, prevVal;
     for (int CS = 0; CS < objCnt; CS++) {
         fseek(objFP[CS], 0, SEEK_SET);
         addRN("01", ESTAB[CS].CSaddr);
+
         // skip for H record & D record
         do {
             fgets(line, MAX_LINE_LEN, objFP[CS]);
-        } while (line[0] == 'D' || line[0] == 'H');
+        } while (line[0] == 'H' || line[0] == 'D');
+
+        do {
+            switch (line[0]) {
+                case 'R':
+                    if ( !RRecord(line, objCnt) )
+                        return 0;
+                    break;
+
+                case 'T':
+
+                case 'M':
+
+                case 'E':
+
+                default:
+                    printf("Error occured in OBJ file\n");
+                    haltLinkingLoader(objFile, objFP, ESTAB);
+                    return 0;
+            }
+
+            memset(line, '\0', sizeof(line));
+            fgets(line, MAX_LINE_LEN, objFP[CS]);
+        } while (1);
+        
+
+
+
 
         if (line[0] == 'R') {
             charNum = 1;
@@ -241,6 +269,32 @@ void loadMap(int objCnt) {
     printf("\t\t ---------------------------------------------------\n");
     printf("\t\t \t\t\t\ttotal length\t%04X\n", len);
 }
+
+int RRecord(char* line, int objCnt) {
+    int charNum = 1;
+    int refAddr;
+    char referenceNum[3], referenceName[7];
+    while (charNum < (int)strlen(line) - 1) {
+        memset(referenceNum, '\0', sizeof(referenceNum));
+        memset(referenceName, '\0', sizeof(referenceName));
+        strncpy(referenceNum, line + charNum, 2);
+        charNum += 2;
+        strncpy(referenceName, line + charNum, 6);
+        charNum += 6;
+
+        refAddr = (searchESTAB(referenceName, objCnt));
+        if (refAddr == -1) {
+            printf("No External Refernece defined\n");
+            return 0;
+        }
+
+        addRN(referenceNum, refAddr);
+    }
+    return 1;
+}
+
+
+
 
 int setMem(int addr, int val) {
     // set Memory to value

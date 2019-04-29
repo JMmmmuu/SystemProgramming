@@ -35,7 +35,7 @@ int loader(char* param);
 void loadMap(int objCnt);
 int HRecord();
 int DRecord();
-int RRecord();
+int RRecord(char* line, int objCnt);
 int TRecord();
 int MRecord();
 
