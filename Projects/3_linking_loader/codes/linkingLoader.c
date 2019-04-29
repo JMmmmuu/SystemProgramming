@@ -102,6 +102,7 @@ int loader(char* param) {
                     }
                     break;
                 default:
+                    if ( isBlankLine(line) ) break;
                     printf("Error occured in file [%s] - Wrong format\n", objFile[CS]);
                     haltLinkingLoader(objFile, objFP, ESTAB);
                     return 0;
@@ -132,15 +133,16 @@ int loader(char* param) {
                         return 0;
                     break;
                 case 'M':       // MODIFICATION Record
-                    if ( !MRecord(line, ESTAB[CS], objFile[CS]) )
-                        return 0;
+                    /** if ( !MRecord(line, ESTAB[CS], objFile[CS]) ) */
+                    /**     return 0; */
                     break;
                 case 'E':       // END Record
                     flag = 1;
                     break;
 
                 default:
-                    printf("Error occured in OBJ file\n");
+                    if ( isBlankLine(line) ) break;
+                    printf("Error occured in file [%s] - Wrong format\n", objFile[CS]);
                     haltLinkingLoader(objFile, objFP, ESTAB);
                     return 0;
             }
@@ -290,24 +292,41 @@ int TRecord(char* line, EShead CShead, char* file) {
     char strAddr[7], tmp[3];
     int tLen, memVal;
 
-    currentAddr = CShead.CSaddr;
     strncpy(strAddr, line + charPtr, 6);       // start addr of T record
     charPtr += 6;
-    currentAddr += strToHex(strAddr, 0);
+    currentAddr = strToHex(strAddr, 0);
+    if (currentAddr == -1) {
+        printf("Error occured in file [%s] - Wrong starting address in T Record\n", file);
+        return 0;
+    }
+    currentAddr += CShead.CSaddr;
 
     strncpy(tmp, line + charPtr, 2);       // length of T record
     tLen = strToHex(tmp, 0);
     charPtr += 2;
+    if (tLen == -1) {
+        printf("Error occured in file [%s] - Wrong Length of T Record\n", file);
+        return 0;
+    }
 
-    while (charPtr < tLen) {
+    printf("%06X %02X\t\t", currentAddr, tLen);
+
+    int setPtr = 0;
+    while (setPtr < tLen) {
+        if (charPtr >= (int)strlen(line)) {
+            printf("Error occured in file [%s] - Wrong format in T Record\n", file);
+            return 0;
+        }
         memset(tmp, '\0', sizeof(tmp));
         strncpy(tmp, line + charPtr, 2);       // get one byte
         charPtr +=2;
 
         memVal = strToHex(tmp, 0);
-        if ( !setMem(currentAddr + charPtr - 9, memVal) )
+        printf("%02X ", memVal);
+        if ( !setMem(currentAddr + setPtr++, memVal) )
             return 0;
     }
+    printf("\n");
 
     return 1;
 }
