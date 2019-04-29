@@ -33,12 +33,18 @@ int progaddr(char* addr);
 int loader(char* param);
 
 void loadMap(int objCnt);
+int HRecord();
+int DRecord();
+int RRecord();
+int TRecord();
+int MRecord();
 
 int setMem(int addr, int val);
 
 void addES(EShead* ES, char* name, char* loc);
 void addRN(char* ref, int addr);
 int searchESTAB(char* name, int objCnt);
+int searchRN(char* ref);
 
 void haltLinkingLoader(char** objFile, FILE** objFP, EShead* ESTAB);
 

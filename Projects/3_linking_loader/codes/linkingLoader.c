@@ -114,10 +114,13 @@ int loader(char* param) {
 
     // PASS 2
     int currentAddr = 0;
-    int tLen;
+    int tLen, mLen;
     int memVal;
+    int mAddr;
+    int mVal, prevVal;
     for (int CS = 0; CS < objCnt; CS++) {
         fseek(objFP[CS], 0, SEEK_SET);
+        addRN("01", ESTAB[CS].CSaddr);
         // skip for H record & D record
         do {
             fgets(line, MAX_LINE_LEN, objFP[CS]);
@@ -152,6 +155,7 @@ int loader(char* param) {
             strncpy(tmp1, line + charNum, 6);       // start addr of T record
             charNum += 6;
             currentAddr += strToHex(tmp1, 0);
+            memset(tmp1, '\0', sizeof(tmp1));
 
             strncpy(tmp1, line + charNum, 2);       // length of T record
             tLen = strToHex(tmp1, 0);
@@ -166,6 +170,37 @@ int loader(char* param) {
                 if ( !setMem(currentAddr + charNum - 9, memVal) )
                     return 0;
             }
+        }
+
+        if (line[0] == 'M') {
+            charNum = 1;
+            strncpy(tmp1, line + charNum, 6);       // addr to modify
+            charNum += 6;
+            mAddr = strToHex(tmp1, 0);
+            memset(tmp1, '\0', sizeof(tmp1));
+
+            strncpy(tmp1, line + charNum, 2);       // length to modify
+            charNum += 2;
+            mLen = strToHex(tmp1, 0);
+
+            strncpy(tmp2, line + charNum + 1, 2);       // Reference number
+
+            mVal = searchRN(tmp2);
+            if (mVal == -1) {
+                printf("Cannot find reference number at %06X - %s\n", mAddr, tmp2);
+                return 0;
+            }
+
+            prevVal = 0;
+            prevVal += (*(MEMORY + mAddr) << 16);
+            prevVal += (*(MEMORY + mAddr + 1) << 8);
+            prevVal += (*(MEMORY + mAddr + 2));
+
+            mVal = (line[charNum] == '+') ? prevVal + mVal : prevVal - mVal;
+
+            setMem(ESTAB[CS].CSaddr + mAddr, mVal >> 16);
+            setMem(ESTAB[CS].CSaddr + mAddr + 1, (mVal >> 8) % (2 << 8));
+            setMem(ESTAB[CS].CSaddr + mAddr + 2, mVal % (2 << 8));
         }
 
 
@@ -270,6 +305,20 @@ int searchESTAB(char* name, int objCnt) {
         }
     }
     
+    return -1;
+}
+
+int searchRN(char* ref) {
+    // saerch Reference number
+    // return address if success
+    // else, return -1
+    referNode* ptmp = referHead;
+    int refNum = strToDecimal(ref);
+    while (ptmp) {
+        if (ptmp->ref == refNum)
+            return ptmp->addr;
+    }
+
     return -1;
 }
 
