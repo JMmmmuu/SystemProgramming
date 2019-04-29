@@ -95,3 +95,17 @@ int hashFunction(char* op) {
 
     return idx % 20;
 }
+
+int searchWithOpcode(int opcode) {
+    // search whether opcode exists in OPTAB
+    // if exist, return format
+    // else, return 0
+    if (!opTable) return 0;
+
+    opNode* pMove;
+    for (int i = 0; i < 20; i++) {
+        for (pMove = opTable[i]; pMove; pMove = pMove->link)
+            if (pMove->opcode == opcode) return pMove->format;
+    }
+    return 0;
+}
