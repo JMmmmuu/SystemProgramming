@@ -110,17 +110,17 @@ int loader(char* param) {
         }
     }
 
-/*
     // PASS 2
     for (int CS = 0; CS < objCnt; CS++) {
         fseek(objFP[CS], 0, SEEK_SET);
         addRN("01", ESTAB[CS].CSaddr);
 
+        flag = 0;
         while (1) {
             memset(line, '\0', sizeof(line));
             fgets(line, MAX_LINE_LEN, objFP[CS]);
             switch (line[0]) {
-                case 'H': case 'D':
+                case 'H': case 'D': case '.':
                     // skip for H record & D records
                     break;
                 case 'R':        // REFER Record
@@ -136,20 +136,20 @@ int loader(char* param) {
                         return 0;
                     break;
                 case 'E':       // END Record
+                    flag = 1;
+                    break;
 
                 default:
                     printf("Error occured in OBJ file\n");
                     haltLinkingLoader(objFile, objFP, ESTAB);
                     return 0;
             }
+            if (flag) break;
         }
         
-        
-
 
         freeRN();
     }
-    */
 
 
 
@@ -193,10 +193,11 @@ int HRecord(char* line, int currentCS, char* file) {
     }
 
     int charPtr = 1;
-    strncpy(ESTAB[currentCS].CSname, line + charPtr, 6);        // get Control Section Name
+    char tmp[7];
+    strncpy(tmp, line + charPtr, 6);
+    strcpy(ESTAB[currentCS].CSname, removeSpace(tmp));        // get Control Section Name
     charPtr += 6;
 
-    char tmp[7];
 
     strncpy(tmp, line + charPtr, 6);            // get starting address of current Control Section
     charPtr += 6;
@@ -264,9 +265,9 @@ int RRecord(char* line, int objCnt, char* file) {
         strncpy(referenceName, line + charPtr, 6);
         charPtr += 6;
 
-        refAddr = (searchESTAB(referenceName, objCnt));
+        refAddr = (searchESTAB(removeSpace(referenceName), objCnt));
         if (refAddr == -1) {
-            printf("Error occured in file [%s] - No External Refernece defined\n", file);
+            printf("Error occured in file [%s] - No External Refernece defined: %s\n", file, referenceName);
             return 0;
         }
 
@@ -430,6 +431,7 @@ int searchRN(char* ref) {
     while (ptmp) {
         if (ptmp->ref == refNum)
             return ptmp->addr;
+        ptmp = ptmp->link;
     }
 
     return -1;
