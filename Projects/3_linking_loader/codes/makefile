@@ -9,4 +9,4 @@ $(TARGET) : $(OBJECTS)
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJECTS)
 
 clean:
-	rm -rf $(OBJECTS) $(TARGET) $(TARGET).dSYM *.lst *.obj
+	rm -rf $(OBJECTS) $(TARGET) $(TARGET).dSYM *.lst
