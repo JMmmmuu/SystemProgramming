@@ -142,7 +142,7 @@ int loader(char* param) {
                         // get the first executable address
                         char __addr[7];
                         strncpy(__addr, line + 1, 6);
-                        EXEC_ADDR= strToHex(__addr, 0);
+                        EXEC_ADDR = strToHex(__addr, 0) + PROGADDR;
                         if (EXEC_ADDR == -1) {
                             printf("Error occured in file [%s] - Wrong format in E Record\n", objFile[CS]);
                             haltLinkingLoader(objFile, objFP, objCnt);
