@@ -98,7 +98,50 @@ int opAct(int opcode, int format, int target, int flags) {
 
     }
     else {
+        // format 3 or 4
+        unsigned char ni, x, b, p, e;
+        ni = flags >> 4;
+        x = (flags >> 3) / 2;
+        b = (flags >> 2) / 2;
+        e = flags / 2;
+        int memVal;
+        int LOC;
+        switch (ni) {
+            case 1:         // immediate addressing
+                memVal = target;
+                break;
+            case 2:         // indirect addressing
+                LOC = target;
+                memVal = 0;
+                for (int j = 0; j < 2; j++) {
+                    // READ MEMORY
+                    // READ VALUE AS ADDR OF MEMORY AGAIN!
+                    for (int i = 2; i >= 0; i--) {
+                        // READ ONE WORD SIZE from the MEMORY
+                        if ( !validAddr(LOC) ) {
+                            printf("Segmetataion Fault!\n");
+                            return 0;
+                        }
+                        memVal += (*(MEMORY + LOC) << (i << 4));
+                    }
+                    LOC = memVal;
+                }
+                break;
+            case 0: case 3:         // simple addressing
+                LOC = target;
+                memVal = 0;
+                for (int i = 2; i >= 0; i--) {
+                    // READ ONE WORD SIZE from the MEMORY
+                    if ( !validAddr(LOC) ) {
+                        printf("Segmetataion Fault!\n");
+                        return 0;
+                    }
+                    memVal += (*(MEMORY + LOC) << (i << 4));
+                }
+                break;
+        }
         switch (opcode) {
+            // memory operand is stored in memVal variable
             case 0x18:        // ADD m
                 break;
             case 0x58:        // ADDF m

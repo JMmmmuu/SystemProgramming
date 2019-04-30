@@ -52,24 +52,14 @@ int executeProg() {
                     break;
                 case 3:
                     flags = *(MEMORY + ++PC);
-                    if (flags / 2 == 1) format = 4;
-                    if (format == 3) {
-                        for (int i = 2; i >= 0; i--) {
-                            if ( !validAddr(PC) ) {
-                                printf("Segmentation Fault! - %06X\n", PC);
-                                return 0;
-                            }
-                            target = *(MEMORY + ++PC) << (i * 4);
+                    if (flags / 2 == 1) format = 4;     // if e flag set
+                    target = 0;
+                    for (int i = (format == 3) ? 2 : 4; i >= 0; i--) {
+                        if ( !validAddr(PC) ) {
+                            printf("Segmentation Fault! - %06X\n", PC);
+                            return 0;
                         }
-                    }
-                    else {
-                        for (int i = 4; i >= 0; i--) {
-                            if ( !validAddr(PC) ) {
-                                printf("Segmentation Fault! - %06X\n", PC);
-                                return 0;
-                            }
-                            target = *(MEMORY + ++PC) << (i * 4);
-                        }
+                        target += (*(MEMORY + ++PC) << (i * 4));
                     }
 
                     flags += (ni << 4);
