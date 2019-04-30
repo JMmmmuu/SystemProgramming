@@ -77,8 +77,7 @@ tRecord* tRHead;
 tRecord* tRTail;
 mRecord* mRHead;
 mRecord* mRTail;
-int A, X, L, PC, SW, B, S, T, CC;
-float F;
+int A, X, L, PC, SW, B, S, T, CC, F;
 
 unsigned char* MEMORY;
 int END_ADDR;

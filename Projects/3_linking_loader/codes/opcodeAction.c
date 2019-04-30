@@ -36,24 +36,8 @@ int opAct(int opcode, int format, int target, int flags) {
         unsigned char _reg1 = target >> 4;
         unsigned char _reg2 = target & (unsigned char)0x0F;
 
-        if (_reg1 == 0x06 && _reg2 == 0x06) {
-            float* r1 = &F;
-            float* r2 = &F;
-        }
-        else if (_reg1 == 0x06) {
-            float* r1 = &F;
-            int* r2 = getRegPtr(_reg2);
-        }
-        else if (_reg2 == 0x06) {
-            int* r1 = getRegPtr(_reg1);
-            float* r2 = &F;
-        }
-        else {
-            int* r1 = getRegPtr(_reg1);
-            int* r2 = getRegPtr(_reg2);
-        }
-
-        int *r1, *r2;
+        int* r1 = getRegPtr(_reg1);
+        int* r2 = getRegPtr(_reg2);
         switch (opcode) {
             case 0x90:      // ADDR r1, r2
                 if (!r1 || !r2) return 0;
@@ -108,6 +92,7 @@ int opAct(int opcode, int format, int target, int flags) {
         ni = flags >> 4;
         x = (flags >> 3) / 2;
         b = (flags >> 2) / 2;
+        p = (flags >> 1) / 2;
         e = flags / 2;
         int memVal;
         int LOC;
@@ -129,7 +114,13 @@ int opAct(int opcode, int format, int target, int flags) {
                         }
                         memVal += (*(MEMORY + LOC++) << (i << 4));
                     }
-                    if (j == 0) LOC = memVal;
+                    if (j == 0) {
+                        if (p) memVal += PC;
+                        else if (b) memVal += B;
+                        if (x) memVal += x;
+
+                        LOC = memVal;
+                    }
                 }
                 break;
             case 0: case 3:         // simple addressing
@@ -143,6 +134,9 @@ int opAct(int opcode, int format, int target, int flags) {
                     }
                     memVal += (*(MEMORY + LOC++) << (i << 4));
                 }
+                if (p) memVal += PC;
+                else if (b) memVal += B;
+                if (x) memVal += x;
                 break;
         }
         switch (opcode) {
@@ -306,6 +300,8 @@ int* getRegPtr(unsigned char reg) {
             return &S;
         case 0x05:
             return &T;
+        case 0x06:
+            return &F;
         case 0x08:
             return &PC;
         case 0x09:
@@ -327,19 +323,19 @@ int read_2B_float(int LOC, int memVal) {
     return memVal;
 }
 
-float getFloat(int f) {
-    int _exponent = (f >> 23) & (unsigned char)0x0FF;
-    int _fraction = f & (unsigned char)0x07FFFFF;
-    float fraction = 1;
-    float res;
-    /** for (int i = 22; i >= 0; i--) { */
-    /**     fraction += (_fraction >> i */
-    /** } */
-    /** float res = (1 + f  */
-    /** if (f >> 31 == 1)  */
-    
-    return res;
-}
+/** float getFloat(int f) { */
+/**     int _exponent = (f >> 36) & (unsigned char)0x0FF; */
+/**     int _fraction = f & (unsigned char)0x07FFFFF; */
+/**     float fraction = 1; */
+/**     float res; */
+/**     [> for (int i = 22; i >= 0; i--) { <] */
+/**     [>     fraction += (_fraction >> i <] */
+/**     [> } <] */
+/**     [> float res = (1 + f  <] */
+/**     [> if (f >> 31 == 1)  <] */
+/**      */
+/**     return res; */
+/** } */
 
 int write_to_memory(int LOC, int memVal) {
     // Write ONE WORD SIZE value to memory
