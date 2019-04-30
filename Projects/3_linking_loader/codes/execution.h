@@ -31,3 +31,4 @@ int* getRegPtr(unsigned char reg);
 
 int read_2B_float(int LOC, int memVal);
 float getFloat(int f);
+int write_to_memory(int LOC, int memVal);
