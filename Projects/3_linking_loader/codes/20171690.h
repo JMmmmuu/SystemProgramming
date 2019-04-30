@@ -77,7 +77,7 @@ tRecord* tRHead;
 tRecord* tRTail;
 mRecord* mRHead;
 mRecord* mRTail;
-int A, X, L, PC, SW, B, S, T;
+int A, X, L, PC, SW, B, S, T, CC;
 float F;
 
 unsigned char* MEMORY;

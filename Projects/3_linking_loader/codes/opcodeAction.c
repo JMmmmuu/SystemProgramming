@@ -7,6 +7,8 @@
 #include "20171690.h"
 #include "execution.h"
 
+int CC;
+
 int opAct(int opcode, int format, int target, int flags) {
     // operate proper action
     // format always 1 ... 4
@@ -64,6 +66,7 @@ int opAct(int opcode, int format, int target, int flags) {
                 *r1 = 0;
                 break;
             case 0xA0:      // COMPR r1, r2
+                if (*r1 == *r2) CC = 1;
                 break;
             case 0x9C:      // DIVR r1, r2
                 if (!r1 || !r2) return 0;
@@ -122,9 +125,9 @@ int opAct(int opcode, int format, int target, int flags) {
                             printf("Segmetataion Fault!\n");
                             return 0;
                         }
-                        memVal += (*(MEMORY + LOC) << (i << 4));
+                        memVal += (*(MEMORY + LOC++) << (i << 4));
                     }
-                    LOC = memVal;
+                    if (j == 0) LOC = memVal;
                 }
                 break;
             case 0: case 3:         // simple addressing
@@ -136,27 +139,31 @@ int opAct(int opcode, int format, int target, int flags) {
                         printf("Segmetataion Fault!\n");
                         return 0;
                     }
-                    memVal += (*(MEMORY + LOC) << (i << 4));
+                    memVal += (*(MEMORY + LOC++) << (i << 4));
                 }
                 break;
         }
         switch (opcode) {
             // memory operand is stored in memVal variable
             case 0x18:        // ADD m
+                A += memVal;
                 break;
             case 0x58:        // ADDF m
                 break;
             case 0x40:        // AND m
+                A &= memVal;
                 break;
             case 0x28:        // COMP m
                 break;
             case 0x88:        // COMPF m
                 break;
             case 0x24:        // DIV m
+                A /= memVal;
                 break;
             case 0x64:        // DIVF m
                 break;
             case 0x3C:        // J m
+                PC = memVal;
                 break;
             case 0x30:        // JEQ m
                 break;
@@ -267,3 +274,28 @@ int* getRegPtr(unsigned char reg) {
     }
 }
 
+int read_2B_float(int LOC, int memVal) {
+    memVal = memVal << 8;
+    for (int i = 1; i >= 0; i--) {
+        if ( !validAddr(LOC) ) {
+            printf("Segmetataion Fault!\n");
+            return -1;
+        }
+        memVal += (*(MEMORY + LOC++) << (i << 4));
+    }
+    return memVal;
+}
+
+float getFloat(int f) {
+    int _exponent = (f >> 23) & (unsigned char)0x0FF;
+    int _fraction = f & (unsigned char)0x07FFFFF;
+    float fraction = 1;
+    float res;
+    /** for (int i = 22; i >= 0; i--) { */
+    /**     fraction += (_fraction >> i */
+    /** } */
+    /** float res = (1 + f  */
+    /** if (f >> 31 == 1)  */
+    
+    return res;
+}

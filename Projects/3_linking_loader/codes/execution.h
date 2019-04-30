@@ -28,3 +28,6 @@ int setBP(char* addr);
 void clearBP();
 void printBP();
 int* getRegPtr(unsigned char reg);
+
+int read_2B_float(int LOC, int memVal);
+float getFloat(int f);
