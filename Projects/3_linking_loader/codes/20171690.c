@@ -280,6 +280,10 @@ int main() {
                     break;
 
                 case 0x52:          // run
+                    if ( executeProg() ) {
+                        printReg();
+                        addHistory(input);
+                    }
 
                     break;
 
