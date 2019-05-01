@@ -112,7 +112,7 @@ int opAct(int opcode, int format, int target, int flags) {
                             printf("Segmentation Fault!_1\n");
                             return 0;
                         }
-                        memVal += (*(MEMORY + LOC++) << (i << 4));
+                        memVal += (*(MEMORY + LOC++) << (i << 8));
                     }
                     if (j == 0) {
                         if (p) memVal += PC;
@@ -131,13 +131,23 @@ int opAct(int opcode, int format, int target, int flags) {
                         printf("Segmentation Fault!_2\n");
                         return 0;
                     }
-                    memVal += (*(MEMORY + LOC++) << (i << 4));
+                    memVal += (*(MEMORY + LOC++) << (i << 8));
                 }
                 break;
         }
-        if (p) memVal += PC;
-        else if (b) memVal += B;
-        if (x) memVal += x;
+        if (p) {
+            memVal += PC;
+            target += PC;
+        }
+        else if (b) {
+            memVal += B;
+            target += B;
+        }
+        if (x) {
+            memVal += X;
+            target += X;
+        }
+
         switch (opcode) {
             // memory operand is stored in memVal variable
             case 0x18:        // ADD m
@@ -160,20 +170,20 @@ int opAct(int opcode, int format, int target, int flags) {
             /** case 0x64:        // DIVF m */
             /**     break; */
             case 0x3C:        // J m
-                PC = memVal;
+                PC = target;
                 break;
             case 0x30:        // JEQ m
-                if (CC) PC = memVal;
+                if (CC) PC = target;
                 break;
             case 0x34:        // JGT m
-                if (CC > 0) PC = memVal;
+                if (CC > 0) PC = target;
                 break;
             case 0x38:        // JLT m
-                if (CC < 0) PC = memVal;
+                if (CC < 0) PC = target;
                 break;
             case 0x48:        // JSUB m
                 L = PC;
-                PC = memVal;
+                PC = target;
                 break;
             case 0x00:        // LDA m
                 A = memVal;
@@ -185,8 +195,8 @@ int opAct(int opcode, int format, int target, int flags) {
                 memVal = (memVal >> 16) | (unsigned char)0xFFFF00;
                 A &= (unsigned char)memVal;
                 break;
-            case 0x70:        // LDF m
-                break;
+            /** case 0x70:        // LDF m */
+            /**     break; */
             case 0x08:        // LDL m
                 L = memVal;
                 break;
@@ -199,18 +209,18 @@ int opAct(int opcode, int format, int target, int flags) {
             case 0x04:        // LDX m
                 X = memVal;
                 break;
-            case 0xD0:        // LPS m
-                break;
+            /** case 0xD0:        // LPS m */
+            /**     break; */
             case 0x20:        // MUL m
                 A *= memVal;
                 break;
-            case 0x60:        // MULF m
-                break;
+            /** case 0x60:        // MULF m */
+            /**     break; */
             case 0x44:        // OR m
                 A |= memVal;
                 break;
-            case 0xD8:        // RD m
-                break;
+            /** case 0xD8:        // RD m */
+            /**     break; */
             case 0x4C:        // RSUB
                 PC = L;
                 break;
@@ -267,18 +277,17 @@ int opAct(int opcode, int format, int target, int flags) {
             case 0x1C:        // SUB m
                 A -= memVal;
                 break;
-            case 0x5C:        // SUBF m
-                break;
-            case 0xE0:        // TD m
-                break;
+            /** case 0x5C:        // SUBF m */
+            /**     break; */
+            /** case 0xE0:        // TD m */
+            /**     break; */
             case 0x2C:        // TIX m
                 X += 1;
                 if (X == memVal) CC = 1;
                 else CC = 0;
-
                 break;
-            case 0xDC:        // WD m
-                break;
+            /** case 0xDC:        // WD m */
+            /**     break; */
 
         }
 
