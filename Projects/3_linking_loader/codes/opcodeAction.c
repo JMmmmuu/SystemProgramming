@@ -115,6 +115,7 @@ int opAct(int opcode, int format, int target, int flags) {
                 for (int j = 0; j < 2; j++) {
                     // READ MEMORY
                     // READ VALUE AS ADDR OF MEMORY AGAIN!
+                    memVal = 0;
                     for (int i = 2; i >= 0; i--) {
                         // READ ONE WORD SIZE from the MEMORY
                         if ( !validAddr(LOC) ) {
@@ -126,7 +127,9 @@ int opAct(int opcode, int format, int target, int flags) {
                     if (j == 0) {
                         LOC = memVal;
                     }
+                printf("%06X\n", memVal);
                 }
+                target = memVal;
                 break;
             case 3:         // simple addressing
                 for (int i = 2; i >= 0; i--) {
