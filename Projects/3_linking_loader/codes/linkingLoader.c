@@ -410,8 +410,6 @@ void addES(EShead* ES, char* name, char* loc) {
     pNew->LOC = strToHex(loc, 0) + ES->CSaddr;
     pNew->link = NULL;
 
-    //printf("%s %X\n", pNew->name, pNew->LOC);
-
     if ( ES->link == NULL ) {
         ES->link = pNew;
         return ;

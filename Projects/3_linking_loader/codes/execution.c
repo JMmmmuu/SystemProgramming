@@ -25,12 +25,13 @@ int executeProg() {
     int format;
     int target;
 
+    int cnt = 0;
+
     if (EXEC_LEN + EXEC_ADDR >= 0x100000) {
         printf("Segmentation Fault!\n");
         return 0;
     }
     while (PC < EXEC_ADDR + EXEC_LEN) {
-        printf("[PC %06X], ", PC);
         if ( !validAddr(PC + 2) ) {
             printf("Segmentation Fault!\n - %06X\n", PC);
             return 0;
@@ -41,18 +42,22 @@ int executeProg() {
 
         if ( (format = searchWithOpcode(opcode)) != 0 ) {
             // if opcode exists
+            printf("[PC %06X], ", PC-1);
             switch (format) {
                 case 1:
                     opAct(opcode, format, 0, 0);
+            printf("\n");
                     break;
                 case 2:
                     reg = *(MEMORY + PC++);
                     opAct(opcode, format, reg, 0);
+            printf("\n");
                     break;
                 case 3:
                     if (ni == 0) {
                         PC += 2;
                         printf("\n");
+                        if ( ++cnt == 40) return 0;
                         continue;
                     }
                     flags = *(MEMORY + PC++);
@@ -81,6 +86,9 @@ int executeProg() {
             PC += 2;
             printf("\n");
         }
+
+        printReg();
+        if ( ++cnt == 40) return 0;
     }
 
     return 1;

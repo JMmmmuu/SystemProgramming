@@ -94,15 +94,24 @@ int opAct(int opcode, int format, int target, int flags) {
         b = (flags >> 2) % 2;
         p = (flags >> 1) % 2;
         e = flags % 2;
+        if (p) {
+            target = (signed char)target + PC;
+        }
+        else if (b) {
+            target += B;
+        }
+        if (x) {
+            target += X;
+        }
+
         printf("%02X - %d %d %d %d %d\n", flags, ni, x, b, p, e);
-        int memVal;
+        int memVal = 0;
         int LOC = target;
         switch (ni) {
             case 1:         // immediate addressing
                 memVal = target;
                 break;
             case 2:         // indirect addressing
-                memVal = 0;
                 for (int j = 0; j < 2; j++) {
                     // READ MEMORY
                     // READ VALUE AS ADDR OF MEMORY AGAIN!
@@ -115,37 +124,22 @@ int opAct(int opcode, int format, int target, int flags) {
                         memVal += (*(MEMORY + LOC++) << (i << 8));
                     }
                     if (j == 0) {
-                        if (p) memVal += PC;
-                        else if (b) memVal += B;
-                        if (x) memVal += x;
-
                         LOC = memVal;
                     }
                 }
                 break;
             case 3:         // simple addressing
-                memVal = 0;
                 for (int i = 2; i >= 0; i--) {
                     // READ ONE WORD SIZE from the MEMORY
                     if ( !validAddr(LOC) ) {
                         printf("Segmentation Fault!_2\n");
                         return 0;
                     }
-                    memVal += (*(MEMORY + LOC++) << (i << 8));
+                    memVal += ((*(MEMORY + LOC++) << (i << 8)));
+                    printf("%06X ", memVal);
                 }
+                printf("\n");
                 break;
-        }
-        if (p) {
-            memVal += PC;
-            target += PC;
-        }
-        else if (b) {
-            memVal += B;
-            target += B;
-        }
-        if (x) {
-            memVal += X;
-            target += X;
         }
 
         switch (opcode) {
@@ -279,8 +273,9 @@ int opAct(int opcode, int format, int target, int flags) {
                 break;
             /** case 0x5C:        // SUBF m */
             /**     break; */
-            /** case 0xE0:        // TD m */
-            /**     break; */
+            case 0xE0:        // TD m
+                CC = 0;
+                break;
             case 0x2C:        // TIX m
                 X += 1;
                 if (X == memVal) CC = 1;
