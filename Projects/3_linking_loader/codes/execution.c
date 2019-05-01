@@ -15,7 +15,7 @@ int executeProg() {
 
     if (EXEC_LEN == -1) {
         printf("Please load the program first\n");
-        return 1;
+        return 0;
     }
 
     A = 0; X = 0; L = 0; SW = 0; B = 0; S = 0; T = 0; F = 0; CC = 0;
@@ -69,7 +69,6 @@ int executeProg() {
                     }
 
                     printf("\t[opcode %02X], [format %d], [flags %01X], [target %05X]\n", opcode, format, flags, target);
-                    flags += (ni << 4);
                     if ( !opAct(opcode, format, target, flags) )
                         return 0;
 

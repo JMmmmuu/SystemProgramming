@@ -22,14 +22,14 @@ int opAct(int opcode, int format, int target, int flags) {
             case 0xC0:      // FLOAT
                 F = (float)A;
                 break;
-            case 0xF4:      // HIO
-                break;
-            case 0xC8:      // NORM
-                break;
-            case 0xF0:      // SIO
-                break;
-            case 0xF8:      // TIO
-                break;
+            /** case 0xF4:      // HIO */
+            /**     break; */
+            /** case 0xC8:      // NORM */
+            /**     break; */
+            /** case 0xF0:      // SIO */
+            /**     break; */
+            /** case 0xF8:      // TIO */
+            /**     break; */
         }
     }
     else if (format == 2) {
@@ -75,8 +75,8 @@ int opAct(int opcode, int format, int target, int flags) {
                 if (!r1 || !r2) return 0;
                 *r2 -= *r1;
                 break;
-            case 0xB0:      // SVC n
-                break;
+            /** case 0xB0:      // SVC n */
+            /**     break; */
             case 0xB8:      // TIXR r1
                 X += 1;
                 if (!r1) return 0;
@@ -90,18 +90,18 @@ int opAct(int opcode, int format, int target, int flags) {
         // format 3 or 4
         unsigned char ni, x, b, p, e;
         ni = flags >> 4;
-        x = (flags >> 3) / 2;
-        b = (flags >> 2) / 2;
-        p = (flags >> 1) / 2;
-        e = flags / 2;
+        x = (flags >> 3) % 2;
+        b = (flags >> 2) % 2;
+        p = (flags >> 1) % 2;
+        e = flags % 2;
+        printf("%02X - %d %d %d %d %d\n", flags, ni, x, b, p, e);
         int memVal;
-        int LOC;
+        int LOC = target;
         switch (ni) {
             case 1:         // immediate addressing
                 memVal = target;
                 break;
             case 2:         // indirect addressing
-                LOC = target;
                 memVal = 0;
                 for (int j = 0; j < 2; j++) {
                     // READ MEMORY
@@ -109,7 +109,7 @@ int opAct(int opcode, int format, int target, int flags) {
                     for (int i = 2; i >= 0; i--) {
                         // READ ONE WORD SIZE from the MEMORY
                         if ( !validAddr(LOC) ) {
-                            printf("Segmetataion Fault!\n");
+                            printf("Segmentation Fault!_1\n");
                             return 0;
                         }
                         memVal += (*(MEMORY + LOC++) << (i << 4));
@@ -123,41 +123,42 @@ int opAct(int opcode, int format, int target, int flags) {
                     }
                 }
                 break;
-            case 0: case 3:         // simple addressing
-                LOC = target;
+            case 3:         // simple addressing
                 memVal = 0;
                 for (int i = 2; i >= 0; i--) {
                     // READ ONE WORD SIZE from the MEMORY
                     if ( !validAddr(LOC) ) {
-                        printf("Segmetataion Fault!\n");
+                        printf("Segmentation Fault!_2\n");
                         return 0;
                     }
                     memVal += (*(MEMORY + LOC++) << (i << 4));
                 }
-                if (p) memVal += PC;
-                else if (b) memVal += B;
-                if (x) memVal += x;
                 break;
         }
+        if (p) memVal += PC;
+        else if (b) memVal += B;
+        if (x) memVal += x;
         switch (opcode) {
             // memory operand is stored in memVal variable
             case 0x18:        // ADD m
                 A += memVal;
                 break;
-            case 0x58:        // ADDF m
-                break;
+            /** case 0x58:        // ADDF m */
+            /**     break; */
             case 0x40:        // AND m
                 A &= memVal;
                 break;
             case 0x28:        // COMP m
+                if (A == memVal) CC = 1;
+                else CC = 0;
                 break;
-            case 0x88:        // COMPF m
-                break;
+            /** case 0x88:        // COMPF m */
+            /**     break; */
             case 0x24:        // DIV m
                 A /= memVal;
                 break;
-            case 0x64:        // DIVF m
-                break;
+            /** case 0x64:        // DIVF m */
+            /**     break; */
             case 0x3C:        // J m
                 PC = memVal;
                 break;
@@ -228,7 +229,7 @@ int opAct(int opcode, int format, int target, int flags) {
             case 0x54:        // STCH m
                 LOC -= 3;
                 if ( !validAddr(LOC) ) {
-                    printf("Segmentaion Fault!\n");
+                    printf("Segmentation Fault!_STCH\n");
                     return 0;
                 }
                 memVal = A & (unsigned char)0x0FF;
@@ -311,38 +312,12 @@ int* getRegPtr(unsigned char reg) {
     }
 }
 
-int read_2B_float(int LOC, int memVal) {
-    memVal = memVal << 8;
-    for (int i = 1; i >= 0; i--) {
-        if ( !validAddr(LOC) ) {
-            printf("Segmetataion Fault!\n");
-            return -1;
-        }
-        memVal += (*(MEMORY + LOC++) << (i << 4));
-    }
-    return memVal;
-}
-
-/** float getFloat(int f) { */
-/**     int _exponent = (f >> 36) & (unsigned char)0x0FF; */
-/**     int _fraction = f & (unsigned char)0x07FFFFF; */
-/**     float fraction = 1; */
-/**     float res; */
-/**     [> for (int i = 22; i >= 0; i--) { <] */
-/**     [>     fraction += (_fraction >> i <] */
-/**     [> } <] */
-/**     [> float res = (1 + f  <] */
-/**     [> if (f >> 31 == 1)  <] */
-/**      */
-/**     return res; */
-/** } */
-
 int write_to_memory(int LOC, int memVal) {
     // Write ONE WORD SIZE value to memory
     // if success, return 1
     // else, return 0
     if ( !validAddr(LOC + 2) ) {
-        printf("Segmentaion Fault!\n");
+        printf("Segmentation Fault!_writing\n");
         return 0;
     }
     unsigned char b[3];

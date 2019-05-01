@@ -225,7 +225,7 @@ int HRecord(char* line, int currentCS, char* file) {
     ESTAB[currentCS].link = NULL;
 
     if ( !validAddr(ESTAB[currentCS].CSaddr) ) {
-        printf("Error occured in file [%s] - Invalid Address in H Record. Please set PROGADDR\n", file);
+        printf("Error occured in file [%s] - Invalid Address in H Record.\nPlease set PROGADDR again\n", file);
         return 0;
     }
 
