@@ -94,17 +94,14 @@ int opAct(int opcode, int format, int target, int flags) {
         b = (flags >> 2) % 2;
         p = (flags >> 1) % 2;
         e = flags % 2;
-        if (p) {
+        if (p)
             target = (signed char)target + PC;
-        }
-        else if (b) {
+        else if (b)
             target += B;
-        }
-        if (x) {
+        if (x)
             target += X;
-        }
 
-        printf("%02X - %d %d %d %d %d\n", flags, ni, x, b, p, e);
+        /** printf("%02X - %d %d %d %d %d\n", flags, ni, x, b, p, e); */
         int memVal = 0;
         int LOC = target;
         switch (ni) {
@@ -128,7 +125,7 @@ int opAct(int opcode, int format, int target, int flags) {
                         LOC = memVal;
                         target = memVal;
                     }
-                    printf("%06X\n", memVal);
+                    /** printf("%06X\n", memVal); */
                 }
                 break;
             case 3:         // simple addressing
@@ -139,9 +136,9 @@ int opAct(int opcode, int format, int target, int flags) {
                         return 0;
                     }
                     memVal += ((*(MEMORY + LOC++) << (i << 8)));
-                    printf("%06X ", memVal);
+                    /** printf("%06X ", memVal); */
                 }
-                printf("\n");
+                /** printf("\n"); */
                 break;
         }
 

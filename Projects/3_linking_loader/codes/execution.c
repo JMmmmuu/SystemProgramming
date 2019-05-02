@@ -57,7 +57,7 @@ int executeProg() {
                     if (ni == 0) {
                         PC += 2;
                         printf("\n");
-                        /** if ( ++cnt == 40) return 0; */
+                        if ( ++cnt == 40) return 0;
                         continue;
                     }
                     flags = *(MEMORY + PC++);
@@ -88,7 +88,7 @@ int executeProg() {
         }
 
         printReg();
-        /** if ( ++cnt == 40) return 0; */
+        if ( ++cnt == 40) return 0;
     }
 
     return 1;
