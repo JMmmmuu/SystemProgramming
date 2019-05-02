@@ -38,6 +38,7 @@ int loader(char* param) {
         objFile[objCnt] = strtok(NULL, " \t");
     } while (objFile[objCnt++]);
     objCnt--;
+    freeTRHead();
 
     if (objCnt > 3) {
         // consider upto 3 files
@@ -170,6 +171,8 @@ int loader(char* param) {
     if (EXEC_ADDR == -1) EXEC_ADDR = ESTAB[0].CSaddr;       // no executable addr specified in E Record
     EXEC_LEN = ESTAB[objCnt-1].CSaddr + ESTAB[objCnt-1].CSlength - EXEC_ADDR;
 
+    printTRHead();
+    freeTRHead();
     return 1;
 }
 
@@ -308,6 +311,7 @@ int TRecord(char* line, EShead CShead, char* file) {
         return 0;
     }
     currentAddr += CShead.CSaddr;
+    newTRaddr(currentAddr);     // store the addr of new T Record
 
     strncpy(tmp, line + charPtr, 2);       // length of T record
     tLen = strToHex(tmp, 0);
@@ -386,6 +390,34 @@ int MRecord(char* line, EShead CShead, char* file) {
     setMem(mAddr + 2, mVal % (2 << 8), file);
 
     return 1;
+}
+
+void newTRaddr(int addr) {
+    newTR* pNew = (newTR*)malloc(sizeof(newTR));
+    pNew->addr = addr; pNew->link = NULL;
+
+    if (!TRHead) TRHead = pNew;
+    else {
+        newTR* pMove;
+        for (pMove = TRHead; pMove->link; pMove = pMove->link) ;
+        pMove->link = pNew;
+    }
+}
+void printTRHead() {
+    newTR* pMv;
+    for (pMv = TRHead; pMv; pMv = pMv->link) {
+        printf("%06X\n", pMv->addr);
+    }
+}
+void freeTRHead() {
+    if (!TRHead) return ;
+    newTR* pFree = TRHead;
+    while (TRHead) {
+        pFree = TRHead;
+        TRHead = TRHead->link;
+        free(pFree);
+    }
+    TRHead = NULL;
 }
 
 int setMem(int addr, int val, char* file) {

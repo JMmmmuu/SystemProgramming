@@ -25,9 +25,15 @@ typedef struct _referNode {
     struct _referNode* link;
 } referNode;
 
+typedef struct _newTR {
+    int addr;
+    struct _newTR* link;
+} newTR;
+
 int PROGADDR;
 EShead* ESTAB;
 referNode* referHead;
+newTR* TRHead;
 
 int progaddr(char* addr);
 int loader(char* param);
@@ -38,6 +44,10 @@ int DRecord(char* line, int currentCS, char* file);
 int RRecord(char* line, int objCnt, char* file);
 int TRecord(char* line, EShead CShead, char* file);
 int MRecord(char* line, EShead CShead, char* file);
+
+void newTRaddr(int addr);
+void printTRHead();
+void freeTRHead();
 
 int setMem(int addr, int val, char* file);
 
