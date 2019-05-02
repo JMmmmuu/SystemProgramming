@@ -21,6 +21,7 @@ int progaddr(char* addr) {
         printf("Invalid Address: out of range\n");
         return 0;
     }
+    EXEC_ADDR = PROGADDR;
 
     printf("PROGADDR SET\n");
     return 1;

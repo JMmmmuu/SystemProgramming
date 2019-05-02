@@ -31,7 +31,7 @@ int executeProg() {
         printf("Segmentation Fault!\n");
         return 0;
     }
-    while (PC < EXEC_ADDR + EXEC_LEN) {
+    while (PC < EXEC_ADDR + EXEC_LEN && PC >= EXEC_ADDR) {
         if ( !validAddr(PC + 2) ) {
             printf("Segmentation Fault!\n - %06X\n", PC);
             return 0;
@@ -57,7 +57,7 @@ int executeProg() {
                     if (ni == 0) {
                         PC += 2;
                         printf("\n");
-                        if ( ++cnt == 40) return 0;
+                        /** if ( ++cnt == 40) return 0; */
                         continue;
                     }
                     flags = *(MEMORY + PC++);
@@ -88,7 +88,7 @@ int executeProg() {
         }
 
         printReg();
-        if ( ++cnt == 40) return 0;
+        /** if ( ++cnt == 40) return 0; */
     }
 
     return 1;

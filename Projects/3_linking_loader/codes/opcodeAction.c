@@ -126,10 +126,10 @@ int opAct(int opcode, int format, int target, int flags) {
                     }
                     if (j == 0) {
                         LOC = memVal;
+                        target = memVal;
                     }
-                printf("%06X\n", memVal);
+                    printf("%06X\n", memVal);
                 }
-                target = memVal;
                 break;
             case 3:         // simple addressing
                 for (int i = 2; i >= 0; i--) {
