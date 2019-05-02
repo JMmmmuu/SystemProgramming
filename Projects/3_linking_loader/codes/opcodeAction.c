@@ -180,10 +180,11 @@ int opAct(int opcode, int format, int target, int flags) {
                 PC = target;
                 break;
             case 0x00:        // LDA m
-                A = memVal;
+                printf("%06X %06X\n", A, target);
+                A = target;
                 break;
             case 0x68:        // LDB m
-                B = memVal;
+                B = target;
                 break;
             case 0x50:        // LDCH m
                 memVal = (memVal >> 16) | (unsigned char)0xFFFF00;
@@ -192,16 +193,16 @@ int opAct(int opcode, int format, int target, int flags) {
             /** case 0x70:        // LDF m */
             /**     break; */
             case 0x08:        // LDL m
-                L = memVal;
+                L = target;
                 break;
             case 0x6C:        // LDS m
-                S = memVal;
+                S = target;
                 break;
             case 0x74:        // LDT m
-                T = memVal;
+                T = target;
                 break;
             case 0x04:        // LDX m
-                X = memVal;
+                X = target;
                 break;
             /** case 0xD0:        // LPS m */
             /**     break; */

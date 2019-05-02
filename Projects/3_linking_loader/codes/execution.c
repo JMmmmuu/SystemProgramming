@@ -58,7 +58,7 @@ int executeProg() {
             if (addr_of_new_TRecord) {
                 byteSize = addr_of_new_TRecord->addr - PC;
                 if (byteSize >= 1 && byteSize <= 4) {
-                    printf("%06X %02X\n", addr_of_new_TRecord->addr, byteSize);
+                    /** printf("%06X %02X\n", addr_of_new_TRecord->addr, byteSize); */
                     PC += byteSize;
                     addr_of_new_TRecord = addr_of_new_TRecord->link;
                 }
