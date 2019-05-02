@@ -170,9 +170,9 @@ int loader(char* param) {
     haltLinkingLoader(objFile, objFP, objCnt);
     if (EXEC_ADDR == -1) EXEC_ADDR = ESTAB[0].CSaddr;       // no executable addr specified in E Record
     EXEC_LEN = ESTAB[objCnt-1].CSaddr + ESTAB[objCnt-1].CSlength - EXEC_ADDR;
+    printf("EXEC - %06X %06X\n", EXEC_ADDR, EXEC_LEN);
 
     printTRHead();
-    freeTRHead();
     return 1;
 }
 

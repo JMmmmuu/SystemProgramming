@@ -6,6 +6,7 @@
  *************************************************/
 #include "20171690.h"
 #include "execution.h"
+#include "linkingLoader.h"
 
 int executeProg() {
     // execute last linked & loaded program
@@ -25,6 +26,8 @@ int executeProg() {
     int format;
     int target;
 
+    newTR* addr_of_new_TRecord = TRHead;
+
     int cnt = 0;
 
     if (EXEC_LEN + EXEC_ADDR >= 0x100000) {
@@ -36,13 +39,37 @@ int executeProg() {
             printf("Segmentation Fault!\n - %06X\n", PC);
             return 0;
         }
-        opcode = *(MEMORY + PC++);
+        opcode = *(MEMORY + PC);
         ni = opcode & (unsigned char)0x03;
         opcode &= (unsigned char)0xFC;
 
-        if ( (format = searchWithOpcode(opcode)) != 0 ) {
+        format = searchWithOpcode(opcode);
+        printf("[PC %06X], ", PC);
+        int byteSize;
+        if (addr_of_new_TRecord) {
+            byteSize = addr_of_new_TRecord->addr - PC;
+            if (byteSize == 0)
+                addr_of_new_TRecord = addr_of_new_TRecord->link;
+        }
+
+        if ( format == 0 || (format == 3 && ni == 0) ) {
+            // WORD or BYTE CONST
+            // no change of REG or MEM
+            if (addr_of_new_TRecord) {
+                byteSize = addr_of_new_TRecord->addr - PC;
+                if (byteSize >= 1 && byteSize <= 4) {
+                    printf("%06X %02X\n", addr_of_new_TRecord->addr, byteSize);
+                    PC += byteSize;
+                    addr_of_new_TRecord = addr_of_new_TRecord->link;
+                }
+                else PC += 3;
+            }
+            else PC += 3;
+            printf("\n");
+        }
+        else {
             // if opcode exists
-            printf("[PC %06X], ", PC-1);
+            PC++;
             switch (format) {
                 case 1:
                     opAct(opcode, format, 0, 0);
@@ -57,7 +84,7 @@ int executeProg() {
                     if (ni == 0) {
                         PC += 2;
                         printf("\n");
-                        if ( ++cnt == 40) return 0;
+                        /** if ( ++cnt == 40) return 0; */
                         continue;
                     }
                     flags = *(MEMORY + PC++);
@@ -79,16 +106,10 @@ int executeProg() {
 
                     break;
             }
-        }
-        else {
-            // WORD CONST
-            // no change in REG or MEM
-            PC += 2;
-            printf("\n");
+            printReg();
         }
 
-        printReg();
-        if ( ++cnt == 40) return 0;
+        /** if ( ++cnt == 40) return 0; */
     }
 
     return 1;
