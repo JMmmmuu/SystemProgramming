@@ -133,13 +133,45 @@ int setBP(char* addr) {
     BPNode* pNew = (BPNode*)malloc(sizeof(BPNode));
     pNew->bp = bpAddr; pNew->link = NULL;
 
+    printf("\t    [ok] create breakpoint %05X\n", bpAddr);
     if (!BPHead) {
         BPHead = pNew;
-        BPTail = pNew;
         return 1;
     }
-    BPTail->link = pNew;
-    BPTail = pNew;
+    if (bpAddr < BPHead->bp) {
+        // head - pNew - ...
+        pNew->link = BPHead;
+        BPHead = pNew;
+    }
+    else if (bpAddr == BPHead->bp) {
+        printf("\t     bp already set\n");
+        return 0;
+    }
+    else {
+        // head - node - pNew - ...
+        pNew->link = BPHead->link;
+        BPHead->link = pNew;
+
+        // head - pMv1 - pNew - pMv2
+        BPNode* pMv1 = BPHead;
+        BPNode* pMv2 = pNew->link;
+        while (pMv2) {
+            if (pMv2->bp == bpAddr) {
+                printf("\t     bp already set\n");
+                return 0;
+            }
+            else if (pMv2->bp < bpAddr) {
+                pMv1->link = pMv2;
+                pNew->link = pMv2->link;
+                pMv2->link = pNew;
+
+                pMv1 = pMv1->link;
+                pMv2 = pNew->link;
+            }
+            else break;
+        }
+    }
+
     return 1;
 }
 
@@ -152,9 +184,9 @@ void clearBP() {
         BPHead = BPHead->link;
         free(pFree);
     }
-    BPHead = BPTail = NULL;
+    BPHead =  NULL;
 
-    printf("Breakpoint Cleared!\n");
+    printf("Breakpoints Cleared!\n");
 }
 
 void printBP() {

@@ -12,7 +12,6 @@ typedef struct _BP {
 
 
 BPNode* BPHead;
-BPNode* BPTail;
 int EXEC_ADDR;
 int EXEC_LEN;
 
