@@ -127,8 +127,11 @@ int setBP(char* addr) {
     // if success, return 1
     // else, return 0
     int bpAddr = strToHex(addr, 0);
-    if (bpAddr == -1)   // wrong parameter
+    if (bpAddr == -1 || !validAddr(bpAddr)) {
+        // wrong parameter
+        printf("\t    invalid break point\n");
         return 0;
+    }
 
     BPNode* pNew = (BPNode*)malloc(sizeof(BPNode));
     pNew->bp = bpAddr; pNew->link = NULL;
@@ -175,8 +178,11 @@ int setBP(char* addr) {
     return 1;
 }
 
-void clearBP() {
-    if (!BPHead) return ;
+int clearBP() {
+    if (!BPHead) {
+        printf("\t    BP Already Cleared!\n");
+        return 0;
+    }
 
     BPNode* pFree;
     while (BPHead) {
@@ -187,6 +193,7 @@ void clearBP() {
     BPHead =  NULL;
 
     printf("Breakpoints Cleared!\n");
+    return 1;
 }
 
 void printBP() {
@@ -198,5 +205,5 @@ void printBP() {
     printf("\t    ----------\n");
     BPNode* ptmp = BPHead;
     for ( ; ptmp; ptmp = ptmp->link)
-        printf("\t    %04X\n", ptmp->bp);
+        printf("\t    %05X\n", ptmp->bp);
 }

@@ -299,14 +299,12 @@ int main() {
                     params = removeSpace(params);
                     if (strcmp(params, "clear") == 0) {
                         // clear all BPs
-                        clearBP();
-                        addHistory(input);
+                        if ( clearBP() )
+                            addHistory(input);
                         break;
                     }
                     if ( setBP(params) )
                         addHistory(input);
-                    else 
-                        printf("Syntax Error. See 'h[elp]'\n");
                     break;
 
                 case 0xA0:
@@ -328,7 +326,6 @@ void init() {
     SYMTAB = NULL;
     numHead = NULL;
     BPHead = NULL;
-    BPTail = NULL;
 
     opTable = (opNode**)malloc(20 * sizeof(opNode*));
     for (int i = 0; i < 20; i++)
