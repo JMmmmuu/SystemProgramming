@@ -58,8 +58,6 @@ int searchRN(char* ref);
 
 void haltLinkingLoader(char** objFile, FILE** objFP, int objCnt);
 
-
-
 int isObjFile(char* file);
 void printES(int objCnt);
 void freeRN();
