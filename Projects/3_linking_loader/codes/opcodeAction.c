@@ -121,7 +121,7 @@ int opAct(int opcode, int format, int target, int flags) {
                             printf("Segmentation Fault!_1\n");
                             return 0;
                         }
-                        memVal += (*(MEMORY + LOC++) << (i << 8));
+                        memVal += (*(MEMORY + LOC++) << (i * 8));
                     }
                     if (j == 0) {
                         LOC = memVal;
@@ -137,7 +137,7 @@ int opAct(int opcode, int format, int target, int flags) {
                         printf("Segmentation Fault!_2\n");
                         return 0;
                     }
-                    memVal += ((*(MEMORY + LOC++) << (i << 8)));
+                    memVal += ((*(MEMORY + LOC++) << (i * 8)));
                     /** printf("%06X ", memVal); */
                 }
                 /** printf("\n"); */
@@ -183,15 +183,16 @@ int opAct(int opcode, int format, int target, int flags) {
                 PC = target;
                 break;
             case 0x00:        // LDA m
-                printf("%06X %06X\n", A, target);
+                /** printf("%06X %06X\n", A, target); */
                 A = memVal;
                 break;
             case 0x68:        // LDB m
                 B = memVal;
                 break;
             case 0x50:        // LDCH m
-                memVal = (memVal >> 16) | (unsigned char)0xFFFF00;
-                A &= (unsigned char)memVal;
+                memVal = (unsigned)(memVal >> 16);// | (unsigned char)0xFFFF00;
+                A = (A >> 8) << 8;
+                A += memVal;
                 break;
             /** case 0x70:        // LDF m */
             /**     break; */
@@ -223,8 +224,8 @@ int opAct(int opcode, int format, int target, int flags) {
             case 0x4C:        // RSUB
                 PC = L;
                 break;
-            case 0xEC:        // SSK m
-                break;
+            /** case 0xEC:        // SSK m */
+            /**     break; */
             case 0x0C:        // STA m
                 LOC -= 3;
                 if ( !write_to_memory(LOC, A) )
@@ -244,10 +245,10 @@ int opAct(int opcode, int format, int target, int flags) {
                 memVal = A & (unsigned char)0x0FF;
                 memcpy(MEMORY + LOC, &memVal, 1);
                 break;
-            case 0x80:        // STF m
-                break;
-            case 0xD4:        // STI m
-                break;
+            /** case 0x80:        // STF m */
+            /**     break; */
+            /** case 0xD4:        // STI m */
+            /**     break; */
             case 0x14:        // STL m
                 LOC -= 3;
                 if ( !write_to_memory(LOC, L) )
