@@ -144,12 +144,12 @@ int loader(char* param) {
                         // get the first executable address
                         char __addr[7];
                         strncpy(__addr, line + 1, 6);
-                        EXEC_ADDR = strToHex(__addr, 0) + PROGADDR;
-                        if (EXEC_ADDR == -1) {
-                            printf("Error occured in file [%s] - Wrong format in E Record\n", objFile[CS]);
-                            haltLinkingLoader(objFile, objFP, objCnt);
-                            return 0;
-                        }
+                        /** EXEC_ADDR = strToHex(__addr, 0) + PROGADDR; */
+                        /** if (EXEC_ADDR == -1) { */
+                        /**     printf("Error occured in file [%s] - Wrong format in E Record\n", objFile[CS]); */
+                        /**     haltLinkingLoader(objFile, objFP, objCnt); */
+                        /**     return 0; */
+                        /** } */
                     }
                     break;
 
@@ -168,11 +168,12 @@ int loader(char* param) {
 
     loadMap(objCnt);
     haltLinkingLoader(objFile, objFP, objCnt);
-    if (EXEC_ADDR == -1) EXEC_ADDR = ESTAB[0].CSaddr;       // no executable addr specified in E Record
+    /** if (EXEC_ADDR == -1) EXEC_ADDR = ESTAB[0].CSaddr;       // no executable addr specified in E Record */
+    EXEC_ADDR = ESTAB[0].CSaddr;
     EXEC_LEN = ESTAB[objCnt-1].CSaddr + ESTAB[objCnt-1].CSlength - EXEC_ADDR;
     printf("EXEC - %06X %06X\n", EXEC_ADDR, EXEC_LEN);
 
-    printTRHead();
+    //printTRHead();
     return 1;
 }
 

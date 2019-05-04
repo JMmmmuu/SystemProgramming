@@ -335,6 +335,7 @@ void init() {
     PROGADDR = 0;
     EXEC_ADDR = EXEC_LEN = -1;
     
+    A = X = L = SW = B = S = T = F = CC = 0;
 
     readOpTable();
 }
