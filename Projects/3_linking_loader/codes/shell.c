@@ -14,6 +14,11 @@ void help() {
     printf("\t\treset\n");
     printf("\t\topcode mnemonic\n\t\topcodelist\n");
     printf("\t\tassemble filename\n\t\ttype filename\n\t\tsymbol\n");
+
+    printf("\t\tprogaddr [address]\n");
+    printf("\t\tloader [object filename] [object filename] [...]\n");
+    printf("\t\trun\n");
+    printf("\t\tbp [address]\n\t\tbp clear\n\t\tbp\n");
 }
 
 void directory() {
