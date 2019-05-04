@@ -8,6 +8,7 @@
 #include "execution.h"
 #include "linkingLoader.h"
 
+
 int executeProg() {
     // execute last linked & loaded program
     // its starting addr & len is stored in EXEC_ADDR & EXEC_LEN
@@ -19,7 +20,7 @@ int executeProg() {
         return 0;
     }
 
-    A = 0; X = 0; L = 0; SW = 0; B = 0; S = 0; T = 0; F = 0; CC = 0;
+    /** A = 0; X = 0; L = 0; SW = 0; B = 0; S = 0; T = 0; F = 0; CC = 0; */
     PC = EXEC_ADDR;
     int opcode;
     unsigned char flags, reg, ni;//, x, b, p, e;
@@ -29,6 +30,7 @@ int executeProg() {
     newTR* addr_of_new_TRecord = TRHead;
 
     int cnt = 0;
+    int MAX_CNT = EXEC_LEN * 1000;
 
     if (EXEC_LEN + EXEC_ADDR >= 0x100000) {
         printf("Segmentation Fault!\n");
@@ -68,23 +70,26 @@ int executeProg() {
         }
         else {
             // if opcode exists
-            printf("[PC %06X], ", PC);
+            /** printf("[PC %06X], ", PC); */
             PC++;
             switch (format) {
                 case 1:
                     opAct(opcode, format, 0, 0);
-                    printf("\n");
+                    /** printf("\n"); */
                     break;
                 case 2:
                     reg = *(MEMORY + PC++);
                     opAct(opcode, format, reg, 0);
-                    printf("\n");
+                    /** printf("\n"); */
                     break;
                 case 3:
                     if (ni == 0) {
                         PC += 2;
                         /** printf("\n"); */
-                        /** if ( ++cnt == 70) return 0; */
+                        if ( ++cnt == MAX_CNT) { 
+                            printf("Program Halted at PC: [%05X] - please set progaddr again, or correct input file\n", PC);
+                            return 0;
+                        }
                         break;
                     }
                     flags = *(MEMORY + PC++);
@@ -104,16 +109,19 @@ int executeProg() {
                         target += (*(MEMORY + PC++) << (i * 8));
                     }
 
-                    printf("\t[opcode %02X], [format %d], [flags %01X], [target %05X]\n", opcode, format, flags, target);
+                    /** printf("\t[opcode %02X], [format %d], [flags %01X], [target %05X]\n", opcode, format, flags, target); */
                     if ( !opAct(opcode, format, target, flags) )
                         return 0;
 
                     break;
             }
-            printReg();
+            /** printReg(); */
         }
 
-        /** if ( ++cnt == 70) return 0; */
+        if ( ++cnt == MAX_CNT) {
+            printf("Program Halted at PC: [%05X] - please set progaddr again, or correct input file\n", PC);
+            return 0;
+        }
         if (BPHead) {
             //if (nextBP->bp == PC) {
             if (searchBP(PC)) {
@@ -122,9 +130,7 @@ int executeProg() {
                 EXEC_ADDR = PC;
                 break;
             }
-
         }
-        
     }
 
     printReg();
@@ -132,10 +138,10 @@ int executeProg() {
 }
 
 void printReg() {
-    printf("\t\tA : %012X X : %08X\n", A, X);
-    printf("\t\tL : %012X PC: %012X\n", L, PC);
-    printf("\t\tB : %012X S : %012X\n", B, S);
-    printf("\t\tT : %012X\n", T);
+    printf("\t\tA : %06X X : %06X\n", A, X);
+    printf("\t\tL : %06X PC: %06X\n", L, PC);
+    printf("\t\tB : %06X S : %06X\n", B, S);
+    printf("\t\tT : %06X\n", T);
 }
 
 int setBP(char* addr) {
