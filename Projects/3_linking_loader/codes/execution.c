@@ -223,7 +223,7 @@ int clearBP() {
     }
     BPHead =  NULL;
 
-    printf("Breakpoints Cleared!\n");
+    printf("\t    [ok] clear all breakpoints\n");
     return 1;
 }
 
