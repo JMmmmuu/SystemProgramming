@@ -26,6 +26,7 @@ int executeProg();
 int setBP(char* addr);
 int clearBP();
 void printBP();
+int searchBP(int PC);
 int* getRegPtr(unsigned char reg);
 
 int read_2B_float(int LOC, int memVal);

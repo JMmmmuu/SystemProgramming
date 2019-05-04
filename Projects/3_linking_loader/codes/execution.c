@@ -44,7 +44,6 @@ int executeProg() {
         opcode &= (unsigned char)0xFC;
 
         format = searchWithOpcode(opcode);
-        printf("[PC %06X], ", PC);
         int byteSize;
         if (addr_of_new_TRecord) {
             byteSize = addr_of_new_TRecord->addr - PC;
@@ -69,29 +68,34 @@ int executeProg() {
         }
         else {
             // if opcode exists
+            printf("[PC %06X], ", PC);
             PC++;
             switch (format) {
                 case 1:
                     opAct(opcode, format, 0, 0);
-            printf("\n");
+                    printf("\n");
                     break;
                 case 2:
                     reg = *(MEMORY + PC++);
                     opAct(opcode, format, reg, 0);
-            printf("\n");
+                    printf("\n");
                     break;
                 case 3:
                     if (ni == 0) {
                         PC += 2;
-                        printf("\n");
-                        /** if ( ++cnt == 40) return 0; */
-                        continue;
+                        /** printf("\n"); */
+                        /** if ( ++cnt == 70) return 0; */
+                        break;
                     }
                     flags = *(MEMORY + PC++);
                     target = (flags & (unsigned char)0x0F) << 8;
                     flags = (flags >> 4) + (ni << 4);
 
-                    if (flags % 2) format = 4;     // if e flag set
+                    if (flags % 2) {
+                        // if e flag set
+                        format = 4;
+                        target = (target << 8);
+                    }
                     for (int i = (format == 3) ? 0 : 1; i >= 0; i--) {
                         if ( !validAddr(PC) ) {
                             printf("Segmentation Fault! - %06X\n", PC);
@@ -109,9 +113,21 @@ int executeProg() {
             printReg();
         }
 
-        /** if ( ++cnt == 40) return 0; */
+        /** if ( ++cnt == 70) return 0; */
+        if (BPHead) {
+            //if (nextBP->bp == PC) {
+            if (searchBP(PC)) {
+                printf("\t     Stop at checkpoint [%05X]\n", PC);
+                EXEC_LEN -= (PC - EXEC_ADDR);
+                EXEC_ADDR = PC;
+                break;
+            }
+
+        }
+        
     }
 
+    printReg();
     return 1;
 }
 
@@ -206,4 +222,15 @@ void printBP() {
     BPNode* ptmp = BPHead;
     for ( ; ptmp; ptmp = ptmp->link)
         printf("\t    %05X\n", ptmp->bp);
+}
+
+int searchBP(int PC) {
+    BPNode* pMv = BPHead;
+    while (pMv) {
+        if (pMv->bp == PC)
+            return 1;
+        else
+            pMv = pMv->link;
+    }
+    return 0;
 }
