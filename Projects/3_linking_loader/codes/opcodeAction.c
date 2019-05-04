@@ -217,8 +217,9 @@ int opAct(int opcode, int format, int target, int flags) {
             case 0x44:        // OR m
                 A |= memVal;
                 break;
-            /** case 0xD8:        // RD m */
-            /**     break; */
+            case 0xD8:        // RD m
+                CC = 1;
+                break;
             case 0x4C:        // RSUB
                 PC = L;
                 break;
