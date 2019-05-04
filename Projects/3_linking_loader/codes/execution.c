@@ -37,7 +37,6 @@ int executeProg() {
         printf("Segmentation Fault!\n");
         return 0;
     }
-    /** while (PC < EXEC_ADDR + EXEC_LEN && PC >= EXEC_ADDR) { */
     if (!continuing) {
         L = PROG_END;
     }
@@ -64,7 +63,6 @@ int executeProg() {
             if (addr_of_new_TRecord) {
                 byteSize = addr_of_new_TRecord->addr - PC;
                 if (byteSize >= 1 && byteSize <= 4) {
-                    /** printf("%06X %02X\n", addr_of_new_TRecord->addr, byteSize); */
                     PC += byteSize;
                     addr_of_new_TRecord = addr_of_new_TRecord->link;
                 }
@@ -128,7 +126,6 @@ int executeProg() {
             return 0;
         }
         if (BPHead) {
-            //if (nextBP->bp == PC) {
             if (searchBP(PC)) {
                 printReg();
                 endFlag = 1;
@@ -142,6 +139,9 @@ int executeProg() {
     }
     if (endFlag == 0) {
         printReg();
+        printf("\t     End Program\n");
+        EXEC_ADDR = PROG_START;
+        EXEC_LEN = PROG_END - PROG_START;
         continuing = 0;
     }
 
