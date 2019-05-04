@@ -48,8 +48,9 @@ int opAct(int opcode, int format, int target, int flags) {
                 *r1 = 0;
                 break;
             case 0xA0:      // COMPR r1, r2
-                if (*r1 == *r2) CC = 1;
-                else CC = 0;
+                if (*r1 == *r2) CC = 0;
+                else if (*r1 > *r2) CC = 1;
+                else CC = -1;
                 break;
             case 0x9C:      // DIVR r1, r2
                 if (!r1 || !r2) return 0;
@@ -80,8 +81,9 @@ int opAct(int opcode, int format, int target, int flags) {
             case 0xB8:      // TIXR r1
                 X += 1;
                 if (!r1) return 0;
-                if (*r1 == X) CC = 1;
-                else CC = 0;
+                if (X == *r1) CC = 0;
+                else if (X > *r1) CC = 1;
+                else CC = -1;
                 break;
         }
 
@@ -153,8 +155,9 @@ int opAct(int opcode, int format, int target, int flags) {
                 A &= memVal;
                 break;
             case 0x28:        // COMP m
-                if (A == memVal) CC = 1;
-                else CC = 0;
+                if (A == memVal) CC = 0;
+                else if (A > memVal) CC = 1;
+                else CC = -1;
                 break;
             /** case 0x88:        // COMPF m */
             /**     break; */
@@ -167,13 +170,13 @@ int opAct(int opcode, int format, int target, int flags) {
                 PC = target;
                 break;
             case 0x30:        // JEQ m
-                if (CC) PC = target;
+                if (CC == 0) PC = target;
                 break;
             case 0x34:        // JGT m
-                if (CC > 0) PC = target;
+                if (CC == 1) PC = target;
                 break;
             case 0x38:        // JLT m
-                if (CC < 0) PC = target;
+                if (CC == -1) PC = target;
                 break;
             case 0x48:        // JSUB m
                 L = PC;
@@ -181,10 +184,10 @@ int opAct(int opcode, int format, int target, int flags) {
                 break;
             case 0x00:        // LDA m
                 printf("%06X %06X\n", A, target);
-                A = target;
+                A = memVal;
                 break;
             case 0x68:        // LDB m
-                B = target;
+                B = memVal;
                 break;
             case 0x50:        // LDCH m
                 memVal = (memVal >> 16) | (unsigned char)0xFFFF00;
@@ -193,16 +196,16 @@ int opAct(int opcode, int format, int target, int flags) {
             /** case 0x70:        // LDF m */
             /**     break; */
             case 0x08:        // LDL m
-                L = target;
+                L = memVal;
                 break;
             case 0x6C:        // LDS m
-                S = target;
+                S = memVal;
                 break;
             case 0x74:        // LDT m
-                T = target;
+                T = memVal;
                 break;
             case 0x04:        // LDX m
-                X = target;
+                X = memVal;
                 break;
             /** case 0xD0:        // LPS m */
             /**     break; */
@@ -275,12 +278,13 @@ int opAct(int opcode, int format, int target, int flags) {
             /** case 0x5C:        // SUBF m */
             /**     break; */
             case 0xE0:        // TD m
-                CC = 0;
+                CC = 1;
                 break;
             case 0x2C:        // TIX m
                 X += 1;
-                if (X == memVal) CC = 1;
-                else CC = 0;
+                if (X == memVal) CC = 0;
+                else if (X > memVal) CC = 1;
+                else CC = -1;
                 break;
             /** case 0xDC:        // WD m */
             /**     break; */
