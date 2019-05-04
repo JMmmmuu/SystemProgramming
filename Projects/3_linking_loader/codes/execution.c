@@ -30,13 +30,18 @@ int executeProg() {
     newTR* addr_of_new_TRecord = TRHead;
 
     int cnt = 0;
-    int MAX_CNT = EXEC_LEN * 1000;
+    int MAX_CNT = (PROG_END - PROG_START) * 1000;
+    int endFlag = 0;
 
     if (EXEC_LEN + EXEC_ADDR >= 0x100000) {
         printf("Segmentation Fault!\n");
         return 0;
     }
-    while (PC < EXEC_ADDR + EXEC_LEN && PC >= EXEC_ADDR) {
+    /** while (PC < EXEC_ADDR + EXEC_LEN && PC >= EXEC_ADDR) { */
+    if (!continuing) {
+        L = PROG_END;
+    }
+    while (PC >= PROG_START && PC < PROG_END) {
         if ( !validAddr(PC + 2) ) {
             printf("Segmentation Fault!\n - %06X\n", PC);
             return 0;
@@ -66,7 +71,7 @@ int executeProg() {
                 else PC += 3;
             }
             else PC += 3;
-            printf("\n");
+            /** printf("\n"); */
         }
         else {
             // if opcode exists
@@ -125,15 +130,21 @@ int executeProg() {
         if (BPHead) {
             //if (nextBP->bp == PC) {
             if (searchBP(PC)) {
+                printReg();
+                endFlag = 1;
                 printf("\t     Stop at checkpoint [%05X]\n", PC);
                 EXEC_LEN -= (PC - EXEC_ADDR);
                 EXEC_ADDR = PC;
+                continuing = 1;
                 break;
             }
         }
     }
+    if (endFlag == 0) {
+        printReg();
+        continuing = 0;
+    }
 
-    printReg();
     return 1;
 }
 

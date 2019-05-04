@@ -256,7 +256,7 @@ int main() {
                     params = strtok(NULL, "\0");
                     if (!params) {
                         PROGADDR = 0;
-                        printf("PROGADDR RESET\n");
+                        printf("PROGADDR RESET to 0\n");
                         break;
                     }
 
@@ -335,7 +335,8 @@ void init() {
     PROGADDR = 0;
     EXEC_ADDR = EXEC_LEN = -1;
     
-    A = X = L = SW = B = S = T = F = CC = 0;
+    A = X = SW = L = B = S = T = F = CC = 0;
+    continuing = 0;
 
     readOpTable();
 }

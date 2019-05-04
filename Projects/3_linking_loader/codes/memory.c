@@ -138,7 +138,7 @@ void reset() {
 
 int validAddr(int addr) {
     // if given address is vaild, return 1, else return 0
-    if (addr >= 0 && addr <= 0xFFFFF)
+    if (addr >= 0 && addr <= 0x0FFFFF)
         return 1;
     else
         return 0;

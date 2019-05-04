@@ -118,6 +118,7 @@ int opAct(int opcode, int format, int target, int flags) {
                     for (int i = 2; i >= 0; i--) {
                         // READ ONE WORD SIZE from the MEMORY
                         if ( !validAddr(LOC) ) {
+                            printf("%06X\n", LOC);
                             printf("Segmentation Fault!_1\n");
                             return 0;
                         }

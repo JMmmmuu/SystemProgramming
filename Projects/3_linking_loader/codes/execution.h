@@ -14,6 +14,9 @@ typedef struct _BP {
 BPNode* BPHead;
 int EXEC_ADDR;
 int EXEC_LEN;
+int PROG_START;
+int PROG_END;
+int continuing;
 
 
 
