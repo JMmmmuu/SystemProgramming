@@ -10,7 +10,7 @@ typedef struct _BP {
     struct _BP* link;
 } BPNode;
 
-
+// GLOBAL VARs
 BPNode* BPHead;
 int EXEC_ADDR;
 int EXEC_LEN;
@@ -18,10 +18,8 @@ int PROG_START;
 int PROG_END;
 int continuing;
 
-
-
+// FUNCTIONS
 int opAct(int opcode, int format, int target, int flags);
-
 
 void printReg();
 

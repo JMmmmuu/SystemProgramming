@@ -6,6 +6,7 @@
  *************************************************/
 #define MAX_LINE_LEN 0xFF
 
+// STRUCTUREs
 typedef struct _ESnode {
     char name[9];
     int LOC;
@@ -30,11 +31,13 @@ typedef struct _newTR {
     struct _newTR* link;
 } newTR;
 
+// GLOBAL VARs
 int PROGADDR;
 EShead* ESTAB;
 referNode* referHead;
 newTR* TRHead;
 
+// FUNCTIONS
 int progaddr(char* addr);
 int loader(char* param);
 
