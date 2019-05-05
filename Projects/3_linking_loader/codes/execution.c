@@ -55,7 +55,7 @@ int executeProg() {
                 addr_of_new_TRecord = addr_of_new_TRecord->link;
         }
 
-        if ( format == 0 || (format == 3 && ni == 0) ) {
+        if ( format == 0 ) { //|| (format == 3 && ni == 0) ) {
             // WORD or BYTE CONST
             // no change of REG or MEM
             if (addr_of_new_TRecord) {
@@ -84,15 +84,15 @@ int executeProg() {
                     /** printf("\n"); */
                     break;
                 case 3:
-                    if (ni == 0) {
-                        PC += 2;
-                        /** printf("\n"); */
-                        if ( ++cnt == MAX_CNT) { 
-                            printf("Program Halted at PC: [%05X] - please set progaddr again, or correct input file\n", PC);
-                            return 0;
-                        }
-                        break;
-                    }
+                    /** if (ni == 0) { */
+                    /**     PC += 2; */
+                    /**     [> printf("\n"); <] */
+                    /**     if ( ++cnt == MAX_CNT) {  */
+                    /**         printf("Program Halted at PC: [%05X] - please set progaddr again, or correct input file\n", PC); */
+                    /**         return 0; */
+                    /**     } */
+                    /**     break; */
+                    /** } */
                     flags = *(MEMORY + PC++);
                     target = (flags & (unsigned char)0x0F) << 8;
                     flags = (flags >> 4) + (ni << 4);
