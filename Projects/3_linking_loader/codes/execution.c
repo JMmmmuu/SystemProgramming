@@ -210,6 +210,7 @@ int setBP(char* addr) {
 }
 
 int clearBP() {
+    // clear all breakpoints
     if (!BPHead) {
         printf("\t    BP Already Cleared!\n");
         return 0;
@@ -228,6 +229,7 @@ int clearBP() {
 }
 
 void printBP() {
+    // print all breakpoints
     if (!BPHead) {
         printf("\t    No Breakpoint Set\n");
         return ;
@@ -240,6 +242,9 @@ void printBP() {
 }
 
 int searchBP(int PC) {
+    // Check whether PC is breakpoint or not
+    // if it is, return 1
+    // else, return 0
     BPNode* pMv = BPHead;
     while (pMv) {
         if (pMv->bp == PC)
