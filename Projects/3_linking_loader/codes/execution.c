@@ -49,11 +49,6 @@ int executeProg() {
 
         format = searchWithOpcode(opcode);
         int byteSize;
-        if (addr_of_new_TRecord) {
-            byteSize = addr_of_new_TRecord->addr - PC;
-            if (byteSize == 0)
-                addr_of_new_TRecord = addr_of_new_TRecord->link;
-        }
 
         if ( format == 0 ) { //|| (format == 3 && ni == 0) ) {
             // WORD or BYTE CONST
