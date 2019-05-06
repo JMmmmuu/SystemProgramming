@@ -54,6 +54,10 @@ int opAct(int opcode, int format, int target, int flags) {
                 break;
             case 0x9C:      // DIVR r1, r2
                 if (!r1 || !r2) return 0;
+                if ( *r1 == 0 ) {
+                    printf("Divided by 0\n");
+                    return 0;
+                }
                 *r2 /= *r1;
                 break;
             case 0x98:      // MULR r1, r2
@@ -163,6 +167,10 @@ int opAct(int opcode, int format, int target, int flags) {
             /** case 0x88:        // COMPF m */
             /**     break; */
             case 0x24:        // DIV m
+                if (memVal == 0) {
+                    printf("Divided by 0\n");
+                    return 0;
+                }
                 A /= memVal;
                 break;
             /** case 0x64:        // DIVF m */
