@@ -52,11 +52,11 @@ int executeProg() {
             // WORD or BYTE CONST
             // no change of REG or MEM
             PC += 3;
-            printf("\n");
+            /** printf("\n"); */
         }
         else if (format == 3 && ni == 0) {
             // SIC MACHINE COMPATIBLE
-            printf("[PC %06X], \n", PC);
+            /** printf("[PC %06X], \n", PC); */
             PC++;
             flags = *(MEMORY + PC++);
             target = (flags & (unsigned char)0x7F) << 8;
@@ -71,17 +71,17 @@ int executeProg() {
         }
         else {
             // if opcode exists
-            printf("[PC %06X], ", PC);
+            /** printf("[PC %06X], ", PC); */
             PC++;
             switch (format) {
                 case 1:
                     opAct(opcode, format, 0, 0);
-                    printf("\n");
+                    /** printf("\n"); */
                     break;
                 case 2:
                     reg = *(MEMORY + PC++);
                     opAct(opcode, format, reg, 0);
-                    printf("\n");
+                    /** printf("\n"); */
                     break;
                 case 3:
                     /** if (ni == 0) { */
@@ -110,13 +110,13 @@ int executeProg() {
                         target += (*(MEMORY + PC++) << (i * 8));
                     }
 
-                    printf("\t[opcode %02X], [format %d], [flags %01X], [target %05X]\n", opcode, format, flags, target);
+                    /** printf("\t[opcode %02X], [format %d], [flags %01X], [target %05X]\n", opcode, format, flags, target); */
                     if ( !opAct(opcode, format, target, flags) )
                         return 0;
 
                     break;
             }
-            printReg();
+            /** printReg(); */
         }
 
         if ( ++cnt == MAX_CNT) {

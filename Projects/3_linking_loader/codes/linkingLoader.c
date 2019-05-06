@@ -421,7 +421,7 @@ int searchTR(int LOC) {
     for (pMv = TRHead; pMv; pMv = pMv->link) {
         byteSize = pMv->addr - LOC;
         if (byteSize == 0) return 0;
-        if (byteSize >= 1 && byteSize <= 4) return byteSize;
+        if (byteSize >= 1 && byteSize <= 2) return byteSize;
     }
 
     return 0;
