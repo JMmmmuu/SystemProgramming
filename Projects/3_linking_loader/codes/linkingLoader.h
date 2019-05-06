@@ -51,6 +51,7 @@ int MRecord(char* line, EShead CShead, char* file);
 void newTRaddr(int addr);
 void printTRHead();
 void freeTRHead();
+int searchTR(int LOC);
 
 int setMem(int addr, int val, char* file);
 

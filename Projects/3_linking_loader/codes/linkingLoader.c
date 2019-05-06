@@ -413,6 +413,20 @@ void printTRHead() {
         printf("%06X\n", pMv->addr);
     }
 }
+int searchTR(int LOC) {
+    if (!TRHead) return 0;
+
+    newTR* pMv;
+    int byteSize;
+    for (pMv = TRHead; pMv; pMv = pMv->link) {
+        byteSize = pMv->addr - LOC;
+        if (byteSize == 0) return 0;
+        if (byteSize >= 1 && byteSize <= 4) return byteSize;
+    }
+
+    return 0;
+}
+
 void freeTRHead() {
     if (!TRHead) return ;
     newTR* pFree = TRHead;
