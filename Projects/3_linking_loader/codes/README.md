@@ -1,6 +1,6 @@
 SIC ASSEMBLER PROJECT
 =================
-2st SP Project
+3rd SP Project
 --------------
 
 > ###### SP course in Sogang Univ.
