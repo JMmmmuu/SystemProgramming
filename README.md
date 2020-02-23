@@ -3,6 +3,7 @@ SIC/XE MACHINE - Assembler
 > ###### SP course in Sogang Univ.
 > ###### Spring Semester in 2019
 > ###### Yuseok Jung
+> #### Apple clang version 10.1 **(might not work with GCC Complier)**
 
 -------------------------
 ### 컴파일 및 실행 방법
